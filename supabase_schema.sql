@@ -235,21 +235,47 @@ ALTER TABLE tournaments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tournament_teams ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de lectura pública para anon / clientes
+DROP POLICY IF EXISTS "Public Read Venues" ON venues;
 CREATE POLICY "Public Read Venues" ON venues FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Fields" ON fields;
 CREATE POLICY "Public Read Fields" ON fields FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Categories" ON pos_categories;
 CREATE POLICY "Public Read Categories" ON pos_categories FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Products" ON pos_products;
 CREATE POLICY "Public Read Products" ON pos_products FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Tournaments" ON tournaments;
 CREATE POLICY "Public Read Tournaments" ON tournaments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Teams" ON tournament_teams;
 CREATE POLICY "Public Read Teams" ON tournament_teams FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Reservations" ON reservations;
 CREATE POLICY "Public Read Reservations" ON reservations FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Vaca" ON vaca_splits;
 CREATE POLICY "Public Read Vaca" ON vaca_splits FOR SELECT USING (true);
 
 -- Políticas de inserción y modificación para servicio autenticado
+DROP POLICY IF EXISTS "Public Insert Reservations" ON reservations;
 CREATE POLICY "Public Insert Reservations" ON reservations FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Update Reservations" ON reservations;
 CREATE POLICY "Public Update Reservations" ON reservations FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public Insert Vaca" ON vaca_splits;
 CREATE POLICY "Public Insert Vaca" ON vaca_splits FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Update Vaca" ON vaca_splits;
 CREATE POLICY "Public Update Vaca" ON vaca_splits FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public Full Access Fields" ON fields;
 CREATE POLICY "Public Full Access Fields" ON fields FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Public Full Access Orders" ON pos_orders;
 CREATE POLICY "Public Full Access Orders" ON pos_orders FOR ALL USING (true);
 
 -- 12. DATOS SEMILLA INICIALES (La Bernabéu Cartagena y Camp Nou Arena Bogotá)
@@ -286,9 +312,9 @@ VALUES
 ('e0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'Gatorade 500ml (Varios Sabores)', '7701234567890', 3200.00, 5000.00, 48, 10),
 ('e0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'Agua Cristal 600ml sin gas', '7701234567891', 1200.00, 2500.00, 80, 15),
 ('e0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'Cerveza Águila / Club Colombia Lata', '7701234567892', 2800.00, 5000.00, 72, 12),
-('e0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'Papas Margarita Pollo / Natural', '7701234567893', 1800.00, 3000.00, 35, 8),
-('e0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000003', 'Alquiler Set de Petos (10 u.)', 'ALQ-PETOS-01', 0.00, 10000.00, 10, 2),
-('e0000000-0000-0000-0000-000000000006', 'a0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000003', 'Alquiler Balón Golty Profesional N° 4/5', 'ALQ-BALON-01', 0.00, 8000.00, 6, 2)
+('e0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002', 'Papas Margarita Pollo / Natural', '7701234567893', 1800.00, 3000.00, 35, 8),
+('e0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 'Alquiler Set de Petos (10 u.)', 'ALQ-PETOS-01', 0.00, 10000.00, 10, 2),
+('e0000000-0000-0000-0000-000000000006', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 'Alquiler Balón Golty Profesional N° 4/5', 'ALQ-BALON-01', 0.00, 8000.00, 6, 2)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO tournaments (id, venue_id, name, sport_type, format, start_date, end_date, inscription_fee, max_teams, is_active)
@@ -387,11 +413,26 @@ ALTER TABLE operational_blocks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reprogramming_vouchers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tournament_matches ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public Read Subscriptions" ON recurring_subscriptions;
 CREATE POLICY "Public Read Subscriptions" ON recurring_subscriptions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Write Subscriptions" ON recurring_subscriptions;
 CREATE POLICY "Public Write Subscriptions" ON recurring_subscriptions FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Public Read Blocks" ON operational_blocks;
 CREATE POLICY "Public Read Blocks" ON operational_blocks FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Write Blocks" ON operational_blocks;
 CREATE POLICY "Public Write Blocks" ON operational_blocks FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Public Read Vouchers" ON reprogramming_vouchers;
 CREATE POLICY "Public Read Vouchers" ON reprogramming_vouchers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Write Vouchers" ON reprogramming_vouchers;
 CREATE POLICY "Public Write Vouchers" ON reprogramming_vouchers FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Public Read Matches" ON tournament_matches;
 CREATE POLICY "Public Read Matches" ON tournament_matches FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Write Matches" ON tournament_matches;
 CREATE POLICY "Public Write Matches" ON tournament_matches FOR ALL USING (true);
