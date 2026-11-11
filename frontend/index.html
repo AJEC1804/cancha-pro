@@ -348,11 +348,25 @@
           </p>
         </div>
 
-        <!-- Filtros de Fecha -->
-        <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <button onclick="setGridDate('today')" id="btnDateToday" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">Hoy</button>
-          <button onclick="setGridDate('tomorrow')" id="btnDateTomorrow" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Mañana</button>
-          <input type="date" id="gridDatePicker" onchange="loadGridAvailability()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white rounded-xl px-2.5 py-1 focus:outline-none cursor-pointer">
+        <!-- Filtros de Fecha & Selector de Modo de Vista -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Toggle Vista Individual vs Multi-Cancha Consolidada -->
+          <div class="bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center shadow-sm">
+            <button onclick="switchGridViewMode('single')" id="btnViewSingle" class="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 transition flex items-center space-x-1">
+              <i data-feather="grid" class="w-3.5 h-3.5"></i>
+              <span>Por Cancha</span>
+            </button>
+            <button onclick="switchGridViewMode('multi')" id="btnViewMulti" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center space-x-1">
+              <i data-feather="columns" class="w-3.5 h-3.5"></i>
+              <span>Multi-Cancha (Consolidada)</span>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <button onclick="setGridDate('today')" id="btnDateToday" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">Hoy</button>
+            <button onclick="setGridDate('tomorrow')" id="btnDateTomorrow" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Mañana</button>
+            <input type="date" id="gridDatePicker" onchange="onDateChanged()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white rounded-xl px-2.5 py-1 focus:outline-none cursor-pointer">
+          </div>
         </div>
       </div>
 
@@ -389,24 +403,50 @@
         </div>
       </div>
 
-      <!-- Grid de Horarios -->
+      <!-- Grid de Horarios Individual -->
       <div id="slotsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <!-- Renderizado de slots -->
+        <!-- Renderizado de slots individuales -->
       </div>
 
-      <!-- Leyenda de Estados -->
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400">
+      <!-- VISTA CONSOLIDADA MULTI-CANCHA (MATRIZ COLUMNAS CANCHAS X FILAS HORAS) -->
+      <div id="multiCourtGridContainer" class="hidden overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm dark:shadow-none p-4 sm:p-6 transition">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h4 class="font-black text-slate-900 dark:text-white text-sm">Matriz de Ocupación Multi-Cancha en Tiempo Real</h4>
+          </div>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold" id="multiGridDateLabel">Fecha seleccionada</span>
+        </div>
+        <div id="multiGridTableWrapper" class="overflow-x-auto min-w-full">
+          <!-- Renderizado dinámico de la tabla multi-cancha -->
+        </div>
+      </div>
+
+      <!-- Leyenda de Estados Completa -->
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-slate-500 dark:text-slate-400">
         <div class="flex items-center space-x-2">
           <span class="w-3.5 h-3.5 rounded-lg bg-emerald-500/20 border border-emerald-500/70"></span>
-          <span>Disponible (Clic para retener y reservar)</span>
+          <span>Disponible</span>
         </div>
         <div class="flex items-center space-x-2">
           <span class="w-3.5 h-3.5 rounded-lg bg-amber-500/30 border border-amber-500 animate-pulse"></span>
-          <span>Bloqueado 10 min (Esperando abono PSE/Nequi)</span>
+          <span>Bloqueado 10 min</span>
         </div>
         <div class="flex items-center space-x-2">
           <span class="w-3.5 h-3.5 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
-          <span>Confirmado / Ocupado</span>
+          <span>Ocupado</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-purple-500/20 border border-purple-500 text-purple-600 text-[10px] font-black flex items-center justify-center">F</span>
+          <span>Abonado Fijo Semanal</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-blue-500/20 border border-blue-500 text-blue-600 text-[10px] font-black flex items-center justify-center">🏆</span>
+          <span>Partido de Torneo</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-amber-500/20 border border-amber-500 text-amber-600 text-[10px] font-black flex items-center justify-center">🌧️</span>
+          <span>Bloqueo Lluvia / Mantenimiento</span>
         </div>
       </div>
 

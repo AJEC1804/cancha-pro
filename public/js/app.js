@@ -259,7 +259,23 @@ function setGridDate(mode) {
 
   state.selectedDate = d.toISOString().split('T')[0];
   if (picker) picker.value = state.selectedDate;
-  loadGridAvailability();
+  if (currentGridViewMode === 'multi') {
+    loadMultiGridAvailability();
+  } else {
+    loadGridAvailability();
+  }
+}
+
+function onDateChanged() {
+  const picker = document.getElementById('gridDatePicker');
+  if (picker && picker.value) {
+    state.selectedDate = picker.value;
+    if (currentGridViewMode === 'multi') {
+      loadMultiGridAvailability();
+    } else {
+      loadGridAvailability();
+    }
+  }
 }
 
 function showPitchPlayerRole(roleName, roleDesc) {
@@ -426,7 +442,10 @@ async function loadGridAvailability() {
 
 let currentSelectedPaymentMode = 'deposit_50';
 
-function openBookingModal(startTime, endTime, price) {
+function openBookingModal(startTime, endTime, price, fieldId = null) {
+  if (fieldId) {
+    state.selectedFieldId = fieldId;
+  }
   const field = state.fields.find(f => f.id === state.selectedFieldId);
   if (field && field.is_active === false) {
     showSuspendedAlertModal(field.name);
@@ -440,8 +459,6 @@ function openBookingModal(startTime, endTime, price) {
   const dateTime = document.getElementById('modalDateTime');
   const totalAmount = document.getElementById('modalTotalAmount');
   const depositAmount = document.getElementById('modalDepositAmount');
-
-  const field = state.fields.find(f => f.id === state.selectedFieldId);
 
   if (courtName) courtName.innerText = field ? field.name : 'Cancha';
   if (dateTime) dateTime.innerText = `${state.selectedDate} | ${startTime} - ${endTime}`;
@@ -770,6 +787,10 @@ function switchActiveRole(role) {
     if (topUserRole) topUserRole.innerText = 'Admin • Complejo La Bernabéu';
     loadPricingCourts();
     loadStaffList();
+    loadSubscriptions();
+    loadOperationalBlocks();
+    loadTournamentsDashboard();
+    populateModalFieldSelects();
   } else if (role === 'staff') {
     if (btnStaff) btnStaff.className = 'px-3 py-1 rounded-xl font-black bg-amber-500 text-slate-950 transition';
     if (vStaff) vStaff.classList.remove('hidden');
@@ -779,6 +800,7 @@ function switchActiveRole(role) {
     if (topUserName) topUserName.innerText = 'Carlos Canchero & POS';
     if (topUserRole) topUserRole.innerText = 'Operaciones • La Bernabéu';
     loadPosProducts();
+    loadActiveReservationsForStaff();
   } else {
     if (btnCliente) btnCliente.className = 'px-3 py-1 rounded-xl font-black bg-blue-500 text-white transition';
     if (vCliente) vCliente.classList.remove('hidden');
@@ -1056,24 +1078,42 @@ async function loadPricingCourts() {
       `;
     }
 
+    const wkndValle = f.weekend_price_per_hour || 130000;
+    const wkndPeak = f.weekend_peak_price_per_hour || 160000;
+
     return `
-      <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
-        <div>
-          <h5 class="font-black text-slate-900 dark:text-white text-sm">${f.name}</h5>
-          <span class="text-slate-500 text-[11px]">Tarifa normal vs Tarifa en alta demanda</span>
-        </div>
-        <div class="flex items-center space-x-3">
+      <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl flex flex-col gap-3 text-xs shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
           <div>
-            <label class="block text-slate-500 text-[10px] font-bold">Precio Valle</label>
-            <input type="number" id="priceValle_${f.id}" value="${f.default_price_per_hour}" class="w-24 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-900 dark:text-white font-bold text-xs">
+            <h5 class="font-black text-slate-900 dark:text-white text-sm">${f.name}</h5>
+            <span class="text-slate-500 text-[11px]">${f.sport_type?.toUpperCase()} • Reglas de precios Colombia</span>
           </div>
-          <div>
-            <label class="block text-amber-500 text-[10px] font-bold">Precio Pico</label>
-            <input type="number" id="pricePeak_${f.id}" value="${f.peak_price_per_hour}" class="w-24 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-900 dark:text-white font-bold text-xs">
-          </div>
-          <button onclick="saveFieldPrice('${f.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl mt-3 text-xs transition shadow-sm">
-            Actualizar
+          <button onclick="saveFieldPrice('${f.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs transition shadow-md shadow-emerald-500/20">
+            Guardar Tarifas
           </button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <span class="text-[10px] font-bold text-slate-500 block uppercase">Lun-Vie Valle</span>
+            <input type="number" id="priceValle_${f.id}" value="${f.default_price_per_hour}" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 mt-1 text-slate-900 dark:text-white font-black text-xs">
+            <span class="text-[9px] text-slate-400 block mt-0.5">06:00 - 17:00</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <span class="text-[10px] font-bold text-amber-500 block uppercase">Lun-Vie Pico 🔥</span>
+            <input type="number" id="pricePeak_${f.id}" value="${f.peak_price_per_hour}" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 mt-1 text-slate-900 dark:text-white font-black text-xs">
+            <span class="text-[9px] text-amber-500/70 block mt-0.5">17:00 - 23:00</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <span class="text-[10px] font-bold text-blue-500 block uppercase">Finde Mañana</span>
+            <input type="number" id="priceWeekendValle_${f.id}" value="${wkndValle}" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 mt-1 text-slate-900 dark:text-white font-black text-xs">
+            <span class="text-[9px] text-blue-500/70 block mt-0.5">Sáb/Dom 06:00 - 15:00</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <span class="text-[10px] font-bold text-purple-500 block uppercase">Finde Pico 🔥</span>
+            <input type="number" id="priceWeekendPeak_${f.id}" value="${wkndPeak}" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 mt-1 text-slate-900 dark:text-white font-black text-xs">
+            <span class="text-[9px] text-purple-500/70 block mt-0.5">Sáb/Dom 15:00 - 23:00</span>
+          </div>
         </div>
       </div>
     `;
@@ -1085,6 +1125,8 @@ async function loadPricingCourts() {
 async function saveFieldPrice(fieldId) {
   const valle = document.getElementById(`priceValle_${fieldId}`).value;
   const pico = document.getElementById(`pricePeak_${fieldId}`).value;
+  const wkndValle = document.getElementById(`priceWeekendValle_${fieldId}`)?.value || 130000;
+  const wkndPeak = document.getElementById(`priceWeekendPeak_${fieldId}`)?.value || 160000;
 
   try {
     const res = await fetch(`${API_BASE}/venues/fields/${fieldId}`, {
@@ -1095,12 +1137,14 @@ async function saveFieldPrice(fieldId) {
       },
       body: JSON.stringify({
         default_price_per_hour: Number(valle),
-        peak_price_per_hour: Number(pico)
+        peak_price_per_hour: Number(pico),
+        weekend_price_per_hour: Number(wkndValle),
+        weekend_peak_price_per_hour: Number(wkndPeak)
       })
     });
     const data = await res.json();
     if (res.ok && data.success) {
-      showToast('✅ Tarifas de cancha actualizadas correctamente.', 'success');
+      showToast('✅ Tarifas ordinarias y de fines de semana actualizadas.', 'success');
       await loadVenues();
     } else {
       if (data.suspended) {
@@ -1488,4 +1532,816 @@ function showSuspendedAlertModal(targetName = 'Esta cancha') {
 function closeSuspendedAlertModal() {
   const modal = document.getElementById('modalSuspendedAlert');
   if (modal) modal.classList.add('hidden');
+}
+
+// ============================================================
+// VISTA CONSOLIDADA MULTI-CANCHA (MATRIZ COLUMNAS CANCHAS X FILAS HORAS)
+// ============================================================
+
+let currentGridViewMode = 'single';
+
+function switchGridViewMode(mode) {
+  currentGridViewMode = mode;
+  const btnSingle = document.getElementById('btnViewSingle');
+  const btnMulti = document.getElementById('btnViewMulti');
+  const courtTabs = document.getElementById('courtTabsContainer');
+  const courtInfo = document.getElementById('courtInfoBanner');
+  const slotsGrid = document.getElementById('slotsGrid');
+  const multiContainer = document.getElementById('multiCourtGridContainer');
+
+  if (mode === 'multi') {
+    if (btnSingle) btnSingle.className = 'px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center space-x-1';
+    if (btnMulti) btnMulti.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 transition flex items-center space-x-1';
+    if (courtTabs) courtTabs.classList.add('hidden');
+    if (courtInfo) courtInfo.classList.add('hidden');
+    if (slotsGrid) slotsGrid.classList.add('hidden');
+    if (multiContainer) multiContainer.classList.remove('hidden');
+    loadMultiGridAvailability();
+  } else {
+    if (btnSingle) btnSingle.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 transition flex items-center space-x-1';
+    if (btnMulti) btnMulti.className = 'px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center space-x-1';
+    if (courtTabs) courtTabs.classList.remove('hidden');
+    if (courtInfo) courtInfo.classList.remove('hidden');
+    if (slotsGrid) slotsGrid.classList.remove('hidden');
+    if (multiContainer) multiContainer.classList.add('hidden');
+    loadGridAvailability();
+  }
+}
+
+async function loadMultiGridAvailability() {
+  const wrapper = document.getElementById('multiGridTableWrapper');
+  const dateLabel = document.getElementById('multiGridDateLabel');
+  if (!wrapper) return;
+
+  wrapper.innerHTML = `<div class="p-8 text-center text-xs text-slate-400">Cargando matriz consolidada de canchas...</div>`;
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/multi-grid?date=${state.selectedDate}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      wrapper.innerHTML = `<div class="p-4 text-center text-xs text-red-500">Error al cargar matriz multi-cancha.</div>`;
+      return;
+    }
+
+    if (dateLabel) {
+      dateLabel.innerHTML = `${data.day_name} ${data.date} ${data.is_weekend ? '<span class="text-amber-500 font-bold ml-1">🔥 Tarifa Fin de Semana</span>' : ''}`;
+    }
+
+    const fields = data.fields || [];
+    const matrix = data.matrix || [];
+
+    let thead = `
+      <thead class="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+        <tr>
+          <th class="py-3 px-3 w-28 text-left font-black">Hora</th>
+          ${fields.map(f => `
+            <th class="py-3 px-3 text-center min-w-[170px]">
+              <div class="font-black text-slate-900 dark:text-white text-xs">${f.name}</div>
+              <div class="text-[9px] font-normal text-slate-400 capitalize">${f.sport_type?.replace('_', ' ')}</div>
+            </th>
+          `).join('')}
+        </tr>
+      </thead>
+    `;
+
+    let tbodyRows = matrix.map(row => {
+      let cells = fields.map(f => {
+        const slot = row.courts[f.id];
+        if (!slot) return `<td class="p-2 text-center text-slate-400 text-[10px]">-</td>`;
+
+        if (slot.status === 'suspended') {
+          return `
+            <td class="p-2 text-center">
+              <div class="bg-red-500/10 border border-red-500/30 text-red-500 p-2 rounded-2xl text-[10px] font-bold">
+                ⛔ Suspendida
+              </div>
+            </td>
+          `;
+        } else if (slot.status === 'operational_block') {
+          return `
+            <td class="p-2 text-center">
+              <div class="bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 p-2 rounded-2xl text-[10px]">
+                <span class="font-black block">🌧️ Bloqueo</span>
+                <span class="text-[9px] opacity-80 truncate block">${slot.block_reason || 'Lluvia / Manto'}</span>
+              </div>
+            </td>
+          `;
+        } else if (slot.status === 'subscription_recurring') {
+          return `
+            <td class="p-2 text-center">
+              <div class="bg-purple-500/15 border border-purple-500/40 text-purple-700 dark:text-purple-300 p-2 rounded-2xl text-[10px]">
+                <span class="font-black block">[F] Fijo Semanal</span>
+                <span class="text-[9px] opacity-80 truncate block">${slot.client_name || 'Abonado'}</span>
+              </div>
+            </td>
+          `;
+        } else if (slot.status === 'tournament_match') {
+          return `
+            <td class="p-2 text-center">
+              <div class="bg-blue-500/15 border border-blue-500/40 text-blue-700 dark:text-blue-300 p-2 rounded-2xl text-[10px]">
+                <span class="font-black block">🏆 Torneo</span>
+                <span class="text-[9px] opacity-80 truncate block">${slot.client_name?.replace('[🏆 TORNEO] ', '') || 'Partido'}</span>
+              </div>
+            </td>
+          `;
+        } else if (slot.status === 'held') {
+          return `
+            <td class="p-2 text-center">
+              <div class="bg-amber-500/20 border border-amber-500 text-amber-800 dark:text-amber-300 p-2 rounded-2xl text-[10px] animate-pulse">
+                <span class="font-black block">⏳ Retenida</span>
+                <span class="text-[9px]">10 min abono</span>
+              </div>
+            </td>
+          `;
+        } else if (slot.status === 'confirmed') {
+          return `
+            <td class="p-2 text-center">
+              <div class="bg-slate-200 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 p-2 rounded-2xl text-[10px]">
+                <span class="font-black block">⚽ Reservado</span>
+                <span class="text-[9px] opacity-80 truncate block">${slot.client_name || 'Confirmado'}</span>
+              </div>
+            </td>
+          `;
+        } else {
+          // Available
+          const peakBadge = row.is_peak ? '<span class="text-[9px] text-amber-500 ml-0.5">🔥</span>' : '';
+          return `
+            <td class="p-2 text-center">
+              <button onclick="openBookingModal('${row.start_time}', '${row.end_time}', ${slot.price}, '${f.id}')"
+                class="w-full bg-emerald-500/15 hover:bg-emerald-500 text-emerald-700 dark:text-emerald-400 hover:text-slate-950 border border-emerald-500/30 p-2 rounded-2xl text-[10px] font-black transition group flex flex-col items-center">
+                <span class="text-xs">$${(slot.price / 1000).toFixed(0)}k${peakBadge}</span>
+                <span class="text-[9px] uppercase tracking-wider font-semibold opacity-90 group-hover:text-slate-950">Reservar</span>
+              </button>
+            </td>
+          `;
+        }
+      }).join('');
+
+      return `
+        <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-950/30 transition">
+          <td class="py-2.5 px-3 font-mono font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center space-x-1">
+            <span>${row.start_time} - ${row.end_time}</span>
+            ${row.is_peak ? '<span class="text-amber-500 text-xs" title="Hora Pico">🔥</span>' : ''}
+          </td>
+          ${cells}
+        </tr>
+      `;
+    }).join('');
+
+    wrapper.innerHTML = `
+      <table class="w-full text-left text-xs border-collapse">
+        ${thead}
+        <tbody>${tbodyRows}</tbody>
+      </table>
+    `;
+
+    if (window.feather) feather.replace();
+  } catch (err) {
+    console.error('Error cargando multi-grid:', err);
+    wrapper.innerHTML = `<div class="p-4 text-center text-xs text-red-500">Error de conexión al cargar la parrilla multi-cancha.</div>`;
+  }
+}
+
+// ============================================================
+// GESTIÓN DE SUSCRIPCIONES SEMANALES FIJAS (RECURRENTES)
+// ============================================================
+
+function openNewSubscriptionModal() {
+  populateModalFieldSelects();
+  const modal = document.getElementById('modalNewSubscription');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeNewSubscriptionModal() {
+  const modal = document.getElementById('modalNewSubscription');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function loadSubscriptions() {
+  const container = document.getElementById('subscriptionsListContainer');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/recurring`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (!data.subscriptions || data.subscriptions.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 text-xs text-center py-4">No hay suscripciones fijas semanales activas.</p>`;
+        return;
+      }
+
+      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+      container.innerHTML = `
+        <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+          <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">Cliente / Grupo</th>
+              <th class="py-2.5 px-3">Cancha</th>
+              <th class="py-2.5 px-3">Turno Fijo</th>
+              <th class="py-2.5 px-3">Plazo</th>
+              <th class="py-2.5 px-3">Tarifa x Partido</th>
+              <th class="py-2.5 px-3 text-right">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            ${data.subscriptions.map(s => {
+              const f = state.fields.find(field => field.id === s.field_id);
+              const dayStr = dayNames[s.day_of_week] || 'Día fijo';
+              return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                  <td class="py-2.5 px-3">
+                    <span class="font-bold text-slate-900 dark:text-white block">${s.client_name}</span>
+                    <span class="text-[10px] text-slate-400">${s.client_phone}</span>
+                  </td>
+                  <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${f ? f.name : 'Cancha'}</td>
+                  <td class="py-2.5 px-3">
+                    <span class="bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold px-2 py-0.5 rounded-lg text-[10px]">
+                      ${dayStr}s • ${s.start_time} (${s.duration_hours || 1}h)
+                    </span>
+                  </td>
+                  <td class="py-2.5 px-3 font-medium">${s.total_weeks} Semanas (${s.weeks_remaining} restantes)</td>
+                  <td class="py-2.5 px-3 font-black text-slate-900 dark:text-white">$${Number(s.price_per_match).toLocaleString('es-CO')}</td>
+                  <td class="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[10px]">
+                    <span class="bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">Fijo Activo</span>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+  } catch (err) {
+    console.error('Error cargando suscripciones:', err);
+  }
+}
+
+async function handleCreateSubscription(e) {
+  e.preventDefault();
+  const fieldId = document.getElementById('subFieldSelect').value;
+  const clientName = document.getElementById('subClientName').value;
+  const clientPhone = document.getElementById('subClientPhone').value;
+  const dayOfWeek = Number(document.getElementById('subDayOfWeek').value);
+  const startTime = document.getElementById('subStartTime').value;
+  const durationHours = Number(document.getElementById('subDuration').value);
+  const totalWeeks = Number(document.getElementById('subTotalWeeks').value);
+  const pricePerMatch = Number(document.getElementById('subPricePerMatch').value);
+  const depositPaid = Number(document.getElementById('subDepositPaid').value);
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/recurring`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        venue_id: state.currentVenueId,
+        field_id: fieldId,
+        client_name: clientName,
+        client_phone: clientPhone,
+        day_of_week: dayOfWeek,
+        start_time: startTime,
+        duration_hours: durationHours,
+        total_weeks: totalWeeks,
+        price_per_match: pricePerMatch,
+        deposit_paid: depositPaid
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`🎉 ¡Suscripción fija creada! Se bloquearon ${data.locked_slots_count} fechas en la parrilla.`, 'success');
+      closeNewSubscriptionModal();
+      loadSubscriptions();
+      loadGridAvailability();
+      if (currentGridViewMode === 'multi') loadMultiGridAvailability();
+    } else {
+      showToast(data.error || 'Error al crear suscripción fija.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de red al registrar suscripción.', 'error');
+  }
+}
+
+// ============================================================
+// BLOQUEOS OPERATIVOS & PROTOCOLO POR LLUVIA (BONOS)
+// ============================================================
+
+function openOperationalBlockModal() {
+  populateModalFieldSelects();
+  const modal = document.getElementById('modalOperationalBlock');
+  const dateInput = document.getElementById('blockDate');
+  if (dateInput) dateInput.value = state.selectedDate;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeOperationalBlockModal() {
+  const modal = document.getElementById('modalOperationalBlock');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function loadOperationalBlocks() {
+  const blocksList = document.getElementById('operationalBlocksList');
+  const vouchersList = document.getElementById('reprogrammingVouchersList');
+
+  try {
+    // 1. Cargar Bloqueos
+    const resBlocks = await fetch(`${API_BASE}/reservations/operational-blocks`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const dataBlocks = await resBlocks.json();
+    if (blocksList && dataBlocks.success) {
+      if (!dataBlocks.blocks || dataBlocks.blocks.length === 0) {
+        blocksList.innerHTML = `<p class="text-slate-400 text-xs py-3 text-center">No hay bloqueos operativos activos.</p>`;
+      } else {
+        blocksList.innerHTML = dataBlocks.blocks.map(b => {
+          const f = state.fields.find(field => field.id === b.field_id);
+          return `
+            <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">${b.reason}</span>
+                <h6 class="font-black text-slate-900 dark:text-white text-xs mt-1">${f ? f.name : 'Cancha'}</h6>
+                <p class="text-[10px] text-slate-500">${b.block_date} | ${b.start_time} - ${b.end_time}</p>
+              </div>
+              <button onclick="cancelOperationalBlock('${b.id}')" class="text-xs text-red-500 hover:text-red-600 font-bold p-1">Liberar</button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 2. Cargar Bonos de Reprogramación
+    const resVouchers = await fetch(`${API_BASE}/reservations/vouchers`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const dataVouchers = await resVouchers.json();
+    if (vouchersList && dataVouchers.success) {
+      if (!dataVouchers.vouchers || dataVouchers.vouchers.length === 0) {
+        vouchersList.innerHTML = `<p class="text-slate-400 text-xs py-3 text-center">No se han emitido bonos de reprogramación por lluvia.</p>`;
+      } else {
+        vouchersList.innerHTML = dataVouchers.vouchers.map(v => `
+          <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between">
+            <div>
+              <span class="font-mono font-black text-amber-700 dark:text-amber-400 text-xs block">${v.code}</span>
+              <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200">${v.client_name}</span>
+              <p class="text-[10px] text-slate-500">${v.reason} • Expira: ${v.expires_at?.split('T')[0]}</p>
+            </div>
+            <div class="text-right">
+              <span class="font-black text-slate-900 dark:text-white text-xs block">$${Number(v.amount_credit).toLocaleString('es-CO')}</span>
+              <span class="text-[9px] font-bold uppercase ${v.status === 'redeemed' ? 'text-slate-400' : 'text-emerald-500'}">
+                ${v.status === 'redeemed' ? 'Canjeado' : 'Disponible'}
+              </span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Error cargando bloqueos u vouchers:', err);
+  }
+}
+
+async function handleCreateOperationalBlock(e) {
+  e.preventDefault();
+  const fieldId = document.getElementById('blockFieldSelect').value;
+  const blockDate = document.getElementById('blockDate').value;
+  const startTime = document.getElementById('blockStartTime').value;
+  const endTime = document.getElementById('blockEndTime').value;
+  const reason = document.getElementById('blockReason').value;
+  const emitVoucher = document.getElementById('blockEmitVoucher').checked;
+  const notes = document.getElementById('blockNotes').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/operational-blocks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        venue_id: state.currentVenueId,
+        field_id: fieldId,
+        block_date: blockDate,
+        start_time: startTime,
+        end_time: endTime,
+        reason: reason,
+        emit_voucher: emitVoucher,
+        notes: notes
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (data.cancelled_reservations && data.cancelled_reservations.length > 0) {
+        showToast(`🌧️ Bloqueo aplicado. Se cancelaron ${data.cancelled_reservations.length} reservas y se emitieron bonos de reprogramación digitales.`, 'success');
+      } else {
+        showToast('✅ Bloqueo operativo registrado en la parrilla.', 'success');
+      }
+      closeOperationalBlockModal();
+      loadOperationalBlocks();
+      loadGridAvailability();
+      if (currentGridViewMode === 'multi') loadMultiGridAvailability();
+    } else {
+      showToast(data.error || 'Error al aplicar bloqueo operativo.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de conexión al aplicar bloqueo.', 'error');
+  }
+}
+
+async function cancelOperationalBlock(blockId) {
+  try {
+    const res = await fetch(`${API_BASE}/reservations/operational-blocks/${blockId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Bloqueo operativo liberado. La franja vuelve a estar disponible.', 'success');
+      loadOperationalBlocks();
+      loadGridAvailability();
+      if (currentGridViewMode === 'multi') loadMultiGridAvailability();
+    }
+  } catch (err) {
+    showToast('Error al cancelar bloqueo.', 'error');
+  }
+}
+
+// ============================================================
+// GESTIÓN DE TORNEOS VINCULADOS A LA PARRILLA
+// ============================================================
+
+function openScheduleTournamentMatchModal() {
+  populateModalFieldSelects();
+  const modal = document.getElementById('modalScheduleMatch');
+  const dateInput = document.getElementById('matchDate');
+  if (dateInput) dateInput.value = state.selectedDate;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeScheduleTournamentMatchModal() {
+  const modal = document.getElementById('modalScheduleMatch');
+  if (modal) modal.classList.add('hidden');
+}
+
+function openRegisterTeamModal() {
+  const modal = document.getElementById('modalRegisterTeam');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeRegisterTeamModal() {
+  const modal = document.getElementById('modalRegisterTeam');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function loadTournamentsDashboard() {
+  const standingsEl = document.getElementById('tournamentStandingsTable');
+  const matchesEl = document.getElementById('tournamentMatchesList');
+
+  try {
+    const resTournaments = await fetch(`${API_BASE}/tournaments`);
+    const dataTournaments = await resTournaments.json();
+
+    if (!dataTournaments.success || !dataTournaments.tournaments || dataTournaments.tournaments.length === 0) return;
+
+    const tournament = dataTournaments.tournaments[0];
+
+    // Cargar tabla de posiciones
+    const resStandings = await fetch(`${API_BASE}/tournaments/${tournament.id}/standings`);
+    const dataStandings = await resStandings.json();
+
+    if (standingsEl && dataStandings.success) {
+      standingsEl.innerHTML = `
+        <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+          <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th class="py-2 px-3">#</th>
+              <th class="py-2 px-3">Equipo</th>
+              <th class="py-2 px-2 text-center">PJ</th>
+              <th class="py-2 px-2 text-center">G</th>
+              <th class="py-2 px-2 text-center">E</th>
+              <th class="py-2 px-2 text-center">P</th>
+              <th class="py-2 px-2 text-center">DG</th>
+              <th class="py-2 px-3 text-right font-black">PTS</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            ${dataStandings.standings.map((t, idx) => `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                <td class="py-2 px-3 font-bold ${idx < 2 ? 'text-emerald-500' : 'text-slate-400'}">${idx + 1}</td>
+                <td class="py-2 px-3 font-black text-slate-900 dark:text-white">${t.team_name}</td>
+                <td class="py-2 px-2 text-center text-slate-500">${t.played}</td>
+                <td class="py-2 px-2 text-center">${t.won}</td>
+                <td class="py-2 px-2 text-center">${t.drawn}</td>
+                <td class="py-2 px-2 text-center">${t.lost}</td>
+                <td class="py-2 px-2 text-center font-mono">${t.goals_for - t.goals_against}</td>
+                <td class="py-2 px-3 text-right font-black text-emerald-600 dark:text-emerald-400">${t.points}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Cargar Partidos Programados
+    const resMatches = await fetch(`${API_BASE}/tournaments/${tournament.id}/matches`);
+    const dataMatches = await resMatches.json();
+
+    if (matchesEl && dataMatches.success) {
+      if (!dataMatches.matches || dataMatches.matches.length === 0) {
+        matchesEl.innerHTML = `<p class="text-slate-400 text-xs py-4 text-center">No hay partidos de torneo agendados.</p>`;
+      } else {
+        matchesEl.innerHTML = dataMatches.matches.map(m => {
+          const f = state.fields.find(field => field.id === m.field_id);
+          const isPlayed = m.status === 'completed';
+          return `
+            <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="text-blue-600 dark:text-blue-400 font-bold">${f ? f.name : 'Cancha'} • ${m.match_date} ${m.start_time}</span>
+                <span class="font-bold px-2 py-0.5 rounded-full ${isPlayed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}">
+                  ${isPlayed ? `Final: ${m.home_score} - ${m.away_score}` : 'Agendado en Parrilla'}
+                </span>
+              </div>
+              <div class="flex items-center justify-between font-black text-xs text-slate-900 dark:text-white pt-1">
+                <span>${m.home_team_name}</span>
+                <span class="text-slate-400 text-[10px]">VS</span>
+                <span>${m.away_team_name}</span>
+              </div>
+              <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                <span>Arbitraje: $${Number(m.referee_fee || 50000).toLocaleString('es-CO')}</span>
+                <span>Sanciones: 🟨 ${m.yellow_cards || 0} 🟥 ${m.red_cards || 0}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Error cargando torneo:', err);
+  }
+}
+
+async function handleScheduleMatch(e) {
+  e.preventDefault();
+  const tournamentId = document.getElementById('matchTournamentSelect').value;
+  const homeTeam = document.getElementById('matchHomeTeam').value;
+  const awayTeam = document.getElementById('matchAwayTeam').value;
+  const fieldId = document.getElementById('matchFieldSelect').value;
+  const matchDate = document.getElementById('matchDate').value;
+  const startTime = document.getElementById('matchStartTime').value;
+  const endTime = document.getElementById('matchEndTime').value;
+  const refereeFee = Number(document.getElementById('matchRefereeFee').value);
+
+  try {
+    const res = await fetch(`${API_BASE}/tournaments/schedule-match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        tournament_id: tournamentId,
+        field_id: fieldId,
+        home_team: homeTeam,
+        away_team: awayTeam,
+        match_date: matchDate,
+        start_time: startTime,
+        end_time: endTime,
+        referee_fee: refereeFee
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('🏆 Partido de torneo agendado y bloqueado en la parrilla horaria con éxito.', 'success');
+      closeScheduleTournamentMatchModal();
+      loadTournamentsDashboard();
+      loadGridAvailability();
+      if (currentGridViewMode === 'multi') loadMultiGridAvailability();
+    } else {
+      showToast(data.error || 'Error al programar partido.', 'error');
+    }
+  } catch (err) {
+    showToast('Error al conectar con el servidor.', 'error');
+  }
+}
+
+async function handleRegisterTeam(e) {
+  e.preventDefault();
+  const name = document.getElementById('regTeamName').value;
+  const captain = document.getElementById('regTeamCaptain').value;
+  const phone = document.getElementById('regTeamPhone').value;
+  const fee = Number(document.getElementById('regTeamFee').value);
+
+  try {
+    const res = await fetch(`${API_BASE}/tournaments/teams`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        tournament_id: 't0000000-0000-0000-0000-000000000001',
+        name,
+        captain_name: captain,
+        captain_phone: phone,
+        registration_fee_paid: fee
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(`⚽ ¡Equipo ${name} inscrito exitosamente!`, 'success');
+      closeRegisterTeamModal();
+      loadTournamentsDashboard();
+    } else {
+      showToast(data.error || 'Error al registrar equipo.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de red al inscribir equipo.', 'error');
+  }
+}
+
+// ============================================================
+// CHECKOUT UNIFICADO (CANCHERO / POS CAFETERÍA + 50% SALDO)
+// ============================================================
+
+let currentUnifiedTotals = { courtPending: 65000, barPending: 20000, grandTotal: 85000 };
+
+async function loadActiveReservationsForStaff() {
+  const courtSelect = document.getElementById('posTargetCourtSelect');
+  const checkoutSelect = document.getElementById('checkoutReservationSelect');
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations?date=${state.selectedDate}&venue_id=${state.currentVenueId}`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.reservations) {
+      const activeList = data.reservations.filter(r => r.status === 'confirmed' || r.status === 'in_progress');
+      
+      const options = activeList.length > 0
+        ? activeList.map(r => {
+            const f = state.fields.find(field => field.id === r.field_id);
+            const balance = Number(r.remaining_balance || (r.total_amount - (r.deposit_paid || 0)));
+            return `<option value="${r.id}" data-pending="${balance}">${f ? f.name : 'Cancha'} — ${r.client_name} (${r.start_time}) | Saldo: $${balance.toLocaleString('es-CO')}</option>`;
+          }).join('')
+        : `<option value="res-demo-001" data-pending="65000">Cancha 1: La Bernabéu — Mateo Jugador (19:00 - 20:00) | Saldo $65.000</option>`;
+
+      if (courtSelect) {
+        courtSelect.innerHTML = `<option value="">Seleccionar Cancha / Reserva Activa...</option>` + options;
+      }
+      if (checkoutSelect) {
+        checkoutSelect.innerHTML = options;
+      }
+    }
+  } catch (err) {
+    console.error('Error cargando reservas para staff:', err);
+  }
+}
+
+function openUnifiedCheckoutModal(resId = null) {
+  loadActiveReservationsForStaff();
+  const modal = document.getElementById('modalUnifiedCheckout');
+  if (modal) modal.classList.remove('hidden');
+  if (resId) {
+    const sel = document.getElementById('checkoutReservationSelect');
+    if (sel) sel.value = resId;
+  }
+  onCheckoutReservationSelected();
+  if (window.feather) feather.replace();
+}
+
+function closeUnifiedCheckoutModal() {
+  const modal = document.getElementById('modalUnifiedCheckout');
+  if (modal) modal.classList.add('hidden');
+}
+
+function onCheckoutReservationSelected() {
+  const sel = document.getElementById('checkoutReservationSelect');
+  const selectedOpt = sel?.options[sel.selectedIndex];
+  const pendingCourt = selectedOpt ? Number(selectedOpt.dataset.pending || 65000) : 65000;
+
+  // Consumo actual en el carrito POS si hay algo abierto
+  const posCartTotal = state.posCart.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+  const barPending = posCartTotal > 0 ? posCartTotal : 20000; // Demo fallback $20.000 si cart vacío
+
+  const grandTotal = pendingCourt + barPending;
+  currentUnifiedTotals = { courtPending: pendingCourt, barPending, grandTotal };
+
+  const courtLabel = document.getElementById('checkoutCourtPendingLabel');
+  const barLabel = document.getElementById('checkoutBarPendingLabel');
+  const totalLabel = document.getElementById('checkoutGrandTotalLabel');
+
+  if (courtLabel) courtLabel.innerText = `$${pendingCourt.toLocaleString('es-CO')}`;
+  if (barLabel) barLabel.innerText = `$${barPending.toLocaleString('es-CO')}`;
+  if (totalLabel) totalLabel.innerText = `$${grandTotal.toLocaleString('es-CO')}`;
+
+  // Sugerir división 50/50 o monto total en efectivo por defecto
+  const cashInput = document.getElementById('checkoutCashAmount');
+  const elecInput = document.getElementById('checkoutElectronicAmount');
+  if (cashInput && elecInput) {
+    const half = Math.round(grandTotal / 2);
+    cashInput.value = half;
+    elecInput.value = grandTotal - half;
+  }
+  recalcUnifiedPayment();
+}
+
+function recalcUnifiedPayment() {
+  const cash = Number(document.getElementById('checkoutCashAmount')?.value || 0);
+  const electronic = Number(document.getElementById('checkoutElectronicAmount')?.value || 0);
+  const totalPaid = cash + electronic;
+  const target = currentUnifiedTotals.grandTotal;
+
+  const badge = document.getElementById('checkoutPaymentMatchBadge');
+  const btn = document.getElementById('btnSubmitUnifiedCheckout');
+
+  if (totalPaid === target) {
+    if (badge) {
+      badge.className = 'text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+      badge.innerText = `✓ Cuadre Exacto ($${totalPaid.toLocaleString('es-CO')})`;
+    }
+    if (btn) btn.disabled = false;
+  } else if (totalPaid > target) {
+    const change = totalPaid - target;
+    if (badge) {
+      badge.className = 'text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400';
+      badge.innerText = `Cambio / Vueltas: $${change.toLocaleString('es-CO')}`;
+    }
+    if (btn) btn.disabled = false;
+  } else {
+    const diff = target - totalPaid;
+    if (badge) {
+      badge.className = 'text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500/20 text-red-500';
+      badge.innerText = `Faltan: $${diff.toLocaleString('es-CO')}`;
+    }
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleUnifiedCheckoutSubmit(e) {
+  e.preventDefault();
+  const checkEquipment = document.getElementById('checkEquipmentReturned')?.checked;
+  if (!checkEquipment) {
+    showToast('⚠️ Obligatorio: Debes verificar la devolución física de petos y balones antes de cerrar la cuenta.', 'warning');
+    return;
+  }
+
+  const reservationId = document.getElementById('checkoutReservationSelect')?.value || 'res-demo-001';
+  const cashAmount = Number(document.getElementById('checkoutCashAmount')?.value || 0);
+  const electronicAmount = Number(document.getElementById('checkoutElectronicAmount')?.value || 0);
+
+  // Formar items si los hay en carrito
+  const items = state.posCart.map(it => ({ product_id: it.id, quantity: it.quantity }));
+
+  try {
+    const res = await fetch(`${API_BASE}/pos/checkout-unified`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        reservation_id: reservationId,
+        items: items,
+        equipment_returned: true,
+        cash_amount: cashAmount,
+        electronic_amount: electronicAmount,
+        electronic_method: 'Nequi / Daviplata'
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('🎉 ¡Liquidación unificada exitosa! Saldo cancelado, implementos recibidos y caja cuadrada.', 'success');
+      clearPosCart();
+      closeUnifiedCheckoutModal();
+      loadActiveReservationsForStaff();
+      loadPosProducts();
+    } else {
+      showToast(data.error || 'Error al liquidar turno.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de comunicación con el servidor.', 'error');
+  }
+}
+
+// Helper: llenar selects de canchas en modales
+function populateModalFieldSelects() {
+  const fields = state.fields && state.fields.length > 0 ? state.fields : [];
+  const options = fields.map(f => `<option value="${f.id}">${f.name} (${f.sport_type?.toUpperCase()})</option>`).join('');
+
+  const subSelect = document.getElementById('subFieldSelect');
+  const blockSelect = document.getElementById('blockFieldSelect');
+  const matchSelect = document.getElementById('matchFieldSelect');
+
+  if (subSelect && subSelect.options.length === 0) subSelect.innerHTML = options;
+  if (blockSelect && blockSelect.options.length === 0) blockSelect.innerHTML = options;
+  if (matchSelect && matchSelect.options.length === 0) matchSelect.innerHTML = options;
 }

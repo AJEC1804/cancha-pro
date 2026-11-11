@@ -303,3 +303,95 @@ VALUES
 ('tt000000-0000-0000-0000-000000000003', 't0000000-0000-0000-0000-000000000001', 'Cartagena United', 'Wilmar Barrios', '3007778899', 3, 3, 1, 0, 2, 7, 9, -2),
 ('tt000000-0000-0000-0000-000000000004', 't0000000-0000-0000-0000-000000000001', 'Totumazo Stars', 'Teófilo Gutiérrez', '3009990011', 0, 3, 0, 0, 3, 3, 15, -12)
 ON CONFLICT (id) DO NOTHING;
+
+-- 13. PILARES OPERATIVOS AVANZADOS: SUSCRIPCIONES, BLOQUEOS LLUVIA Y PARTIDOS DE TORNEO
+
+-- Columnas de fin de semana en Canchas
+ALTER TABLE fields ADD COLUMN IF NOT EXISTS weekend_price_per_hour NUMERIC(12,2) DEFAULT 130000.00;
+ALTER TABLE fields ADD COLUMN IF NOT EXISTS weekend_peak_price_per_hour NUMERIC(12,2) DEFAULT 160000.00;
+
+-- Suscripciones Fijas Semanales (40% - 60% Ingresos de la Sede)
+CREATE TABLE IF NOT EXISTS recurring_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+    field_id UUID NOT NULL REFERENCES fields(id) ON DELETE CASCADE,
+    client_name VARCHAR(150) NOT NULL,
+    client_phone VARCHAR(30) NOT NULL,
+    client_email VARCHAR(150),
+    day_of_week INT NOT NULL, -- 0 (Domingo) a 6 (Sábado)
+    start_time TIME NOT NULL,
+    duration_hours INT NOT NULL DEFAULT 1,
+    total_weeks INT NOT NULL DEFAULT 4,
+    weeks_remaining INT NOT NULL DEFAULT 4,
+    price_per_match NUMERIC(12,2) NOT NULL,
+    deposit_paid NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(30) NOT NULL DEFAULT 'active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bloqueos Operativos y Protocolo por Lluvia
+CREATE TABLE IF NOT EXISTS operational_blocks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+    field_id UUID NOT NULL REFERENCES fields(id) ON DELETE CASCADE,
+    block_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bonos Digitales de Reprogramación por Clima (Cero Pérdidas)
+CREATE TABLE IF NOT EXISTS reprogramming_vouchers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    original_reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
+    client_name VARCHAR(150) NOT NULL,
+    client_phone VARCHAR(30) NOT NULL,
+    amount_credit NUMERIC(12,2) NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'available', -- 'available', 'redeemed', 'expired'
+    expires_at TIMESTAMPTZ NOT NULL,
+    redeemed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Partidos de Torneos Agendados en la Parrilla
+CREATE TABLE IF NOT EXISTS tournament_matches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+    field_id UUID NOT NULL REFERENCES fields(id) ON DELETE CASCADE,
+    reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
+    home_team_id UUID REFERENCES tournament_teams(id) ON DELETE SET NULL,
+    away_team_id UUID REFERENCES tournament_teams(id) ON DELETE SET NULL,
+    home_team_name VARCHAR(150) NOT NULL,
+    away_team_name VARCHAR(150) NOT NULL,
+    match_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'scheduled', -- 'scheduled', 'completed', 'cancelled'
+    home_score INT DEFAULT 0,
+    away_score INT DEFAULT 0,
+    yellow_cards INT DEFAULT 0,
+    red_cards INT DEFAULT 0,
+    referee_fee NUMERIC(12,2) NOT NULL DEFAULT 50000.00,
+    referee_paid BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- RLS para las nuevas tablas
+ALTER TABLE recurring_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE operational_blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reprogramming_vouchers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tournament_matches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public Read Subscriptions" ON recurring_subscriptions FOR SELECT USING (true);
+CREATE POLICY "Public Write Subscriptions" ON recurring_subscriptions FOR ALL USING (true);
+CREATE POLICY "Public Read Blocks" ON operational_blocks FOR SELECT USING (true);
+CREATE POLICY "Public Write Blocks" ON operational_blocks FOR ALL USING (true);
+CREATE POLICY "Public Read Vouchers" ON reprogramming_vouchers FOR SELECT USING (true);
+CREATE POLICY "Public Write Vouchers" ON reprogramming_vouchers FOR ALL USING (true);
+CREATE POLICY "Public Read Matches" ON tournament_matches FOR SELECT USING (true);
+CREATE POLICY "Public Write Matches" ON tournament_matches FOR ALL USING (true);

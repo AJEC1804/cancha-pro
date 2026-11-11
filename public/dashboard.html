@@ -253,6 +253,90 @@
 
       </div>
 
+      <!-- SECCIÓN 2: SUSCRIPCIONES Y CLIENTES FIJOS SEMANALES (40% - 60% INGRESOS) -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">Base Recurrente Segura</span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base">Reservas Fijas Semanales (Suscripciones)</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bloquea turnos fijos mensuales para grupos habituales asegurando el 50% de ocupación base de la sede.</p>
+          </div>
+          <button onclick="openNewSubscriptionModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-purple-600/20">
+            <i data-feather="calendar" class="w-4 h-4"></i>
+            <span>+ Nueva Suscripción Fija</span>
+          </button>
+        </div>
+
+        <div id="subscriptionsListContainer" class="overflow-x-auto">
+          <!-- Renderizado de suscripciones activas -->
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: BLOQUEOS OPERATIVOS & PROTOCOLO DE LLUVIA (BONOS DE REPROGRAMACIÓN) -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold">Mantenimiento & Fuerza Mayor</span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base">Bloqueos Operativos y Protocolo por Lluvia</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bloquea canchas por cepillado, tormentas eléctricas o escuelas. Emite bonos de reprogramación automáticos a favor del cliente sin perder el abono.</p>
+          </div>
+          <button onclick="openOperationalBlockModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-amber-500/20">
+            <i data-feather="alert-triangle" class="w-4 h-4"></i>
+            <span>+ Bloquear por Lluvia / Mantenimiento</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Bloqueos Activos -->
+          <div class="space-y-3">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bloqueos Registrados en Parrilla</h5>
+            <div id="operationalBlocksList" class="space-y-2 text-xs"></div>
+          </div>
+          <!-- Bonos Emitidos -->
+          <div class="space-y-3">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bonos de Reprogramación Emitidos (Lluvia)</h5>
+            <div id="reprogrammingVouchersList" class="space-y-2 text-xs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: GESTIÓN DE TORNEOS VINCULADOS A LA PARRILLA -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-bold">Torneos & Fixtures</span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base">Campeonatos con Programación en Parrilla</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Inscripción de equipos, control de arbitraje ($50.000 COP), marcadores, sanciones y reserva de franjas horarias.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="openRegisterTeamModal()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition">
+              + Inscribir Equipo
+            </button>
+            <button onclick="openScheduleTournamentMatchModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2 rounded-xl transition shadow-md shadow-blue-600/20 flex items-center space-x-1.5">
+              <i data-feather="calendar" class="w-4 h-4"></i>
+              <span>Agendar Partido en Parrilla</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-7 space-y-3">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Tabla de Posiciones en Tiempo Real</h5>
+            <div id="tournamentStandingsTable" class="overflow-x-auto text-xs"></div>
+          </div>
+          <div class="lg:col-span-5 space-y-3">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Próximos Partidos Agendados</h5>
+            <div id="tournamentMatchesList" class="space-y-2 text-xs max-h-72 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Gestión de Empleados / Cancheros -->
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -331,7 +415,14 @@
               Cargar a Cancha
             </button>
             <button onclick="checkoutPosOrder('cash')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs transition shadow-md shadow-emerald-500/20">
-              Cobrar Efectivo / Nequi
+              Cobrar Cafetería
+            </button>
+          </div>
+
+          <div class="pt-1">
+            <button onclick="openUnifiedCheckoutModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-blue-600/20 flex items-center justify-center space-x-2">
+              <i data-feather="check-circle" class="w-4 h-4"></i>
+              <span>Liquidación Unificada (50% Cancha + Bar + Petos)</span>
             </button>
           </div>
         </div>
@@ -580,6 +671,359 @@
           <span>WhatsApp Admin</span>
         </a>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Nueva Suscripción Fija Semanal -->
+  <div id="modalNewSubscription" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl p-6 space-y-4 shadow-2xl transition max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full">Recurrencia Garantizada</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base mt-1">Nueva Suscripción Fija Semanal</h3>
+        </div>
+        <button onclick="closeNewSubscriptionModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Bloquea automáticamente el turno semanal durante el periodo contratado para clientes habituales (40% - 60% de los ingresos de la sede).
+      </p>
+
+      <form onsubmit="handleCreateSubscription(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Cancha Asignada</label>
+          <select id="subFieldSelect" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+            <!-- Cargado dinámicamente -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre del Grupo / Cliente</label>
+            <input type="text" id="subClientName" required placeholder="Ej. Los Galácticos FC (Carlos)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Teléfono / WhatsApp</label>
+            <input type="tel" id="subClientPhone" required placeholder="300 123 4567" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Día Fijo</label>
+            <select id="subDayOfWeek" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+              <option value="1">Lunes</option>
+              <option value="2" selected>Martes</option>
+              <option value="3">Miércoles</option>
+              <option value="4">Jueves</option>
+              <option value="5">Viernes</option>
+              <option value="6">Sábado</option>
+              <option value="0">Domingo</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Hora Inicio</label>
+            <input type="time" id="subStartTime" value="20:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Duración</label>
+            <select id="subDuration" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+              <option value="1">1 Hora</option>
+              <option value="2">2 Horas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Plazo Contratado</label>
+            <select id="subTotalWeeks" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+              <option value="4">4 Semanas (1 Mes)</option>
+              <option value="8">8 Semanas (2 Meses)</option>
+              <option value="12">12 Semanas (Trimestre)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Tarifa x Partido (COP)</label>
+            <input type="number" id="subPricePerMatch" value="130000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Anticipo Cobrado (COP)</label>
+            <input type="number" id="subDepositPaid" value="130000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+
+        <div class="flex space-x-2 pt-3">
+          <button type="button" onclick="closeNewSubscriptionModal()" class="w-1/3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">
+            Cancelar
+          </button>
+          <button type="submit" class="w-2/3 bg-purple-600 hover:bg-purple-500 text-white font-black py-2.5 rounded-xl transition shadow-md shadow-purple-600/20">
+            Bloquear Turnos Fijos en Parrilla
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Bloqueo Operativo & Protocolo Lluvia -->
+  <div id="modalOperationalBlock" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl p-6 space-y-4 shadow-2xl transition max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full">Contingencia Operativa</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base mt-1">Registrar Bloqueo / Protocolo de Lluvia</h3>
+        </div>
+        <button onclick="closeOperationalBlockModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Bloquea temporalmente franjas en la parrilla por clima adverso o mantenimiento. El sistema cancelará reservas afectadas y generará un <strong>Bono Digital de Reprogramación</strong> con código canjeable.
+      </p>
+
+      <form onsubmit="handleCreateOperationalBlock(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Cancha a Bloquear</label>
+          <select id="blockFieldSelect" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+            <!-- Cargado dinámicamente -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Fecha del Bloqueo</label>
+            <input type="date" id="blockDate" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Hora Inicio</label>
+            <input type="time" id="blockStartTime" value="18:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Hora Fin</label>
+            <input type="time" id="blockEndTime" value="21:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Causa o Razón del Bloqueo</label>
+          <select id="blockReason" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+            <option value="Lluvia Torrencial / Tormenta Eléctrica">🌧️ Tormenta Eléctrica / Lluvia Inundación</option>
+            <option value="Mantenimiento de Grama Sintética (Cepillado y Caucho)">🛠️ Mantenimiento de Grama (Caucho y Cepillado)</option>
+            <option value="Clase Escuela Deportiva Infantil">⚽ Escuela Deportiva Infantil / Entrenamiento</option>
+            <option value="Falla Técnica Iluminación LED">⚡ Falla Técnica de Iluminación</option>
+            <option value="Evento Privado Sede">🎉 Evento Privado</option>
+          </select>
+        </div>
+
+        <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-start space-x-2.5">
+          <input type="checkbox" id="blockEmitVoucher" checked class="w-4 h-4 text-amber-500 rounded mt-0.5">
+          <label for="blockEmitVoucher" class="text-xs text-amber-800 dark:text-amber-300 font-bold leading-snug cursor-pointer">
+            Emitir automáticamente Bono de Reprogramación Digital para clientes con reserva pagada en ese rango horario (cero pérdidas financieras).
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Notas u Observaciones</label>
+          <input type="text" id="blockNotes" placeholder="Ej. Tormenta con relámpagos a las 7:00 PM" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+
+        <div class="flex space-x-2 pt-3">
+          <button type="button" onclick="closeOperationalBlockModal()" class="w-1/3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">
+            Cancelar
+          </button>
+          <button type="submit" class="w-2/3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-amber-500/20">
+            Aplicar Bloqueo y Notificar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Agendar Partido de Torneo -->
+  <div id="modalScheduleMatch" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl p-6 space-y-4 shadow-2xl transition max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full">Fixtures & Arbitraje</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-base mt-1">Agendar Partido de Torneo en Parrilla</h3>
+        </div>
+        <button onclick="closeScheduleTournamentMatchModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Reserva la franja en la parrilla oficial y registra el arancel de arbitraje ($50.000 COP) para el cuerpo colegiado.
+      </p>
+
+      <form onsubmit="handleScheduleMatch(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Torneo</label>
+          <select id="matchTournamentSelect" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+            <option value="t0000000-0000-0000-0000-000000000001">Copa Libertadores CanchaPro 2026</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Equipo Local</label>
+            <input type="text" id="matchHomeTeam" required placeholder="Ej. Real Cartagena Turf" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Equipo Visitante</label>
+            <input type="text" id="matchAwayTeam" required placeholder="Ej. Bocagrande FC" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Cancha Asignada</label>
+          <select id="matchFieldSelect" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+            <!-- Cargado dinámicamente -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Fecha</label>
+            <input type="date" id="matchDate" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Hora Inicio</label>
+            <input type="time" id="matchStartTime" value="20:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Hora Fin</label>
+            <input type="time" id="matchEndTime" value="21:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Costo de Arbitraje Oficial (COP)</label>
+          <input type="number" id="matchRefereeFee" value="50000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+
+        <div class="flex space-x-2 pt-3">
+          <button type="button" onclick="closeScheduleTournamentMatchModal()" class="w-1/3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">
+            Cancelar
+          </button>
+          <button type="submit" class="w-2/3 bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 rounded-xl transition shadow-md shadow-blue-600/20">
+            Fijar Partido en Parrilla
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Inscribir Equipo a Torneo -->
+  <div id="modalRegisterTeam" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl transition">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-slate-900 dark:text-white text-sm">Inscribir Equipo en Torneo</h3>
+        <button onclick="closeRegisterTeamModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleRegisterTeam(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre del Equipo</label>
+          <input type="text" id="regTeamName" required placeholder="Ej. Los Halcones FC" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre del Capitán</label>
+          <input type="text" id="regTeamCaptain" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Teléfono Celular</label>
+          <input type="tel" id="regTeamPhone" required placeholder="300 987 6543" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Valor de Inscripción Pagada (COP)</label>
+          <input type="number" id="regTeamFee" value="200000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+          Registrar e Inscribir
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Liquidación Unificada Final (POS + 50% Saldo Cancha + Devolución Implementos + Pago Mixto) -->
+  <div id="modalUnifiedCheckout" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-xl rounded-3xl p-6 space-y-4 shadow-2xl transition max-h-[95vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🧾</span>
+          <div>
+            <h3 class="font-black text-slate-900 dark:text-white text-base">Checkout Unificado Canchero</h3>
+            <p class="text-[11px] text-slate-500">Saldo restante cancha (50%) + Cafetería + Check implementos + Pago mixto</p>
+          </div>
+        </div>
+        <button onclick="closeUnifiedCheckoutModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="handleUnifiedCheckoutSubmit(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Seleccionar Turno / Reserva Activa en Cancha:</label>
+          <select id="checkoutReservationSelect" onchange="onCheckoutReservationSelected()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold cursor-pointer">
+            <option value="res-demo-001">Cancha 1: La Bernabéu — Mateo Jugador (19:00 - 20:00) | Saldo $65.000</option>
+          </select>
+        </div>
+
+        <!-- Tarjetas de Resumen Financiero -->
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">50% Saldo Cancha</span>
+            <span id="checkoutCourtPendingLabel" class="text-base font-black text-slate-900 dark:text-white mt-0.5 block">$65.000</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl text-center">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Consumos POS / Bar</span>
+            <span id="checkoutBarPendingLabel" class="text-base font-black text-amber-500 mt-0.5 block">$20.000</span>
+          </div>
+          <div class="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-2xl text-center">
+            <span class="text-emerald-600 dark:text-emerald-400 block text-[10px] uppercase font-black">Total a Liquidar</span>
+            <span id="checkoutGrandTotalLabel" class="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">$85.000</span>
+          </div>
+        </div>
+
+        <!-- PROTOCOLO OBLIGATORIO: DEVOLUCIÓN DE IMPLEMENTOS -->
+        <div class="bg-amber-500/10 border-2 border-amber-500/40 p-4 rounded-2xl space-y-2">
+          <div class="flex items-center space-x-2 text-amber-700 dark:text-amber-400 font-black text-xs">
+            <i data-feather="shield" class="w-4 h-4"></i>
+            <span>Control Anti-Pérdidas de Material Deportivo</span>
+          </div>
+          <div class="flex items-start space-x-2.5 pt-1">
+            <input type="checkbox" id="checkEquipmentReturned" required class="w-4 h-4 text-emerald-500 rounded mt-0.5 cursor-pointer">
+            <label for="checkEquipmentReturned" class="text-xs text-slate-700 dark:text-slate-300 font-bold leading-snug cursor-pointer">
+              ✓ Devolución verificada de implementos deportivos: Se confirma la entrega completa de petos y balones prestados a la cancha antes de cerrar la cuenta.
+            </label>
+          </div>
+        </div>
+
+        <!-- PAGO MIXTO (EFECTIVO + DIGITAL NEQUI/DAVIPLATA) -->
+        <div class="space-y-2 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div class="flex justify-between items-center">
+            <label class="block text-slate-700 dark:text-slate-300 font-black">División de Pago Mixto (Efectivo vs Electrónico):</label>
+            <span id="checkoutPaymentMatchBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">Cuadre exacto</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-slate-500 text-[10px] font-bold">Monto Efectivo (Cash)</label>
+              <input type="number" id="checkoutCashAmount" value="50000" oninput="recalcUnifiedPayment()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 text-[10px] font-bold">Monto Nequi / PSE / QR</label>
+              <input type="number" id="checkoutElectronicAmount" value="35000" oninput="recalcUnifiedPayment()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-400">Permite registrar que un jugador pagó parte en billetes y otro transfirió por Nequi.</p>
+        </div>
+
+        <div class="flex space-x-2 pt-2">
+          <button type="button" onclick="closeUnifiedCheckoutModal()" class="w-1/3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">
+            Cancelar
+          </button>
+          <button type="submit" id="btnSubmitUnifiedCheckout" class="w-2/3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-1.5">
+            <i data-feather="check-circle" class="w-4 h-4"></i>
+            <span>Facturar y Liberar Cancha</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

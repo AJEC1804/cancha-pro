@@ -109,10 +109,10 @@ const inMemoryStore = {
       surface_type: 'sintetica_monofilamento',
       default_price_per_hour: 110000,
       peak_price_per_hour: 130000,
+      weekend_price_per_hour: 130000,
+      weekend_peak_price_per_hour: 160000,
       open_time: '06:00',
       close_time: '23:00',
-      iot_relay_channel: 1,
-      iot_device_id: 'ESP32_RELAY_SEDELABERNABEU_01',
       is_active: true,
       description: 'Grama sintética monofilamento de 50mm con iluminación LED de alta potencia para partidos nocturnos.'
     },
@@ -124,10 +124,10 @@ const inMemoryStore = {
       surface_type: 'sintetica_monofilamento',
       default_price_per_hour: 160000,
       peak_price_per_hour: 190000,
+      weekend_price_per_hour: 180000,
+      weekend_peak_price_per_hour: 220000,
       open_time: '06:00',
       close_time: '23:00',
-      iot_relay_channel: 2,
-      iot_device_id: 'ESP32_RELAY_SEDELABERNABEU_01',
       is_active: true,
       description: 'Ideal para torneos de empresas y partidos 7v7, con gradería cubierta.'
     },
@@ -139,10 +139,10 @@ const inMemoryStore = {
       surface_type: 'vidrio_padel',
       default_price_per_hour: 90000,
       peak_price_per_hour: 120000,
+      weekend_price_per_hour: 110000,
+      weekend_peak_price_per_hour: 140000,
       open_time: '06:00',
       close_time: '23:00',
-      iot_relay_channel: 3,
-      iot_device_id: 'ESP32_RELAY_SEDELABERNABEU_01',
       is_active: true,
       description: 'Pista de pádel de cristal panorámica con iluminación antideslumbrante.'
     }
@@ -281,7 +281,90 @@ const inMemoryStore = {
     { id: 'tt-4', tournament_id: 't-001', team_name: 'Totumazo Stars', captain_name: 'Teófilo Gutiérrez', captain_phone: '3009990011', points: 0, matches_played: 3, matches_won: 0, matches_drawn: 0, matches_lost: 3, goals_for: 3, goals_against: 15, goal_difference: -12 }
   ],
 
-  iot_relay_logs: []
+  // 1. Suscripciones y Clientes Fijos Semanales
+  recurring_subscriptions: [
+    {
+      id: 'sub-001',
+      venue_id: 'a0000000-0000-0000-0000-000000000001',
+      field_id: 'f0000000-0000-0000-0000-000000000001',
+      field_name: 'Cancha 1: La Bernabéu Principal (Fútbol 5)',
+      client_name: 'Club Amigos de San Fernando',
+      client_phone: '3007778899',
+      client_email: 'amigos.sanfernando@gmail.com',
+      day_of_week: 2, // Martes
+      day_name: 'Martes',
+      start_time: '20:00',
+      end_time: '21:00',
+      weeks_count: 4,
+      total_amount: 520000,
+      monthly_discount_pct: 10,
+      amount_paid: 468000,
+      payment_status: 'paid',
+      status: 'active',
+      start_date: '2026-11-01',
+      end_date: '2026-11-30',
+      created_at: new Date().toISOString()
+    }
+  ],
+
+  // 2. Bloqueos Operativos (Mantenimiento, Lluvia, Escuelas)
+  operational_blocks: [
+    {
+      id: 'block-001',
+      venue_id: 'a0000000-0000-0000-0000-000000000001',
+      field_id: 'f0000000-0000-0000-0000-000000000002',
+      field_name: 'Cancha 2: Maracaná Express (Fútbol 7)',
+      date: new Date().toISOString().split('T')[0],
+      start_time: '14:00',
+      end_time: '16:00',
+      block_type: 'maintenance', // 'maintenance', 'rain_storm', 'academy'
+      reason: 'Cepillado y descompactación de caucho sintético',
+      notes: 'Mantenimiento preventivo quincenal programado',
+      created_at: new Date().toISOString()
+    }
+  ],
+
+  // 3. Bonos de Reprogramación por Lluvia
+  reprogramming_vouchers: [
+    {
+      id: 'vouch-001',
+      code: 'BONO-LLUVIA-8492',
+      venue_id: 'a0000000-0000-0000-0000-000000000001',
+      client_name: 'David Ospina',
+      client_phone: '3157778899',
+      amount: 65000,
+      reason: 'Cancelación por tormenta eléctrica en Cancha 1',
+      is_redeemed: false,
+      redeemed_at: null,
+      created_at: new Date().toISOString(),
+      expires_at: '2026-12-31'
+    }
+  ],
+
+  // 4. Partidos de Torneos vinculados a la Parrilla Horaria
+  tournament_matches: [
+    {
+      id: 'm-001',
+      tournament_id: 't-001',
+      round_number: 1,
+      home_team_id: 'tt-1',
+      home_team_name: 'Los Galácticos FC',
+      away_team_id: 'tt-2',
+      away_team_name: 'San Fernando City',
+      field_id: 'f0000000-0000-0000-0000-000000000001',
+      field_name: 'Cancha 1: La Bernabéu Principal (Fútbol 5)',
+      scheduled_date: new Date().toISOString().split('T')[0],
+      scheduled_time: '21:00 - 22:00',
+      home_score: 4,
+      away_score: 2,
+      arbitration_fee: 50000,
+      arbitration_paid: true,
+      referee_name: 'Wilmar Roldán Jr.',
+      yellow_cards: 3,
+      red_cards: 0,
+      is_finished: true
+    }
+  ]
 };
 
 // Objeto de base de datos con métodos normalizados
@@ -550,6 +633,69 @@ const db = {
   // Torneos
   findTournaments: async (venueId) => inMemoryStore.tournaments.filter(t => t.venue_id === venueId && t.is_active),
   findTournamentTeams: async (tourId) => inMemoryStore.tournament_teams.filter(tt => tt.tournament_id === tourId),
+  findTournamentMatches: async (tourId) => inMemoryStore.tournament_matches.filter(m => m.tournament_id === tourId),
+  createTournamentMatch: async (data) => {
+    const match = { id: db.generateId(), is_finished: false, created_at: new Date().toISOString(), ...data };
+    inMemoryStore.tournament_matches.push(match);
+    return match;
+  },
+  updateTournamentMatch: async (id, data) => {
+    const idx = inMemoryStore.tournament_matches.findIndex(m => m.id === id);
+    if (idx === -1) return null;
+    inMemoryStore.tournament_matches[idx] = { ...inMemoryStore.tournament_matches[idx], ...data };
+    return inMemoryStore.tournament_matches[idx];
+  },
+
+  // 1. Suscripciones Semanales (Clientes Fijos)
+  findSubscriptions: async (venueId) => inMemoryStore.recurring_subscriptions.filter(s => !venueId || s.venue_id === venueId),
+  createSubscription: async (data) => {
+    const sub = { id: db.generateId(), status: 'active', created_at: new Date().toISOString(), ...data };
+    inMemoryStore.recurring_subscriptions.push(sub);
+    return sub;
+  },
+
+  // 2. Bloqueos Operativos (Mantenimiento, Lluvia, Escuelas)
+  findOperationalBlocks: async (venueId, date) => {
+    return inMemoryStore.operational_blocks.filter(b => {
+      if (venueId && b.venue_id !== venueId) return false;
+      if (date && b.date !== date) return false;
+      return true;
+    });
+  },
+  createOperationalBlock: async (data) => {
+    const block = { id: db.generateId(), created_at: new Date().toISOString(), ...data };
+    inMemoryStore.operational_blocks.push(block);
+    return block;
+  },
+  deleteOperationalBlock: async (id) => {
+    const idx = inMemoryStore.operational_blocks.findIndex(b => b.id === id);
+    if (idx === -1) return false;
+    inMemoryStore.operational_blocks.splice(idx, 1);
+    return true;
+  },
+
+  // 3. Bonos de Reprogramación por Lluvia
+  findVouchers: async (venueId) => inMemoryStore.reprogramming_vouchers.filter(v => !venueId || v.venue_id === venueId),
+  createVoucher: async (data) => {
+    const voucher = {
+      id: db.generateId(),
+      code: `BONO-LLUVIA-${Math.floor(1000 + Math.random() * 9000)}`,
+      is_redeemed: false,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().split('T')[0], // 60 días
+      ...data
+    };
+    inMemoryStore.reprogramming_vouchers.push(voucher);
+    return voucher;
+  },
+  findVoucherByCode: async (code) => inMemoryStore.reprogramming_vouchers.find(v => v.code === code && !v.is_redeemed),
+  redeemVoucher: async (code) => {
+    const v = inMemoryStore.reprogramming_vouchers.find(v => v.code === code);
+    if (!v || v.is_redeemed) return null;
+    v.is_redeemed = true;
+    v.redeemed_at = new Date().toISOString();
+    return v;
+  },
 
   // IoT Relays
   logIotAction: async (data) => {

@@ -13,6 +13,9 @@ router.post('/products', authenticate, requireRoles('superadmin', 'tenant_admin'
 // Órdenes de Cafetería ("Cargar a Cancha X")
 router.post('/orders', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.createOrder);
 
+// Checkout Unificado (50% restante de Cancha + Cafetería + Check de Implementos + Pagos Mixtos)
+router.post('/checkout-unified', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.checkoutUnifiedTab);
+
 // Arqueo de caja
 router.get('/shift', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.getActiveShift);
 router.post('/shift/close', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.closeShift);

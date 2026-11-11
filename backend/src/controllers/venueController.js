@@ -193,6 +193,8 @@ const createField = async (req, res, next) => {
       surface_type: surface_type || 'sintetica_monofilamento',
       default_price_per_hour: Number(default_price_per_hour),
       peak_price_per_hour: Number(peak_price_per_hour || default_price_per_hour),
+      weekend_price_per_hour: Number(req.body.weekend_price_per_hour || 130000),
+      weekend_peak_price_per_hour: Number(req.body.weekend_peak_price_per_hour || 160000),
       open_time: open_time || '06:00',
       close_time: close_time || '23:00',
       is_active: true,

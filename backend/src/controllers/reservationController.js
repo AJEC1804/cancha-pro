@@ -338,10 +338,369 @@ const listReservations = async (req, res, next) => {
   }
 };
 
+/**
+ * PARRILLA MULTI-CANCHA CONSOLIDADA (MATRIZ COLUMNAS CANCHAS X FILAS HORAS)
+ * GET /api/reservations/multi-grid?venue_id=...&date=YYYY-MM-DD
+ */
+const getMultiGridAvailability = async (req, res, next) => {
+  try {
+    const { venue_id, date } = req.query;
+    const targetVenueId = venue_id || 'a0000000-0000-0000-0000-000000000001';
+    const targetDate = date || new Date().toISOString().split('T')[0];
+
+    const venue = await db.findVenueById(targetVenueId);
+    if (!venue) {
+      return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
+    }
+
+    await lockTimerService.cleanExpiredReservations();
+
+    const fields = await db.findFieldsByVenue(targetVenueId, true);
+    const dayReservations = await db.findReservations({
+      venue_id: targetVenueId,
+      booking_date: targetDate
+    });
+    const operationalBlocks = await db.findOperationalBlocks(targetVenueId, targetDate);
+
+    // Detección de Fin de Semana (Tarifas diferenciadas)
+    const bookingDateObj = new Date(targetDate + 'T00:00:00');
+    const dayOfWeek = bookingDateObj.getDay(); // 0=Dom, 6=Sáb
+    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+    const openHour = 6;
+    const closeHour = 23;
+    const matrix = [];
+
+    for (let h = openHour; h < closeHour; h++) {
+      const startTime = `${String(h).padStart(2, '0')}:00`;
+      const endTime = `${String(h + 1).padStart(2, '0')}:00`;
+      // En fin de semana, mañanas y noches son hora pico
+      const isPeak = isWeekend ? ((h >= 8 && h < 12) || h >= 17) : (h >= 17);
+
+      const row = {
+        time_slot: `${startTime} - ${endTime}`,
+        start_time: startTime,
+        end_time: endTime,
+        hour: h,
+        is_peak: isPeak,
+        courts: {}
+      };
+
+      for (const field of fields) {
+        if (!field.is_active) {
+          row.courts[field.id] = {
+            status: 'suspended',
+            field_name: field.name,
+            price: 0,
+            message: 'Cancha Suspendida'
+          };
+          continue;
+        }
+
+        const hourlyPrice = isWeekend
+          ? (isPeak ? (field.weekend_peak_price_per_hour || field.peak_price_per_hour) : (field.weekend_price_per_hour || field.default_price_per_hour))
+          : (isPeak ? field.peak_price_per_hour : field.default_price_per_hour);
+
+        // Bloqueo operativo (mantenimiento, lluvia, clases)
+        const opBlock = operationalBlocks.find(b => 
+          b.field_id === field.id && (startTime < b.end_time && endTime > b.start_time)
+        );
+
+        if (opBlock) {
+          row.courts[field.id] = {
+            status: 'operational_block',
+            field_name: field.name,
+            price: hourlyPrice,
+            block_type: opBlock.block_type,
+            reason: opBlock.reason
+          };
+          continue;
+        }
+
+        // Buscar reserva activa
+        const existingRes = dayReservations.find(r => 
+          r.field_id === field.id &&
+          !['cancelled', 'expired'].includes(r.status) &&
+          (startTime < r.end_time && endTime > r.start_time)
+        );
+
+        if (existingRes) {
+          if (existingRes.status === 'held') {
+            const secs = lockTimerService.getRemainingSeconds(existingRes.held_until);
+            if (secs > 0) {
+              row.courts[field.id] = {
+                status: 'held',
+                field_name: field.name,
+                price: hourlyPrice,
+                reservation_id: existingRes.id,
+                client_name: existingRes.client_name,
+                seconds_remaining: secs
+              };
+            } else {
+              row.courts[field.id] = { status: 'available', field_name: field.name, price: hourlyPrice };
+            }
+          } else {
+            row.courts[field.id] = {
+              status: existingRes.payment_mode === 'subscription_recurring' ? 'subscription' : (existingRes.payment_mode === 'tournament_match' ? 'tournament' : existingRes.status),
+              field_name: field.name,
+              price: hourlyPrice,
+              reservation_id: existingRes.id,
+              client_name: existingRes.client_name,
+              is_recurring: existingRes.payment_mode === 'subscription_recurring'
+            };
+          }
+        } else {
+          row.courts[field.id] = {
+            status: 'available',
+            field_name: field.name,
+            price: hourlyPrice
+          };
+        }
+      }
+
+      matrix.push(row);
+    }
+
+    res.json({
+      success: true,
+      venue: { id: venue.id, name: venue.name, city: venue.city },
+      date: targetDate,
+      is_weekend: isWeekend,
+      fields: fields.map(f => ({ id: f.id, name: f.name, sport_type: f.sport_type, is_active: f.is_active })),
+      matrix
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * CREAR RESERVA FIJA RECURRENTE (SUSCRIPCIÓN SEMANAL)
+ * POST /api/reservations/recurring
+ */
+const createRecurringSubscription = async (req, res, next) => {
+  try {
+    const {
+      venue_id, field_id, client_name, client_phone, client_email,
+      day_of_week, start_time, start_date, monthly_discount_pct
+    } = req.body;
+
+    let end_time = req.body.end_time;
+    if (!end_time && start_time) {
+      const dur = parseInt(req.body.duration_hours || 1, 10);
+      const [h, m] = start_time.split(':').map(Number);
+      end_time = `${String((h + dur) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    if (!field_id || day_of_week === undefined || !start_time || !end_time) {
+      return res.status(400).json({ success: false, error: 'Cancha, día y horario son requeridos.' });
+    }
+
+    const field = await db.findFieldById(field_id);
+    if (!field || !field.is_active) {
+      return res.status(400).json({ success: false, error: 'Cancha inválida o suspendida.' });
+    }
+
+    const numWeeks = parseInt(req.body.weeks_count || req.body.total_weeks || 4, 10);
+    const discount = parseInt(monthly_discount_pct || 10, 10);
+    const hourlyPrice = field.default_price_per_hour;
+    const baseTotal = hourlyPrice * numWeeks;
+    const finalAmount = Math.round(baseTotal * (1 - (discount / 100)));
+
+    const startDateObj = start_date ? new Date(start_date + 'T00:00:00') : new Date();
+    const createdReservations = [];
+
+    // Calcular las fechas exactas para cada semana
+    for (let w = 0; w < numWeeks; w++) {
+      const matchDate = new Date(startDateObj);
+      matchDate.setDate(matchDate.getDate() + (w * 7));
+      const dateStr = matchDate.toISOString().split('T')[0];
+
+      const resItem = await db.createReservation({
+        venue_id: venue_id || field.venue_id,
+        field_id: field.id,
+        field_name: field.name,
+        client_name,
+        client_phone,
+        client_email: client_email || 'suscripcion@canchapro.com',
+        booking_date: dateStr,
+        start_time,
+        end_time,
+        status: 'confirmed',
+        payment_status: 'paid',
+        payment_mode: 'subscription_recurring',
+        total_amount: Math.round(finalAmount / numWeeks),
+        deposit_required: Math.round(finalAmount / numWeeks),
+        deposit_paid: Math.round(finalAmount / numWeeks),
+        remaining_balance: 0,
+        held_until: null,
+        accepted_terms: true,
+        notes: `Suscripción Fija Semanal (${w + 1}/${numWeeks}) - ${client_name}`
+      });
+      createdReservations.push(resItem);
+    }
+
+    const daysNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const subscription = await db.createSubscription({
+      venue_id: venue_id || field.venue_id,
+      field_id: field.id,
+      field_name: field.name,
+      client_name,
+      client_phone,
+      client_email,
+      day_of_week: parseInt(day_of_week, 10),
+      day_name: daysNames[parseInt(day_of_week, 10)] || 'Día',
+      start_time,
+      end_time,
+      weeks_count: numWeeks,
+      total_amount: baseTotal,
+      monthly_discount_pct: discount,
+      amount_paid: finalAmount,
+      payment_status: 'paid',
+      start_date: startDateObj.toISOString().split('T')[0],
+      end_date: createdReservations[createdReservations.length - 1].booking_date,
+      reservations_count: createdReservations.length
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `¡Suscripción fija semanal de ${numWeeks} semanas activada y bloqueada en la parrilla!`,
+      subscription,
+      reservations: createdReservations
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const listSubscriptions = async (req, res, next) => {
+  try {
+    const venueId = req.query.venue_id;
+    const subs = await db.findSubscriptions(venueId);
+    res.json({ success: true, subscriptions: subs });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * BLOQUEO OPERATIVO Y PROTOCOLO DE LLUVIA (EMISIÓN DE BONO DE REPROGRAMACIÓN)
+ * POST /api/reservations/operational-blocks
+ */
+const createOperationalBlock = async (req, res, next) => {
+  try {
+    const { venue_id, field_id, start_time, end_time, reason, notes } = req.body;
+    const date = req.body.date || req.body.block_date;
+    const block_type = req.body.block_type || (reason?.toLowerCase().includes('lluvia') ? 'rain_storm' : 'maintenance');
+
+    if (!field_id || !date || !start_time || !end_time) {
+      return res.status(400).json({ success: false, error: 'Cancha, fecha y horario son obligatorios.' });
+    }
+
+    const field = await db.findFieldById(field_id);
+    if (!field) {
+      return res.status(404).json({ success: false, error: 'Cancha no encontrada.' });
+    }
+
+    // Comprobar si hay una reserva activa en esa franja
+    const affectedReservations = await db.findReservations({
+      field_id,
+      booking_date: date
+    });
+
+    const conflictRes = affectedReservations.find(r => 
+      !['cancelled', 'expired'].includes(r.status) &&
+      (start_time < r.end_time && end_time > r.start_time)
+    );
+
+    let issuedVoucher = null;
+    if (conflictRes) {
+      // Reprogramación por lluvia o causa mayor
+      conflictRes.status = 'cancelled_by_weather';
+      conflictRes.notes = (conflictRes.notes ? conflictRes.notes + ' | ' : '') + `Cancelada por: ${reason || block_type}`;
+      
+      // Emitir bono digital si ya había dinero abonado
+      const amountToRefund = conflictRes.deposit_paid || conflictRes.total_amount || 65000;
+      issuedVoucher = await db.createVoucher({
+        venue_id: venue_id || field.venue_id,
+        reservation_id: conflictRes.id,
+        client_name: conflictRes.client_name,
+        client_phone: conflictRes.client_phone,
+        amount: amountToRefund,
+        reason: `Reprogramación por ${block_type}: ${reason}`
+      });
+    }
+
+    const block = await db.createOperationalBlock({
+      venue_id: venue_id || field.venue_id,
+      field_id,
+      field_name: field.name,
+      date,
+      start_time,
+      end_time,
+      block_type, // 'maintenance', 'rain_storm', 'academy'
+      reason,
+      notes: notes || '',
+      issued_voucher: issuedVoucher ? issuedVoucher.code : null
+    });
+
+    res.status(201).json({
+      success: true,
+      message: issuedVoucher 
+        ? `Bloqueo aplicado. Se reprogramó la reserva de ${conflictRes.client_name} y se generó el Bono de Reprogramación: ${issuedVoucher.code}`
+        : 'Bloqueo operativo registrado correctamente en la parrilla.',
+      block,
+      issued_voucher: issuedVoucher
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const listOperationalBlocks = async (req, res, next) => {
+  try {
+    const { venue_id, date } = req.query;
+    const blocks = await db.findOperationalBlocks(venue_id, date);
+    res.json({ success: true, blocks });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const listVouchers = async (req, res, next) => {
+  try {
+    const venueId = req.query.venue_id;
+    const vouchers = await db.findVouchers(venueId);
+    res.json({ success: true, vouchers });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const redeemVoucher = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    const redeemed = await db.redeemVoucher(code);
+    if (!redeemed) {
+      return res.status(400).json({ success: false, error: 'Bono no válido o ya redimido.' });
+    }
+    res.json({ success: true, message: `Bono ${code} redimido con éxito por $${redeemed.amount.toLocaleString('es-CO')}.`, voucher: redeemed });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getGridAvailability,
+  getMultiGridAvailability,
   holdSlot,
   confirmPayment,
   cancelReservation,
-  listReservations
+  listReservations,
+  createRecurringSubscription,
+  listSubscriptions,
+  createOperationalBlock,
+  listOperationalBlocks,
+  listVouchers,
+  redeemVoucher
 };

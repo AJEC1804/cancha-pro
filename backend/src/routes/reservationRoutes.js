@@ -8,6 +8,19 @@ const { authenticate } = require('../middleware/auth');
 
 // Consulta de disponibilidad de parrilla (abierto para clientes y admins)
 router.get('/grid', reservationController.getGridAvailability);
+router.get('/multi-grid', reservationController.getMultiGridAvailability);
+
+// Suscripciones y Clientes Fijos Semanales
+router.get('/recurring', authenticate, reservationController.listSubscriptions);
+router.post('/recurring', authenticate, reservationController.createRecurringSubscription);
+
+// Bloqueos Operativos y Protocolo de Lluvia
+router.get('/operational-blocks', reservationController.listOperationalBlocks);
+router.post('/operational-blocks', authenticate, reservationController.createOperationalBlock);
+
+// Bonos de Reprogramación
+router.get('/vouchers', authenticate, reservationController.listVouchers);
+router.post('/vouchers/redeem', authenticate, reservationController.redeemVoucher);
 
 // Listado de reservas
 router.get('/', authenticate, reservationController.listReservations);
