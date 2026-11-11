@@ -4,19 +4,15 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api?path=$1"
+    },
+    {
+      "source": "/api",
+      "destination": "/api"
     },
     {
       "source": "/dashboard",
-      "destination": "/public/dashboard.html"
-    },
-    {
-      "source": "/dashboard.html",
-      "destination": "/public/dashboard.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
+      "destination": "/dashboard.html"
     }
   ],
   "headers": [

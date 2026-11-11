@@ -35,14 +35,20 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/database', databaseRoutes);
 
 // Endpoint Health Check & Info
-app.get('/api/health', (req, res) => {
+app.get(['/api', '/api/health'], (req, res) => {
   res.json({
     status: 'OK',
     app: 'CanchaPro Engine API',
     version: '1.0.0',
-    mode: process.env.NODE_ENV || 'development',
+    mode: process.env.NODE_ENV || 'production',
+    cloud: 'Vercel Serverless',
     time: new Date().toISOString()
   });
+});
+
+// 404 handler específico para /api
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, error: `Ruta API no encontrada: ${req.method} ${req.originalUrl || req.url}` });
 });
 
 // Manejador centralizado de errores

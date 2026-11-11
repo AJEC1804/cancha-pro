@@ -2,6 +2,7 @@
 // CANCHA PRO — Vercel Serverless Function Entrypoint
 // Mapea todas las solicitudes /api/* al enrutador Express
 // ============================================================
+const url = require('url');
 const app = require('../backend/src/app');
 
 module.exports = (req, res) => {
@@ -13,6 +14,16 @@ module.exports = (req, res) => {
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
     return res.end();
+  }
+
+  // Resolver la URL original de la API
+  const parsed = url.parse(req.url, true);
+  if (parsed.query && parsed.query.path) {
+    req.url = '/api/' + parsed.query.path;
+  } else if (req.headers['x-matched-path']) {
+    req.url = req.headers['x-matched-path'];
+  } else if (req.headers['x-forwarded-uri']) {
+    req.url = req.headers['x-forwarded-uri'];
   }
 
   return app(req, res);
