@@ -22,7 +22,7 @@ const state = {
   activeRole: 'superadmin',
   posCart: [],
   theme: localStorage.getItem('canchapro_theme') || 'dark',
-  authToken: localStorage.getItem('canchapro_token') || 'demo-user-u0000000-0000-0000-0000-000000000001'
+  authToken: localStorage.getItem('canchapro_token') || 'demo-user-b0000000-0000-0000-0000-000000000001'
 };
 
 // ============================================================
@@ -708,17 +708,17 @@ async function loadTournamentStandings() {
 
 function quickLoginAs(email) {
   let role = 'superadmin';
-  let token = 'demo-user-u0000000-0000-0000-0000-000000000001';
+  let token = 'demo-user-b0000000-0000-0000-0000-000000000001';
 
   if (email.includes('admin@bernabeu')) {
     role = 'tenant_admin';
-    token = 'demo-user-u0000000-0000-0000-0000-000000000002';
+    token = 'demo-user-b0000000-0000-0000-0000-000000000002';
   } else if (email.includes('canchero')) {
     role = 'staff';
-    token = 'demo-user-u0000000-0000-0000-0000-000000000003';
+    token = 'demo-user-b0000000-0000-0000-0000-000000000003';
   } else if (email.includes('mateo')) {
     role = 'cliente';
-    token = 'demo-user-u0000000-0000-0000-0000-000000000004';
+    token = 'demo-user-b0000000-0000-0000-0000-000000000004';
   }
 
   localStorage.setItem('canchapro_token', token);
@@ -1351,7 +1351,7 @@ async function loadClientReservations() {
   if (!container) return;
 
   try {
-    const res = await fetch(`${API_BASE}/reservations?user_id=u0000000-0000-0000-0000-000000000004`, {
+    const res = await fetch(`${API_BASE}/reservations?user_id=b0000000-0000-0000-0000-000000000004`, {
       headers: { 'Authorization': `Bearer ${state.authToken}` }
     });
     const data = await res.json();
@@ -2146,7 +2146,7 @@ async function handleRegisterTeam(e) {
         'Authorization': `Bearer ${state.authToken}`
       },
       body: JSON.stringify({
-        tournament_id: 't0000000-0000-0000-0000-000000000001',
+        tournament_id: 'd0000000-0000-0000-0000-000000000001',
         name,
         captain_name: captain,
         captain_phone: phone,

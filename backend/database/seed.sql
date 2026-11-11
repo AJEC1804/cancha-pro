@@ -46,7 +46,7 @@ INSERT INTO users (id, venue_id, role, name, email, phone, document_id, password
 VALUES
 -- SUPERADMIN DE LA PLATAFORMA (El dueño del SaaS / Alejandro)
 (
-    'u0000000-0000-0000-0000-000000000001',
+    'b0000000-0000-0000-0000-000000000001',
     NULL,
     'superadmin',
     'Alejandro SuperAdmin',
@@ -57,7 +57,7 @@ VALUES
 ),
 -- ADMIN DE SEDE LA BERNABÉU
 (
-    'u0000000-0000-0000-0000-000000000002',
+    'b0000000-0000-0000-0000-000000000002',
     'a0000000-0000-0000-0000-000000000001',
     'tenant_admin',
     'Don Mario Administrador',
@@ -68,7 +68,7 @@ VALUES
 ),
 -- CANCHERO / EMPLEADO EN LA BERNABÉU
 (
-    'u0000000-0000-0000-0000-000000000003',
+    'b0000000-0000-0000-0000-000000000003',
     'a0000000-0000-0000-0000-000000000001',
     'staff',
     'Carlos Canchero & POS',
@@ -79,7 +79,7 @@ VALUES
 ),
 -- CLIENTE JUGADOR
 (
-    'u0000000-0000-0000-0000-000000000004',
+    'b0000000-0000-0000-0000-000000000004',
     NULL,
     'cliente',
     'Mateo Jugador',

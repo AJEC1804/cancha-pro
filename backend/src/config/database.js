@@ -51,7 +51,7 @@ const inMemoryStore = {
 
   users: [
     {
-      id: 'u0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
       venue_id: null, // Acceso global a todas las canchas
       role: 'superadmin',
       name: 'Alejandro SuperAdmin',
@@ -63,7 +63,7 @@ const inMemoryStore = {
       created_at: new Date().toISOString()
     },
     {
-      id: 'u0000000-0000-0000-0000-000000000002',
+      id: 'b0000000-0000-0000-0000-000000000002',
       venue_id: 'a0000000-0000-0000-0000-000000000001', // Admin La Bernabéu
       role: 'tenant_admin',
       name: 'Don Mario Administrador',
@@ -75,7 +75,7 @@ const inMemoryStore = {
       created_at: new Date().toISOString()
     },
     {
-      id: 'u0000000-0000-0000-0000-000000000003',
+      id: 'b0000000-0000-0000-0000-000000000003',
       venue_id: 'a0000000-0000-0000-0000-000000000001', // Canchero / POS Staff
       role: 'staff',
       name: 'Carlos Canchero & POS',
@@ -87,7 +87,7 @@ const inMemoryStore = {
       created_at: new Date().toISOString()
     },
     {
-      id: 'u0000000-0000-0000-0000-000000000004',
+      id: 'b0000000-0000-0000-0000-000000000004',
       venue_id: null,
       role: 'cliente',
       name: 'Mateo Jugador',
@@ -154,7 +154,7 @@ const inMemoryStore = {
       venue_id: 'a0000000-0000-0000-0000-000000000001',
       field_id: 'f0000000-0000-0000-0000-000000000001',
       field_name: 'Cancha 1: La Bernabéu Principal (Fútbol 5)',
-      user_id: 'u0000000-0000-0000-0000-000000000004',
+      user_id: 'b0000000-0000-0000-0000-000000000004',
       client_name: 'Mateo Jugador',
       client_phone: '3012345678',
       client_email: 'mateo@gmail.com',
@@ -247,7 +247,7 @@ const inMemoryStore = {
     {
       id: 'shift-001',
       venue_id: 'a0000000-0000-0000-0000-000000000001',
-      staff_user_id: 'u0000000-0000-0000-0000-000000000003',
+      staff_user_id: 'b0000000-0000-0000-0000-000000000003',
       staff_name: 'Carlos Canchero & POS',
       opened_at: new Date().toISOString(),
       closed_at: null,

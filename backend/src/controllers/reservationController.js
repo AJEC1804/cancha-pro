@@ -180,7 +180,7 @@ const holdSlot = async (req, res, next) => {
     const holdUntil = lockTimerService.calculateHoldExpiry(venue ? venue.hold_timeout_minutes : 10);
 
     // 4. Datos del usuario cliente
-    const userId = req.user ? req.user.id : (await db.findUserByEmail(client_email))?.id || 'u0000000-0000-0000-0000-000000000004';
+    const userId = req.user ? req.user.id : (await db.findUserByEmail(client_email))?.id || 'b0000000-0000-0000-0000-000000000004';
 
     const newReservation = await db.createReservation({
       venue_id: field.venue_id,

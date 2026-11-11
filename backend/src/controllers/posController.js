@@ -49,7 +49,7 @@ const createOrder = async (req, res, next) => {
   try {
     const { items, payment_method, reservation_id, notes } = req.body;
     const venueId = req.body.venue_id || (req.user ? req.user.venue_id : 'a0000000-0000-0000-0000-000000000001');
-    const staffId = req.user ? req.user.id : 'u0000000-0000-0000-0000-000000000003';
+    const staffId = req.user ? req.user.id : 'b0000000-0000-0000-0000-000000000003';
 
     if (!items || !items.length) {
       return res.status(400).json({ success: false, error: 'La orden debe contener al menos un producto.' });
