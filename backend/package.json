@@ -1,0 +1,27 @@
+{
+  "name": "cancha-pro-backend",
+  "version": "1.0.0",
+  "description": "Sistema de gestión integral para canchas sintéticas - Multi-tenant, Reservas en tiempo real, La Vaca Digital, POS Cafetería y Automatización IoT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "canchas",
+    "reservas",
+    "futbol",
+    "padel",
+    "iot",
+    "pos",
+    "la-vaca-digital"
+  ],
+  "author": "CanchaPro",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

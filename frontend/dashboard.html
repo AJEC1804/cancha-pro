@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CanchaPro — Panel de Control Multi-Rol</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0B0F19',
+              green: '#10B981',
+              'green-dark': '#059669',
+              slate: '#1E293B',
+              slateLight: '#334155',
+              amber: '#F59E0B',
+              blue: '#3B82F6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/custom.css">
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-turf-pattern min-h-screen text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-300">
+
+  <!-- ================= TOPBAR DASHBOARD ================= -->
+  <header class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <div class="flex items-center space-x-4">
+        <a href="index.html" class="flex items-center space-x-2">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black shadow-md shadow-emerald-500/25">
+            <i data-feather="activity" class="w-5 h-5 text-slate-950"></i>
+          </div>
+          <span class="text-lg font-black tracking-tight text-slate-900 dark:text-white">CANCHA<span class="text-emerald-500 dark:text-emerald-400">PRO</span></span>
+        </a>
+
+        <!-- Conmutador Rápido de Roles (Simulador en Vivo) -->
+        <div class="hidden sm:flex items-center space-x-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
+          <button onclick="switchActiveRole('superadmin')" id="roleBtnSuperadmin" class="px-3 py-1 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">👑 SuperAdmin</button>
+          <button onclick="switchActiveRole('tenant_admin')" id="roleBtnTenant" class="px-3 py-1 rounded-xl font-bold bg-emerald-500 text-slate-950 transition">🏢 Admin Sede</button>
+          <button onclick="switchActiveRole('staff')" id="roleBtnStaff" class="px-3 py-1 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">⚡ Canchero/POS</button>
+          <button onclick="switchActiveRole('cliente')" id="roleBtnCliente" class="px-3 py-1 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">⚽ Jugador</button>
+        </div>
+      </div>
+
+      <!-- Controles: Selector Modo Claro/Oscuro + Usuario y Salir -->
+      <div class="flex items-center space-x-3 text-xs">
+        <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema Claro / Oscuro" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 hover:scale-105 transition">
+          <i data-feather="sun" id="themeIconSun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-feather="moon" id="themeIconMoon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+
+        <div class="text-right hidden sm:block">
+          <p id="topbarUserName" class="font-bold text-slate-900 dark:text-white">Alejandro SuperAdmin</p>
+          <p id="topbarUserRole" class="text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold">SuperAdmin • Control Global</p>
+        </div>
+        
+        <a href="index.html" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center space-x-1.5 transition font-semibold">
+          <i data-feather="log-out" class="w-3.5 h-3.5"></i>
+          <span>Volver</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= CUERPO PRINCIPAL ================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+    
+    <!-- Banner de Rol Activo -->
+    <div id="roleAlertBanner" class="bg-purple-500/10 border border-purple-500/30 rounded-3xl p-5 flex items-center justify-between shadow-sm">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+          <i data-feather="shield" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h4 id="bannerRoleTitle" class="text-sm font-bold text-slate-900 dark:text-white">Panel de Control SuperAdmin (Alejandro)</h4>
+          <p id="bannerRoleDesc" class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Control de todas las sedes, activación/desactivación de canchas y CRUD general.</p>
+        </div>
+      </div>
+      <span id="bannerRoleBadge" class="text-xs font-black px-3.5 py-1.5 rounded-full bg-purple-600 text-white uppercase tracking-wider shadow-sm">SuperAdmin</span>
+    </div>
+
+    <!-- ================= VISTA 1: SUPERADMIN (ALEJANDRO) ================= -->
+    <div id="viewSuperadmin" class="space-y-8">
+      
+      <!-- Métricas Globales SaaS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Sedes Registradas</span>
+            <i data-feather="home" class="w-5 h-5 text-purple-500"></i>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white mt-2">2 Complejos</p>
+          <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">Cartagena & Bogotá</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Total Canchas en el Sistema</span>
+            <i data-feather="grid" class="w-5 h-5 text-emerald-500"></i>
+          </div>
+          <p id="superadminTotalFieldsCount" class="text-2xl font-black text-slate-900 dark:text-white mt-2">3 Canchas</p>
+          <p class="text-xs text-slate-500 mt-1">Fútbol 5, 7 y Pádel</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Volumen Transaccionado</span>
+            <i data-feather="dollar-sign" class="w-5 h-5 text-amber-500"></i>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white mt-2">$24.850.000 COP</p>
+          <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">+18% este mes</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Comisión Plataforma (SaaS)</span>
+            <i data-feather="trending-up" class="w-5 h-5 text-blue-500"></i>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white mt-2">$1.242.500 COP</p>
+          <p class="text-xs text-slate-500 mt-1">Comisión del 5% recaudada</p>
+        </div>
+      </div>
+
+      <!-- TARJETA SUPABASE & CLOUD VERCEL -->
+      <div class="bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-blue-500/10 border border-emerald-500/30 rounded-3xl p-6 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <i data-feather="database" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-black text-slate-900 dark:text-white">Base de Datos Cloud: Supabase PostgreSQL & Vercel</h3>
+                <span id="supabaseStatusBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span id="supabaseStatusText">Verificando...</span>
+                </span>
+              </div>
+              <p id="supabaseStatusDesc" class="text-xs text-slate-600 dark:text-slate-400 mt-1">Conectividad directa con Supabase Cloud y arquitectura Edge Serverless en Vercel con resiliencia y fallback automático.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="checkSupabaseStatus()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 flex items-center space-x-1.5 transition">
+              <i data-feather="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Probar Conexión</span>
+            </button>
+            <button onclick="openSupabaseModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black px-3.5 py-2 rounded-xl flex items-center space-x-1.5 transition shadow-sm">
+              <i data-feather="settings" class="w-3.5 h-3.5"></i>
+              <span>Configurar Supabase</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN CRÍTICA: GESTIÓN Y CRUD DE CANCHAS (ACTIVAR / DESACTIVAR) -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <h3 class="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
+              <span>🏟️ Gestión y Control Total de Canchas</span>
+              <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-bold">CRUD SuperAdmin</span>
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Activa o desactiva canchas instantáneamente, modifica tarifas o registra nuevas instalaciones deportivas.</p>
+          </div>
+          <button onclick="openNewFieldModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+            <i data-feather="plus-circle" class="w-4 h-4"></i>
+            <span>+ Crear Nueva Cancha</span>
+          </button>
+        </div>
+
+        <!-- Tabla de Canchas con Switch de Activar/Desactivar -->
+        <div id="superadminFieldsTableContainer" class="overflow-x-auto">
+          <!-- Renderizado dinámico de canchas -->
+        </div>
+      </div>
+
+      <!-- Gestión de Sedes & Complejos -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-black text-slate-900 dark:text-white">Complejos Deportivos Registrados</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Da de alta nuevos negocios para que administren sus canchas de forma autónoma.</p>
+          </div>
+          <button onclick="openNewVenueModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-purple-600/20">
+            <i data-feather="plus" class="w-4 h-4"></i>
+            <span>+ Agregar Nueva Sede</span>
+          </button>
+        </div>
+
+        <div id="superadminVenuesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Renderizado de Sedes -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VISTA 2: ADMIN DE SEDE (DON MARIO / TENANT) ================= -->
+    <div id="viewTenantAdmin" class="hidden space-y-8">
+      
+      <!-- Configuración del Negocio -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Horarios y Políticas -->
+        <div class="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+          <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <i data-feather="sliders" class="w-5 h-5 text-emerald-500"></i>
+            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Horarios y Parámetros</h3>
+          </div>
+          <form onsubmit="saveVenueSettings(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hora de Apertura</label>
+              <input type="time" id="settingOpenTime" value="06:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hora de Cierre</label>
+              <input type="time" id="settingCloseTime" value="23:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">% Mínimo de Abono</label>
+              <input type="number" id="settingDepositPct" value="50" min="10" max="100" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Horas mínimas para cancelación</label>
+              <input type="number" id="settingCancelHours" value="6" min="1" max="48" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+              Guardar Parámetros de Sede
+            </button>
+          </form>
+        </div>
+
+        <!-- Ajuste de Precios por Cancha -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-feather="dollar-sign" class="w-5 h-5 text-amber-500"></i>
+              <h3 class="font-bold text-slate-900 dark:text-white text-sm">Ajustar Precios de Canchas (Valle vs Pico)</h3>
+            </div>
+            <span class="text-[11px] text-slate-500">Hora Pico: desde las 17:00</span>
+          </div>
+          
+          <div id="pricingCourtsContainer" class="space-y-3">
+            <!-- Renderizado de canchas con inputs de precio -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Gestión de Empleados / Cancheros -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">Personal y Cancheros de La Bernabéu</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Crea credenciales para que tus empleados operen la caja y gestionen reservas en mostrador.</p>
+          </div>
+          <button onclick="openNewStaffModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+            <i data-feather="user-plus" class="w-4 h-4"></i>
+            <span>+ Crear Usuario Empleado</span>
+          </button>
+        </div>
+
+        <div id="staffListTable" class="overflow-x-auto">
+          <!-- Renderizado de lista de staff -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VISTA 3: STAFF & CANCHERO (PUNTO DE VENTA Y CAJA) ================= -->
+    <div id="viewStaff" class="hidden space-y-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- CATÁLOGO POS CAFETERÍA (Cols 7) -->
+        <div class="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-feather="shopping-cart" class="w-5 h-5 text-amber-500"></i>
+              <h3 class="font-bold text-slate-900 dark:text-white text-sm">Punto de Venta (Cafetería & Tienda)</h3>
+            </div>
+            <span class="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-bold">Turno Activo</span>
+          </div>
+
+          <div id="posProductsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <!-- Renderizado de productos táctiles -->
+          </div>
+        </div>
+
+        <!-- TICKET Y "CARGAR A CANCHA" (Cols 5) -->
+        <div class="lg:col-span-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-sm dark:shadow-none transition">
+          <div class="space-y-4">
+            <h4 class="font-bold text-slate-900 dark:text-white text-sm border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
+              <span>Cuenta Actual / Consumo</span>
+              <button onclick="clearPosCart()" class="text-[11px] text-red-500 hover:underline font-bold">Vaciar</button>
+            </h4>
+
+            <!-- Items en carrito -->
+            <div id="posCartItems" class="space-y-2 max-h-48 overflow-y-auto text-xs">
+              <p class="text-slate-400 text-center py-6">No hay productos agregados</p>
+            </div>
+
+            <!-- Total -->
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-sm shadow-sm">
+              <span class="text-slate-500 dark:text-slate-400 font-bold">Total a Cobrar:</span>
+              <span id="posCartTotal" class="text-xl font-black text-emerald-600 dark:text-emerald-400">$0 COP</span>
+            </div>
+
+            <!-- "CARGAR A LA CANCHA X" -->
+            <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-2">
+              <label class="block text-xs font-black text-amber-700 dark:text-amber-400 flex items-center space-x-1.5">
+                <i data-feather="link" class="w-3.5 h-3.5"></i>
+                <span>Cargar a la Cancha X (Cuenta Abierta):</span>
+              </label>
+              <select id="posTargetCourtSelect" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl p-2.5 focus:border-amber-500 focus:outline-none cursor-pointer">
+                <option value="">Seleccionar Cancha / Reserva Activa...</option>
+                <option value="res-demo-001">Cancha 1: La Bernabéu (Mateo Jugador - 19:00)</option>
+              </select>
+              <p class="text-[10px] text-slate-500">El valor se acumula al saldo del partido y se liquida al final.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <button onclick="checkoutPosOrder('charged_to_field')" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-2xl text-xs transition shadow-md shadow-amber-500/20">
+              Cargar a Cancha
+            </button>
+            <button onclick="checkoutPosOrder('cash')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs transition shadow-md shadow-emerald-500/20">
+              Cobrar Efectivo / Nequi
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ARQUEO DE CAJA POR TURNO -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition max-w-xl">
+        <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <i data-feather="dollar-sign" class="w-5 h-5 text-emerald-500"></i>
+          <h3 class="font-bold text-slate-900 dark:text-white text-sm">Cierre de Turno y Arqueo de Caja</h3>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-slate-600 dark:text-slate-300">
+            <span>Efectivo Inicial de Caja:</span>
+            <span class="font-bold text-slate-900 dark:text-white">$100.000 COP</span>
+          </div>
+          <div class="flex justify-between text-slate-600 dark:text-slate-300">
+            <span>Ventas en Efectivo Registradas:</span>
+            <span id="shiftSystemCashLabel" class="font-bold text-emerald-600 dark:text-emerald-400">$100.000 COP</span>
+          </div>
+          <div class="pt-2">
+            <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">Efectivo Físico Contado en Caja:</label>
+            <input type="number" id="shiftActualCashInput" placeholder="Ej. 100000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <button onclick="submitCloseShift()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl border border-slate-700 transition">
+            Efectuar Cierre de Caja
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VISTA 4: CLIENTE JUGADOR ================= -->
+    <div id="viewCliente" class="hidden space-y-6">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+        <h3 class="font-bold text-slate-900 dark:text-white text-base">Mis Reservas y "La Vaca"</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Aquí puedes ver tus partidos reservados, comprobantes de pago y estado de las cuotas de tus amigos.</p>
+        
+        <div id="clientReservationsList" class="space-y-3">
+          <!-- Renderizado de reservas del cliente -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= MODALES AUXILIARES ================= -->
+  <!-- Modal Crear/Editar Cancha (CRUD SuperAdmin) -->
+  <div id="modalNewField" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl transition">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 id="modalFieldFormTitle" class="font-black text-slate-900 dark:text-white text-sm">Crear Nueva Cancha</h3>
+        <button onclick="closeNewFieldModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleSaveField(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="fieldFormId" value="">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Sede / Complejo</label>
+          <select id="fieldFormVenue" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            <option value="a0000000-0000-0000-0000-000000000001">La Bernabéu (Cartagena)</option>
+            <option value="a0000000-0000-0000-0000-000000000002">Camp Nou Arena VIP (Bogotá)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre de la Cancha</label>
+          <input type="text" id="fieldFormName" required placeholder="Ej. Cancha 4: Maracaná 2" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Tipo de Deporte</label>
+            <select id="fieldFormSport" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              <option value="futbol_5">Fútbol 5</option>
+              <option value="futbol_7">Fútbol 7</option>
+              <option value="futbol_9">Fútbol 9</option>
+              <option value="padel">Pádel</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Superficie</label>
+            <select id="fieldFormSurface" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              <option value="sintetica_monofilamento">Sintética Monofilamento</option>
+              <option value="sintetica_fibrilada">Sintética Fibrilada</option>
+              <option value="vidrio_padel">Vidrio Templado Pádel</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Precio Valle ($/hora)</label>
+            <input type="number" id="fieldFormPriceValley" required placeholder="110000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Precio Pico ($/hora)</label>
+            <input type="number" id="fieldFormPricePeak" required placeholder="130000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Descripción / Características</label>
+          <input type="text" id="fieldFormDesc" placeholder="Grama FIFA Quality, cerramiento nuevo" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white">
+        </div>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+          Guardar Cancha
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nueva Sede (Superadmin) -->
+  <div id="modalNewVenue" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl transition">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-slate-900 dark:text-white text-sm">Registrar Nuevo Complejo Deportivo</h3>
+        <button onclick="closeNewVenueModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleCreateVenue(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Nombre del Complejo</label>
+          <input type="text" id="newVenueName" required placeholder="Ej. Arena Maracaná Medellín" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Ciudad</label>
+          <input type="text" id="newVenueCity" required placeholder="Ej. Medellín" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Dirección</label>
+          <input type="text" id="newVenueAddress" required placeholder="Ej. Cra 70 # 45-10" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Teléfono / WhatsApp</label>
+          <input type="tel" id="newVenuePhone" required placeholder="3001234567" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-2.5 rounded-xl transition shadow-md shadow-purple-600/20">
+          Crear y Activar Complejo
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nuevo Empleado (Tenant Admin) -->
+  <div id="modalNewStaff" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl transition">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-slate-900 dark:text-white text-sm">Crear Usuario Empleado / Canchero</h3>
+        <button onclick="closeNewStaffModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleCreateStaff(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Nombre Completo</label>
+          <input type="text" id="newStaffName" required placeholder="Ej. Andrés Canchero" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Correo Electrónico</label>
+          <input type="email" id="newStaffEmail" required placeholder="andres@bernabeu.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Contraseña</label>
+          <input type="password" id="newStaffPassword" required value="admin123" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+          Registrar Personal
+        </button>
+      </form>
+    </div>
+  </div>
+
+    <!-- Modal Supabase Cloud (Configuración & Esquema) -->
+    <div id="modalSupabase" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-xl rounded-3xl p-6 space-y-4 shadow-2xl transition">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🌲</span>
+            <h3 class="font-bold text-slate-900 dark:text-white text-base">Configuración Supabase Cloud</h3>
+          </div>
+          <button onclick="closeSupabaseModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+        </div>
+        
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Ingresa la URL y la llave pública de tu proyecto en Supabase para sincronizar canchas, reservas y pedidos en la nube.
+        </p>
+
+        <form onsubmit="handleSaveSupabaseConfig(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Project URL (Supabase)</label>
+            <input type="url" id="supabaseFormUrl" placeholder="https://tu-proyecto.supabase.co" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono text-xs">
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">API Key (Anon o Service Role Key)</label>
+            <input type="password" id="supabaseFormKey" placeholder="eyJhbGciOiJIUzI1NiIsIn..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono text-xs">
+          </div>
+          
+          <div id="supabaseTestFeedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+          <div class="flex space-x-2 pt-2">
+            <button type="button" onclick="closeSupabaseModal()" class="w-1/3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl transition">
+              Cerrar
+            </button>
+            <button type="submit" id="btnSaveSupabase" class="w-2/3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+              Guardar y Conectar
+            </button>
+          </div>
+        </form>
+
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+          <p class="text-[11px] text-slate-500 font-semibold mb-1">Archivo de Esquema:</p>
+          <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-mono text-emerald-600 dark:text-emerald-400">supabase_schema.sql</span>
+            <span class="text-[11px] text-slate-400">Listo para ejecutar en SQL Editor</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      initDashboard();
+      feather.replace();
+    });
+  </script>
+</body>
+</html>

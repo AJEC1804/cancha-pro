@@ -1,0 +1,30 @@
+{
+  "name": "cancha-pro",
+  "version": "1.0.0",
+  "description": "CanchaPro — Plataforma SaaS de Gestión Integral de Canchas Sintéticas",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "build": "echo 'Build complete'"
+  },
+  "keywords": [
+    "cancha-pro",
+    "reservas",
+    "canchas-sinteticas",
+    "la-vaca-digital",
+    "pos",
+    "supabase",
+    "vercel"
+  ],
+  "author": "Alejandro Castellar",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  }
+}

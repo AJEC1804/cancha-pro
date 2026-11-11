@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CanchaPro — Sistema Inteligente para Canchas Sintéticas</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0B0F19',
+              green: '#10B981',
+              'green-dark': '#059669',
+              slate: '#1E293B',
+              slateLight: '#334155',
+              amber: '#F59E0B',
+              blue: '#3B82F6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/custom.css">
+  <!-- Feather Icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-turf-pattern min-h-screen text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
+
+  <!-- ================= TOPBAR MINIMALISTA Y LIMPIA ================= -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
+      
+      <!-- Logo y Sede -->
+      <a href="index.html" class="flex items-center space-x-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/25 group-hover:scale-105 transition transform">
+          <i data-feather="activity" class="text-white w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xl font-black tracking-tight text-slate-900 dark:text-white">CANCHA<span class="text-emerald-500 dark:text-emerald-400">PRO</span></span>
+            <span class="text-[9px] uppercase font-black tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">SaaS</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Sede: <strong id="currentVenueLabel" class="text-slate-700 dark:text-slate-200">La Bernabéu (Cartagena)</strong></p>
+        </div>
+      </a>
+
+      <!-- Controles Limpios: Selector de Tema + Botón Panel + BOTÓN MENÚ LATERAL (☰) -->
+      <div class="flex items-center space-x-2.5">
+        <!-- Conmutador Claro / Oscuro -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema Claro / Oscuro" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 hover:scale-105 transition">
+          <i data-feather="sun" id="themeIconSun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-feather="moon" id="themeIconMoon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+
+        <!-- Acceso directo al Dashboard -->
+        <a href="dashboard.html" class="hidden sm:inline-flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5">
+          <i data-feather="sliders" class="w-3.5 h-3.5"></i>
+          <span>Panel de Gestión</span>
+        </a>
+
+        <!-- BOTÓN HAMBURGUESA / MENÚ LATERAL -->
+        <button onclick="openNavDrawer()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center space-x-2 transition shadow-sm">
+          <i data-feather="menu" class="w-4 h-4 text-emerald-500"></i>
+          <span class="hidden md:inline">Menú</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MENÚ LATERAL DESPLEGABLE (OFF-CANVAS DRAWER) ================= -->
+  <div id="navDrawer" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop Blur -->
+    <div onclick="closeNavDrawer()" class="drawer-backdrop fixed inset-0"></div>
+
+    <!-- Panel Lateral Deslizante -->
+    <div class="drawer-panel fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between p-6 z-50 overflow-y-auto">
+      
+      <div class="space-y-6">
+        <!-- Header del Menú Lateral -->
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black">
+              <i data-feather="activity" class="w-4 h-4 text-slate-950"></i>
+            </div>
+            <span class="font-black text-slate-900 dark:text-white text-base">CANCHA<span class="text-emerald-500">PRO</span></span>
+          </div>
+          <button onclick="closeNavDrawer()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
+            <i data-feather="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Selector de Sede dentro del Menú Lateral -->
+        <div class="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Complejo Deportivo Activo:</label>
+          <select id="drawerVenueSelector" onchange="changeVenue(this.value); closeNavDrawer();" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl p-2 font-bold focus:outline-none cursor-pointer">
+            <option value="a0000000-0000-0000-0000-000000000001">📍 La Bernabéu (Cartagena)</option>
+            <option value="a0000000-0000-0000-0000-000000000002">📍 Camp Nou Arena VIP (Bogotá)</option>
+          </select>
+        </div>
+
+        <!-- Enlaces de Navegación -->
+        <div class="space-y-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-1">Módulos del Sistema</span>
+          
+          <a href="#parrilla" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <i data-feather="calendar" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="block">Parrilla en Vivo</span>
+              <span class="text-[10px] text-slate-400 font-normal">Consulta y reserva de horarios</span>
+            </div>
+          </a>
+
+          <a href="#la-vaca" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+              <i data-feather="share-2" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="block">La Vaca Digital</span>
+              <span class="text-[10px] text-slate-400 font-normal">Divide la cuota por WhatsApp</span>
+            </div>
+          </a>
+
+          <a href="#cafeteria" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <i data-feather="coffee" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="block">Cafetería & POS</span>
+              <span class="text-[10px] text-slate-400 font-normal">Cargar consumos a la cancha</span>
+            </div>
+          </a>
+
+          <a href="#torneos" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-400 transition">
+            <div class="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+              <i data-feather="award" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="block">Torneos & Fixtures</span>
+              <span class="text-[10px] text-slate-400 font-normal">Posiciones y calendarios</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Acceso Rápido por Rol -->
+        <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block">Cambiar Rol (Demostración):</span>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button onclick="quickLoginAs('superadmin@canchapro.com')" class="p-2.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 font-bold text-left transition hover:bg-purple-500/20">
+              👑 SuperAdmin
+              <span class="block text-[9px] text-purple-500 font-normal">CRUD canchas</span>
+            </button>
+            <button onclick="quickLoginAs('admin@bernabeu.com')" class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-left transition hover:bg-emerald-500/20">
+              🏢 Admin Sede
+              <span class="block text-[9px] text-emerald-500 font-normal">La Bernabéu</span>
+            </button>
+            <button onclick="quickLoginAs('canchero@bernabeu.com')" class="p-2.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 font-bold text-left transition hover:bg-amber-500/20">
+              ⚡ Canchero
+              <span class="block text-[9px] text-amber-500 font-normal">POS y caja</span>
+            </button>
+            <button onclick="quickLoginAs('mateo@gmail.com')" class="p-2.5 rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold text-left transition hover:bg-blue-500/20">
+              ⚽ Jugador
+              <span class="block text-[9px] text-blue-500 font-normal">Mis reservas</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer del Menú Lateral -->
+      <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Tema Visual:</span>
+          <button onclick="toggleTheme()" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+            Alternar Claro / Oscuro
+          </button>
+        </div>
+        <a href="dashboard.html" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center space-x-2 transition shadow-md shadow-emerald-500/20">
+          <i data-feather="sliders" class="w-4 h-4"></i>
+          <span>Entrar al Panel de Control</span>
+        </a>
+        <p class="text-[10px] text-slate-400 text-center">📞 WhatsApp Directo: <strong>300 679 9595</strong></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= HERO SECTION CON CANCHA TÁCTICA 3D ================= -->
+  <section class="relative pt-8 pb-16 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Columna Izquierda: Copy de Alta Conversión -->
+        <div class="lg:col-span-6 space-y-6 text-center lg:text-left">
+          
+          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm">
+            <span class="text-amber-500 dark:text-amber-400">⚡ Solución Anti No-Shows</span>
+            <span>•</span>
+            <span class="text-emerald-600 dark:text-emerald-400">Bloqueo Preventivo 10 Minutos</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+            Reserva tu Cancha en Segundos. <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-green-500">Cero Enredos de Cobro.</span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+            El sistema inteligente que elimina las "canchas vacías". Bloquea tu turno con abono digital, divide la cuenta entre tus amigos con <strong>"La Vaca Digital"</strong> vía WhatsApp y administra tu complejo deportivo sin pérdidas.
+          </p>
+
+          <!-- Badges de Deporte -->
+          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1">
+            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">⚽ Fútbol 5 Sintético</span>
+            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">⚽ Fútbol 7 Maracaná</span>
+            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">🎾 Pádel Cristal Pro</span>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="pt-3 flex flex-wrap items-center justify-center lg:justify-start gap-3">
+            <a href="#parrilla" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 rounded-2xl shadow-xl shadow-emerald-500/25 inline-flex items-center space-x-2 transition transform hover:-translate-y-1">
+              <i data-feather="calendar" class="w-5 h-5"></i>
+              <span>Ver Parrilla de Turnos</span>
+            </a>
+            <button onclick="testQuickHold()" class="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white font-bold px-6 py-3.5 rounded-2xl inline-flex items-center space-x-2 transition shadow-sm">
+              <i data-feather="clock" class="w-5 h-5 text-amber-500 dark:text-amber-400"></i>
+              <span>Probar Bloqueo 10 Min</span>
+            </button>
+          </div>
+
+          <!-- Social Proof -->
+          <div class="pt-4 flex items-center justify-center lg:justify-start space-x-4 text-xs text-slate-500 dark:text-slate-400">
+            <div class="flex -space-x-2">
+              <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User 1">
+              <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="User 2">
+              <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" alt="User 3">
+            </div>
+            <div>
+              <div class="flex text-amber-400 text-xs">★★★★★</div>
+              <span>Más de <strong>450 partidos</strong> jugados este mes en Cartagena</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Columna Derecha: Cancha Táctica 3D -->
+        <div class="lg:col-span-6 virtual-pitch-container flex flex-col items-center">
+          
+          <!-- Banner Superior del Estadio -->
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/80 px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between w-full max-w-md mb-3 z-10 transition">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 pulse-live"></span>
+              <span class="font-bold text-xs text-slate-800 dark:text-white">Cancha 1: La Bernabéu Principal</span>
+            </div>
+            <div class="flex items-center space-x-2 text-xs">
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full">Fútbol 5v5</span>
+            </div>
+          </div>
+
+          <!-- La Cancha Táctica 3D -->
+          <div id="virtualPitchCanvas" class="virtual-pitch relative w-full max-w-md h-72 rounded-3xl turf-stripes p-3 border-4 border-white/60 dark:border-white/20 overflow-hidden cursor-pointer select-none">
+            
+            <!-- Líneas Oficiales del Campo de Juego -->
+            <div class="w-full h-full border-2 border-white/70 rounded-2xl relative flex items-center justify-center">
+              
+              <!-- Línea central y círculo del mediocampo -->
+              <div class="absolute inset-x-0 top-1/2 h-0.5 bg-white/70"></div>
+              <div class="w-20 h-20 rounded-full border-2 border-white/70 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-white"></div>
+              </div>
+
+              <!-- Área de Portería Superior -->
+              <div class="absolute top-0 inset-x-1/4 h-14 border-b-2 border-x-2 border-white/70 rounded-b-lg"></div>
+              <div class="absolute top-12 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white"></div>
+
+              <!-- Área de Portería Inferior -->
+              <div class="absolute bottom-0 inset-x-1/4 h-14 border-t-2 border-x-2 border-white/70 rounded-t-lg"></div>
+              <div class="absolute bottom-12 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white"></div>
+
+              <!-- Puntos Tácticos Interactivos de Jugadores (5v5) -->
+              <div onclick="showPitchPlayerRole('Arquero', 'Lidera la defensa y protege el arco.')" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-amber-400 border-2 border-slate-950 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">1</div>
+              <div onclick="showPitchPlayerRole('Cierre Central', 'Recuperador clave y salida limpia desde atrás.')" class="absolute bottom-20 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white border-2 border-emerald-600 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">4</div>
+              <div onclick="showPitchPlayerRole('Ala Izquierda', 'Velocidad, desborde y centros por la banda.')" class="absolute bottom-28 left-12 w-7 h-7 rounded-full bg-white border-2 border-emerald-600 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">7</div>
+              <div onclick="showPitchPlayerRole('Ala Derecha', 'Ida y vuelta constante, remate a puerta.')" class="absolute bottom-28 right-12 w-7 h-7 rounded-full bg-white border-2 border-emerald-600 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">8</div>
+              <div onclick="showPitchPlayerRole('Pivot / Delantero', 'Referente de área, aguanta de espaldas y define.')" class="absolute top-24 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-emerald-400 border-2 border-slate-950 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">9</div>
+
+            </div>
+
+          </div>
+
+          <!-- Tip Táctico Interactivo -->
+          <p id="pitchRoleTip" class="text-[11px] text-slate-500 dark:text-slate-400 mt-3 text-center">
+            💡 <em>Haz clic en cualquier posición de la cancha para ver funciones tácticas.</em>
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div class="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Cero No-Shows</p>
+          <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">100%</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Abonos con bloqueo de 10 min</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">La Vaca Digital</p>
+          <p class="text-3xl font-black text-amber-500 dark:text-amber-400 mt-1">Split Nequi</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Divide cuotas por WhatsApp</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">POS Cafetería</p>
+          <p class="text-3xl font-black text-blue-600 dark:text-blue-400 mt-1">A la Cancha</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Bebidas sumadas a la cuenta</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Torneos & Fixtures</p>
+          <p class="text-3xl font-black text-purple-600 dark:text-purple-400 mt-1">Round-Robin</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Tablas de posiciones en vivo</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= PARRILLA HORARIA INTERACTIVA ================= -->
+  <section id="parrilla" class="py-14 bg-slate-100/80 dark:bg-slate-950/70 border-y border-slate-200 dark:border-slate-800/80 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Cabecera de la Parrilla -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Módulo A: Motor de Reservas en Tiempo Real</span>
+          </div>
+          <h2 class="text-3xl font-black text-slate-900 dark:text-white">Parrilla Horaria Inteligente</h2>
+          <p class="text-slate-600 dark:text-slate-400 text-sm mt-1">
+            Los turnos en amarillo están temporalmente retenidos esperando abono. Si no pagan en 10 minutos, se liberan automáticamente.
+          </p>
+        </div>
+
+        <!-- Filtros de Fecha -->
+        <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <button onclick="setGridDate('today')" id="btnDateToday" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">Hoy</button>
+          <button onclick="setGridDate('tomorrow')" id="btnDateTomorrow" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Mañana</button>
+          <input type="date" id="gridDatePicker" onchange="loadGridAvailability()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white rounded-xl px-2.5 py-1 focus:outline-none cursor-pointer">
+        </div>
+      </div>
+
+      <!-- Selector de Canchas (Tabs Visuales) -->
+      <div id="courtTabsContainer" class="flex items-center space-x-3 overflow-x-auto pb-4 mb-6">
+        <!-- Renderizado dinámico de canchas -->
+      </div>
+
+      <!-- Tarjeta de Información de Cancha -->
+      <div id="courtInfoBanner" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm dark:shadow-none transition">
+        <div class="flex items-center space-x-4">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 flex-shrink-0">
+            <i data-feather="shield" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h3 id="currentCourtTitle" class="text-xl font-black text-slate-900 dark:text-white">Cancha 1: La Bernabéu Principal (Fútbol 5)</h3>
+            <p id="currentCourtDesc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Grama sintética monofilamento 50mm • Balones y petos en cafetería</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-6 text-xs border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-800">
+          <div>
+            <span class="text-slate-500 dark:text-slate-400 block font-medium">Hora Valle (06:00 - 17:00):</span>
+            <span class="text-slate-900 dark:text-white font-black text-base" id="courtPriceValley">$110.000 COP</span>
+          </div>
+          <div>
+            <span class="text-amber-600 dark:text-amber-400 block font-medium">Hora Pico 🔥 (17:00 - 23:00):</span>
+            <span class="text-slate-900 dark:text-white font-black text-base" id="courtPricePeak">$130.000 COP</span>
+          </div>
+          <div>
+            <span class="text-slate-500 dark:text-slate-400 block font-medium">Abono Requerido:</span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-black text-base">50% para retener</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid de Horarios -->
+      <div id="slotsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Renderizado de slots -->
+      </div>
+
+      <!-- Leyenda de Estados -->
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400">
+        <div class="flex items-center space-x-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-emerald-500/20 border border-emerald-500/70"></span>
+          <span>Disponible (Clic para retener y reservar)</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-amber-500/30 border border-amber-500 animate-pulse"></span>
+          <span>Bloqueado 10 min (Esperando abono PSE/Nequi)</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
+          <span>Confirmado / Ocupado</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SECCIÓN: "LA VACA DIGITAL" ================= -->
+  <section id="la-vaca" class="py-16 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-gradient-to-br from-white via-slate-50 to-emerald-50 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 lg:p-12 shadow-xl dark:shadow-2xl transition">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-5">
+            <div class="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1 rounded-full">
+              <span>🐄 Módulo B Exclusivo</span>
+              <span>•</span>
+              <span>Cero dolores de cabeza para el Capitán</span>
+            </div>
+            
+            <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-tight">
+              "La Vaca Digital": Divide la Cancha y que Cada Quien Pague su Cuota
+            </h2>
+            
+            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+              ¿Cansado de que el organizador siempre deba poner la plata completa y luego cobrarle a los demás? Con <strong>La Vaca Digital</strong>, el sistema divide el valor entre todos, genera enlaces individuales de Nequi/PSE y confirma el turno automáticamente cuando se junta el 50% de abono.
+            </p>
+
+            <ul class="space-y-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
+              <li class="flex items-center space-x-3">
+                <i data-feather="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>
+                <span>Mensaje listo para enviar al grupo de WhatsApp con link único de pago.</span>
+              </li>
+              <li class="flex items-center space-x-3">
+                <i data-feather="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>
+                <span>Cada jugador paga con su propio Nequi, Daviplata o PSE.</span>
+              </li>
+              <li class="flex items-center space-x-3">
+                <i data-feather="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>
+                <span>El turno pasa a <strong>CONFIRMADO</strong> al alcanzar la cuota del 50%.</span>
+              </li>
+            </ul>
+
+            <div class="pt-2">
+              <button onclick="demoVacaSimulation()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-7 py-3 rounded-2xl shadow-lg shadow-amber-500/25 inline-flex items-center space-x-2 transition transform hover:-translate-y-0.5">
+                <i data-feather="share-2" class="w-4 h-4"></i>
+                <span>Simular "La Vaca" en Vivo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Widget de La Vaca -->
+          <div class="lg:col-span-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl transition">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+              <div>
+                <span class="text-xs text-slate-500 dark:text-slate-400 block font-semibold">Simulador de Pozo</span>
+                <span class="font-bold text-slate-900 dark:text-white text-base">Cancha Fútbol 5 (10 Jugadores)</span>
+              </div>
+              <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-black">Meta: $130.000 COP</span>
+            </div>
+
+            <!-- Slider de Jugadores -->
+            <div class="space-y-2 mb-5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-600 dark:text-slate-400">Número de Jugadores:</span>
+                <span id="demoVacaPlayersLabel" class="text-emerald-600 dark:text-emerald-400">10 personas</span>
+              </div>
+              <input type="range" id="demoVacaRange" min="4" max="14" value="10" step="1" oninput="updateDemoVacaCalculation()" class="w-full accent-emerald-500 cursor-pointer h-2 bg-slate-200 dark:bg-slate-800 rounded-lg">
+              <div class="flex justify-between text-[11px] text-slate-400">
+                <span>4 jugadores</span>
+                <span>10 (Estándar 5v5)</span>
+                <span>14 jugadores</span>
+              </div>
+            </div>
+
+            <!-- Mini Cancha Táctica de Camisetas -->
+            <div id="vacaSquadGrid" class="grid grid-cols-5 gap-2 mb-4 p-3 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center">
+              <!-- Renderizado de 10 camisetas -->
+            </div>
+
+            <!-- Cálculo por Jugador -->
+            <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center mb-5">
+              <span class="text-xs text-slate-500 dark:text-slate-400 block uppercase font-bold">Cuota individual por jugador:</span>
+              <span id="demoVacaQuota" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">$13.000 COP</span>
+              <span class="text-[11px] text-slate-500 block mt-1">Con solo 5 aportes se asegura el abono del 50% y la cancha queda confirmada</span>
+            </div>
+
+            <!-- Barra de Progreso de la Vaca -->
+            <div class="space-y-1.5 mb-5">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-slate-600 dark:text-slate-400">Progreso Recaudado:</span>
+                <span id="demoVacaProgressText" class="text-slate-900 dark:text-white">7 de 10 Pagaron ($91.000 COP)</span>
+              </div>
+              <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3.5 overflow-hidden">
+                <div id="demoVacaProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500" style="width: 70%"></div>
+              </div>
+            </div>
+
+            <button onclick="shareVacaWhatsappDemo()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center space-x-2 transition shadow-md shadow-emerald-600/20">
+              <i data-feather="send" class="w-4 h-4"></i>
+              <span>Copiar Enlace de WhatsApp para el Grupo</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SECCIÓN: CAFETERÍA & TORNEOS ================= -->
+  <section id="cafeteria" class="py-14 bg-white dark:bg-slate-950/40 border-t border-slate-200 dark:border-slate-800 transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Tarjeta POS "Cargar a Cancha" -->
+        <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl space-y-4 shadow-sm dark:shadow-none transition">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500">
+            <i data-feather="coffee" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-2xl font-black text-slate-900 dark:text-white">Cafetería & "Cargar a Cancha X"</h3>
+          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+            Los jugadores no tienen que interrumpir el juego con billeteras. El canchero o personal del bar registra Gatorades, cervezas o petos y los <strong>carga a la cuenta abierta de la cancha</strong> para cobrar todo en un solo pago al finalizar.
+          </p>
+          <div class="flex items-center space-x-3 text-xs text-slate-600 dark:text-slate-400 font-semibold">
+            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Control de Stock Mínimo</span>
+            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Cierre de Caja con Arqueo</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta Gestión de Torneos y Ligas -->
+        <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl space-y-4 shadow-sm dark:shadow-none transition">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-500">
+            <i data-feather="award" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-2xl font-black text-slate-900 dark:text-white">Torneos, Ligas y Turnos Fijos</h3>
+          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+            Generador automático de fixtures Todos contra Todos (Round-Robin), registro de resultados, tabla de goleadores y administración de turnos fijos semanales para empresas y grupos recurrentes.
+          </p>
+          <div class="flex items-center space-x-3 text-xs text-slate-600 dark:text-slate-400 font-semibold">
+            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Fixture Algorítmico</span>
+            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Tablas en Tiempo Real</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SECCIÓN: TORNEOS ================= -->
+  <section id="torneos" class="py-14">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Torneos y Fixtures Automatizados</h2>
+        <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">Crea campeonatos relámpago o ligas largas. El sistema genera los cruces (Round-Robin) y actualiza la tabla de posiciones en tiempo real.</p>
+      </div>
+
+      <!-- Tabla de Posiciones Demo -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl max-w-4xl mx-auto transition">
+        <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-feather="award" class="w-5 h-5 text-amber-500"></i>
+            <span class="font-bold text-slate-900 dark:text-white text-sm">Copa Nocturna La Bernabéu 2026</span>
+          </div>
+          <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/20">Fase de Grupos</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-3 px-4">#</th>
+                <th class="py-3 px-4">Equipo</th>
+                <th class="py-3 px-4 text-center">PJ</th>
+                <th class="py-3 px-4 text-center">PG</th>
+                <th class="py-3 px-4 text-center">PE</th>
+                <th class="py-3 px-4 text-center">PP</th>
+                <th class="py-3 px-4 text-center">DG</th>
+                <th class="py-3 px-4 text-center font-bold text-slate-900 dark:text-white">PTS</th>
+              </tr>
+            </thead>
+            <tbody id="tournamentTableBody" class="divide-y divide-slate-200 dark:divide-slate-800">
+              <!-- Renderizado de posiciones -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= POLÍTICAS & UBICACIÓN LA BERNABÉU ================= -->
+  <section class="py-12 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-3">📍 Ubicación La Bernabéu</h4>
+        <p>Dg al Centro Comercial San Fernando, detrás del Totumazo Cartagenero.</p>
+        <p class="mt-1">Cartagena de Indias, Colombia</p>
+        <p class="mt-2 text-emerald-600 dark:text-emerald-400 font-bold">📞 WhatsApp Reservas: 300 679 9595</p>
+      </div>
+
+      <div>
+        <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-3">📋 Normas de La Bernabéu</h4>
+        <ul class="space-y-1.5 list-disc list-inside">
+          <li>Uso estricto de calzado tipo turf (guayos de goma sintética).</li>
+          <li>Prohibido el ingreso de guayos con taches de aluminio.</li>
+          <li>Presentarse 15 minutos antes del inicio de la reserva.</li>
+          <li>Cancelaciones válidas con mínimo 6 horas de anticipación.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-3">🔒 Seguridad y Pagos</h4>
+        <p>Integrado con pasarelas certificadas PSE, Nequi y Daviplata. Retención temporal garantizada por 10 minutos para evitar doble reserva simultánea.</p>
+        <p class="mt-3 text-[11px] text-slate-400">© 2026 CanchaPro Platform. Desarrollado para administración deportiva de alto rendimiento.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODAL DE RESERVA CON CRONÓMETRO 10 MIN ================= -->
+  <div id="bookingModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition">
+      
+      <!-- Header con Cronómetro Regresivo -->
+      <div class="bg-slate-50 dark:bg-slate-950 p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Bloqueo Preventivo Temporal</span>
+          <h3 id="modalCourtName" class="text-base font-black text-slate-900 dark:text-white">Cancha 1: La Bernabéu Principal</h3>
+        </div>
+        
+        <!-- Reloj Regresivo 10 Min -->
+        <div class="neon-timer-box px-4 py-2 rounded-2xl border border-amber-500/40 text-center">
+          <span class="text-[9px] text-amber-400 font-black block uppercase tracking-wider">Tiempo Restante</span>
+          <span id="holdCountdown" class="text-lg font-black text-amber-400">10:00</span>
+        </div>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="p-6 space-y-5 overflow-y-auto">
+        
+        <!-- Detalle de la Reserva -->
+        <div class="bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between text-xs">
+          <div>
+            <span class="text-slate-500 dark:text-slate-400 block font-medium">Fecha y Turno:</span>
+            <span id="modalDateTime" class="text-slate-900 dark:text-white font-black text-sm">2026-11-10 | 19:00 - 20:00</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-500 dark:text-slate-400 block font-medium">Total Cancha:</span>
+            <span id="modalTotalAmount" class="text-emerald-600 dark:text-emerald-400 font-black text-base">$130.000 COP</span>
+          </div>
+        </div>
+
+        <!-- Formulario del Jugador -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo del Responsable</label>
+            <input type="text" id="bookingClientName" placeholder="Ej. Mateo Jugador" value="Mateo Jugador" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:border-emerald-500 focus:outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Teléfono / WhatsApp</label>
+              <input type="tel" id="bookingClientPhone" placeholder="3001234567" value="3012345678" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:border-emerald-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
+              <input type="email" id="bookingClientEmail" placeholder="correo@ejemplo.com" value="mateo@gmail.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:border-emerald-500 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Selección de Modo de Pago -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Selecciona Modalidad de Abono</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="selectPaymentMode('deposit_50')" id="optDeposit50" class="p-3 rounded-2xl border text-center text-xs font-black border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+              <span>Abono 50%</span>
+              <span id="modalDepositAmount" class="block text-[11px] text-slate-500 font-normal mt-0.5">$65.000 COP</span>
+            </button>
+            <button type="button" onclick="selectPaymentMode('full')" id="optFull" class="p-3 rounded-2xl border text-center text-xs font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <span>Pago 100%</span>
+              <span class="block text-[11px] text-slate-500 font-normal mt-0.5">Totalidad</span>
+            </button>
+            <button type="button" onclick="selectPaymentMode('vaca_split')" id="optVaca" class="p-3 rounded-2xl border text-center text-xs font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">
+              <span>🐄 La Vaca</span>
+              <span class="block text-[11px] text-slate-500 font-normal mt-0.5">Dividir cuota</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Checkbox de Políticas de La Bernabéu -->
+        <div class="flex items-start space-x-2 text-[11px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-950/40 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <input type="checkbox" id="acceptTermsCheck" checked class="mt-0.5 accent-emerald-500 rounded">
+          <label for="acceptTermsCheck">
+            Acepto el uso de calzado tipo turf (no taches de aluminio) y que la reserva requiere mínimo 6 horas de anticipación para cancelación o reprogramación.
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-3">
+        <button onclick="closeBookingModal()" class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl">Cancelar</button>
+        <button onclick="submitReservationHold()" id="btnSubmitHold" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition">
+          Retener y Proceder al Pago
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script>
+    feather.replace();
+  </script>
+</body>
+</html>

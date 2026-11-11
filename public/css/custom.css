@@ -1,0 +1,188 @@
+/* ============================================================
+   CANCHA PRO — Theme System (Light & Dark Mode) & Sports Aesthetics
+   Paleta: #0B0F19 (Dark Fondo), #FFFFFF / #F8FAFC (Light Fondo)
+   Césped: #10B981 / #059669 | Pizarra: #1E293B | Alerta: #F59E0B
+   ============================================================ */
+
+/* Variables CSS para Modo Oscuro (Default) */
+:root {
+  --bg-main: #0B0F19;
+  --bg-surface: #131B2A;
+  --bg-card: #1E293B;
+  --bg-card-hover: #273549;
+  --border-color: #334155;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --accent-green: #10B981;
+  --accent-green-hover: #059669;
+  --accent-amber: #F59E0B;
+  --glow-emerald: rgba(16, 185, 129, 0.25);
+  --pitch-stripe-1: #064E3B;
+  --pitch-stripe-2: #047857;
+  --pitch-border: rgba(255, 255, 255, 0.4);
+}
+
+/* Variables CSS para Modo Claro */
+html:not(.dark) {
+  --bg-main: #F1F5F9;
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --border-color: #E2E8F0;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --accent-green: #059669;
+  --accent-green-hover: #047857;
+  --accent-amber: #D97706;
+  --glow-emerald: rgba(5, 150, 105, 0.15);
+  --pitch-stripe-1: #059669;
+  --pitch-stripe-2: #10B981;
+  --pitch-border: rgba(255, 255, 255, 0.85);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Texturas de fondo */
+.dark .bg-turf-pattern {
+  background-color: #0B0F19;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%),
+    radial-gradient(circle at 85% 60%, rgba(59, 130, 246, 0.08) 0%, transparent 45%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+html:not(.dark) .bg-turf-pattern {
+  background-color: #F8FAFC;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 55%),
+    radial-gradient(circle at 85% 60%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+/* ================= MENÚ LATERAL DESPLEGABLE (OFF-CANVAS DRAWER) ================= */
+.drawer-backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity 0.3s ease;
+}
+
+.drawer-panel {
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.4);
+}
+
+.drawer-open .drawer-panel {
+  transform: translateX(0);
+}
+
+/* ================= CANCHA VIRTUAL TÁCTICA 3D / ESTADIO ================= */
+.virtual-pitch-container {
+  perspective: 1000px;
+}
+
+.virtual-pitch {
+  transform: rotateX(22deg) scale(0.96);
+  transform-style: preserve-3d;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 35px rgba(16, 185, 129, 0.25);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.virtual-pitch:hover {
+  transform: rotateX(14deg) scale(0.98);
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.6),
+    0 0 45px rgba(16, 185, 129, 0.35);
+}
+
+/* Rayas de corte de grama sintética profesional */
+.turf-stripes {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--pitch-stripe-1) 0px,
+    var(--pitch-stripe-1) 45px,
+    var(--pitch-stripe-2) 45px,
+    var(--pitch-stripe-2) 90px
+  );
+}
+
+/* Líneas de la cancha de fútbol */
+.pitch-line {
+  border-color: var(--pitch-border);
+}
+
+/* Tarjetas interactivas con brillo deportivo */
+.card-sport {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-sport:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-green);
+  box-shadow: 0 12px 30px -8px var(--glow-emerald);
+}
+
+/* Efecto de pulso en vivo para turnos y canchas */
+@keyframes pulse-emerald {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.pulse-live {
+  animation: pulse-emerald 2s infinite;
+}
+
+/* Temporizador con reloj digital de neón */
+.neon-timer-box {
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.15);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Switch estilizado Activar / Desactivar */
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: #10B981;
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #10B981;
+}
+
+/* Barra flotante de demostración de roles */
+.role-floating-dock {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-green);
+}
