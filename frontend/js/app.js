@@ -1089,6 +1089,40 @@ async function toggleVenueStatus(venueId) {
   }
 }
 
+// Guardar parámetros operativos de la sede (Admin Sede)
+async function saveVenueSettings(e) {
+  if (e) e.preventDefault();
+  const openTime = document.getElementById('settingOpenTime')?.value || '06:00';
+  const closeTime = document.getElementById('settingCloseTime')?.value || '23:00';
+  const depositPct = Number(document.getElementById('settingDepositPct')?.value || 50);
+  const cancelHours = Number(document.getElementById('settingCancelHours')?.value || 6);
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/${state.currentVenueId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        open_time: openTime,
+        close_time: closeTime,
+        deposit_percentage: depositPct,
+        cancellation_hours_notice: cancelHours
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('⚙️ Parámetros de sede actualizados correctamente.', 'success');
+      loadVenues();
+    } else {
+      showToast(data.error || 'Error al guardar parámetros.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de comunicación con el servidor.', 'error');
+  }
+}
+
 // ============================================================
 // ADMIN SEDE: AUTOGESTIÓN DE SUB-CANCHAS (CANCHA 1, 2, 3...)
 // ============================================================
@@ -1172,14 +1206,6 @@ async function loadTenantAdminFields() {
     }
   } catch (e) {
     console.error('Error cargando sub-canchas del tenant:', e);
-  }
-}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (e) {
-    console.error(e);
   }
 }
 

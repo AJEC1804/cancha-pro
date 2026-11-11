@@ -16,10 +16,13 @@ module.exports = (req, res) => {
     return res.end();
   }
 
-  // Resolver la URL original de la API
+  // Resolver la URL original de la API preservando todos los query parameters
   const parsed = url.parse(req.url, true);
   if (parsed.query && parsed.query.path) {
-    req.url = '/api/' + parsed.query.path;
+    const queryCopy = { ...parsed.query };
+    delete queryCopy.path;
+    const searchParams = new URLSearchParams(queryCopy).toString();
+    req.url = '/api/' + parsed.query.path + (searchParams ? '?' + searchParams : '');
   } else if (req.headers['x-matched-path']) {
     req.url = req.headers['x-matched-path'];
   } else if (req.headers['x-forwarded-uri']) {

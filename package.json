@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "node backend/server.js",
-    "build": "echo 'Build complete'"
+    "build": "node -c api/index.js && node -c backend/server.js && node -c public/js/app.js && node -c frontend/js/app.js"
   },
   "keywords": [
     "cancha-pro",
