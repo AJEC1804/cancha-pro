@@ -7,10 +7,10 @@ const db = require('../config/database');
 const listVenues = async (req, res, next) => {
   try {
     const venues = await db.findVenues();
-    // Adjuntar canchas activas de cada sede
+    // Adjuntar canchas (activas e inactivas con su bandera de estado) de cada sede
     const result = await Promise.all(
       venues.map(async (v) => {
-        const fields = await db.findFieldsByVenue(v.id);
+        const fields = await db.findFieldsByVenue(v.id, true);
         return {
           ...v,
           fields_count: fields.length,
@@ -32,7 +32,7 @@ const getVenue = async (req, res, next) => {
     if (!venue) {
       return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
     }
-    const fields = await db.findFieldsByVenue(venue.id);
+    const fields = await db.findFieldsByVenue(venue.id, true);
     res.json({ success: true, venue: { ...venue, fields } });
   } catch (err) {
     next(err);
@@ -212,6 +212,15 @@ const updateField = async (req, res, next) => {
     const field = await db.findFieldById(id);
     if (!field) {
       return res.status(404).json({ success: false, error: 'Cancha no encontrada.' });
+    }
+
+    // BLOQUEO ESTRICTO SI LA CANCHA ESTÁ SUSPENDIDA
+    if (!field.is_active && req.body.is_active === undefined && (!req.user || req.user.role !== 'superadmin')) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: 'Esta cancha se encuentra actualmente suspendida. La gestión está bloqueada. Por favor, comunícate con el administrador del sistema.'
+      });
     }
 
     const updated = await db.updateField(id, req.body);

@@ -149,33 +149,40 @@ async function loadVenues() {
   }
 }
 
-// Renderizar tabs de canchas de la sede
+// Renderizar tabs de canchas de la sede (incluye activas y suspendidas con su distintivo)
 function renderCourtTabs() {
   const container = document.getElementById('courtTabsContainer');
   if (!container) return;
 
-  // Filtrar solo canchas activas para la vista pública
-  const activeFields = state.fields.filter(f => f.is_active);
-
-  if (activeFields.length === 0) {
-    container.innerHTML = `<span class="text-xs text-slate-400">No hay canchas activas en esta sede actualmente.</span>`;
+  if (!state.fields || state.fields.length === 0) {
+    container.innerHTML = `<span class="text-xs text-slate-400">No hay canchas registradas en esta sede.</span>`;
     return;
   }
 
-  // Si la cancha seleccionada está inactiva, seleccionar la primera activa
-  if (!activeFields.some(f => f.id === state.selectedFieldId)) {
-    state.selectedFieldId = activeFields[0].id;
+  // Si la cancha seleccionada no está en la lista, seleccionar la primera disponible
+  if (!state.fields.some(f => f.id === state.selectedFieldId)) {
+    state.selectedFieldId = state.fields[0].id;
   }
 
-  container.innerHTML = activeFields.map(f => {
+  container.innerHTML = state.fields.map(f => {
     const isSelected = f.id === state.selectedFieldId;
-    const activeClass = isSelected
-      ? 'bg-emerald-500 text-slate-950 font-black border-emerald-400 shadow-md shadow-emerald-500/20'
-      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 font-bold';
+    const isSuspended = !f.is_active;
+
+    let btnClass = '';
+    if (isSuspended) {
+      btnClass = isSelected
+        ? 'bg-red-600 text-white font-black border-red-700 shadow-md shadow-red-500/25'
+        : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/20 font-bold';
+    } else {
+      btnClass = isSelected
+        ? 'bg-emerald-500 text-slate-950 font-black border-emerald-400 shadow-md shadow-emerald-500/20'
+        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 font-bold';
+    }
 
     return `
-      <button onclick="selectCourt('${f.id}')" class="px-5 py-2.5 rounded-2xl text-xs whitespace-nowrap border transition ${activeClass}">
-        ${f.name}
+      <button onclick="selectCourt('${f.id}')" class="px-5 py-2.5 rounded-2xl text-xs whitespace-nowrap border transition flex items-center space-x-2 ${btnClass}">
+        <span>${f.name}</span>
+        ${isSuspended ? '<span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider">Suspendida</span>' : ''}
       </button>
     `;
   }).join('');
@@ -198,8 +205,22 @@ function updateCourtInfoBanner() {
   const valleyEl = document.getElementById('courtPriceValley');
   const peakEl = document.getElementById('courtPricePeak');
 
-  if (titleEl) titleEl.innerText = field.name;
-  if (descEl) descEl.innerText = field.description || 'Grama sintética profesional con iluminación de alta potencia';
+  if (titleEl) {
+    if (!field.is_active) {
+      titleEl.innerHTML = `<span class="line-through opacity-70">${field.name}</span> <span class="text-xs bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase ml-2">Suspendida</span>`;
+    } else {
+      titleEl.innerText = field.name;
+    }
+  }
+
+  if (descEl) {
+    if (!field.is_active) {
+      descEl.innerHTML = `<strong class="text-red-500 font-bold">⚠️ CANCHA TEMPORALMENTE SUSPENDIDA.</strong> Comunícate con el administrador del sistema para más información.`;
+    } else {
+      descEl.innerText = field.description || 'Grama sintética profesional con iluminación de alta potencia';
+    }
+  }
+
   if (valleyEl) valleyEl.innerText = `$${Number(field.default_price_per_hour).toLocaleString('es-CO')} COP`;
   if (peakEl) peakEl.innerText = `$${Number(field.peak_price_per_hour).toLocaleString('es-CO')} COP`;
 }
@@ -256,6 +277,41 @@ async function loadGridAvailability() {
   const container = document.getElementById('slotsGrid');
   if (!container) return;
 
+  const currentField = state.fields.find(f => f.id === state.selectedFieldId);
+
+  // VALIDACIÓN INMEDIATA: SI LA CANCHA ESTÁ SUSPENDIDA, BLOQUEAR TODA GESTIÓN
+  if (currentField && currentField.is_active === false) {
+    container.innerHTML = `
+      <div class="col-span-full bg-red-500/10 border-2 border-dashed border-red-500/40 rounded-3xl p-8 sm:p-12 text-center space-y-4">
+        <div class="w-16 h-16 rounded-3xl bg-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-lg shadow-red-500/20">
+          <i data-feather="lock" class="w-8 h-8"></i>
+        </div>
+        <div class="max-w-md mx-auto space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full bg-red-600 text-white shadow-sm inline-block">
+            Cancha Suspendida / Fuera de Servicio
+          </span>
+          <h4 class="text-xl font-black text-slate-900 dark:text-white">
+            Esta cuenta o cancha se encuentra suspendida
+          </h4>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            No es posible realizar reservas, visualizar turnos ni gestionar esta instalación debido a una suspensión temporal del servicio.
+          </p>
+          <div class="p-3 bg-red-500/15 border border-red-500/30 rounded-2xl text-xs font-bold text-red-700 dark:text-red-300">
+            📞 Por favor, comunícate con el administrador del sistema para más información o reactivar el servicio.
+          </div>
+        </div>
+        <div class="pt-2">
+          <button onclick="showSuspendedAlertModal('${currentField.name}')" class="bg-red-600 hover:bg-red-500 text-white font-black text-xs px-6 py-3 rounded-2xl transition shadow-lg shadow-red-600/30 inline-flex items-center space-x-2">
+            <i data-feather="alert-circle" class="w-4 h-4"></i>
+            <span>Ver Detalles del Bloqueo</span>
+          </button>
+        </div>
+      </div>
+    `;
+    if (window.feather) feather.replace();
+    return;
+  }
+
   const datePicker = document.getElementById('gridDatePicker');
   if (datePicker && datePicker.value) {
     state.selectedDate = datePicker.value;
@@ -272,6 +328,29 @@ async function loadGridAvailability() {
   try {
     const res = await fetch(`${API_BASE}/reservations/grid?venue_id=${state.currentVenueId}&field_id=${state.selectedFieldId}&date=${state.selectedDate}`);
     const data = await res.json();
+
+    if (data.is_suspended || data.suspended) {
+      container.innerHTML = `
+        <div class="col-span-full bg-red-500/10 border-2 border-dashed border-red-500/40 rounded-3xl p-8 sm:p-12 text-center space-y-4">
+          <div class="w-16 h-16 rounded-3xl bg-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-lg shadow-red-500/20">
+            <i data-feather="slash" class="w-8 h-8"></i>
+          </div>
+          <div class="max-w-md mx-auto space-y-2">
+            <span class="text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full bg-red-600 text-white shadow-sm inline-block">
+              Bloqueo Activo
+            </span>
+            <h4 class="text-xl font-black text-slate-900 dark:text-white">
+              ${data.error || 'Esta cuenta o cancha se encuentra suspendida'}
+            </h4>
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+              Comunícate con el administrador del sistema para restablecer el servicio.
+            </p>
+          </div>
+        </div>
+      `;
+      if (window.feather) feather.replace();
+      return;
+    }
 
     if (!data.success || !data.slots) {
       container.innerHTML = `<p class="col-span-full text-center text-red-500 text-xs">Error al consultar horarios.</p>`;
@@ -348,6 +427,12 @@ async function loadGridAvailability() {
 let currentSelectedPaymentMode = 'deposit_50';
 
 function openBookingModal(startTime, endTime, price) {
+  const field = state.fields.find(f => f.id === state.selectedFieldId);
+  if (field && field.is_active === false) {
+    showSuspendedAlertModal(field.name);
+    return;
+  }
+
   state.currentHoldSlot = { startTime, endTime, price };
   
   const modal = document.getElementById('bookingModal');
@@ -455,6 +540,11 @@ async function submitReservationHold() {
     const data = await res.json();
 
     if (!res.ok) {
+      if (data.suspended) {
+        closeBookingModal();
+        showSuspendedAlertModal();
+        return;
+      }
       showToast(data.error || 'Horario no disponible.', 'warning');
       return;
     }
@@ -941,27 +1031,55 @@ async function loadPricingCourts() {
 
   const fields = state.fields.length > 0 ? state.fields : [];
 
-  container.innerHTML = fields.map(f => `
-    <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
-      <div>
-        <h5 class="font-black text-slate-900 dark:text-white text-sm">${f.name}</h5>
-        <span class="text-slate-500 text-[11px]">Tarifa normal vs Tarifa en alta demanda</span>
-      </div>
-      <div class="flex items-center space-x-3">
-        <div>
-          <label class="block text-slate-500 text-[10px] font-bold">Precio Valle</label>
-          <input type="number" id="priceValle_${f.id}" value="${f.default_price_per_hour}" class="w-24 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-900 dark:text-white font-bold text-xs">
+  container.innerHTML = fields.map(f => {
+    const isSuspended = !f.is_active;
+
+    if (isSuspended) {
+      return `
+        <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h5 class="font-black text-slate-900 dark:text-white text-sm line-through opacity-70">${f.name}</h5>
+              <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-red-600 text-white">SUSPENDIDA</span>
+            </div>
+            <p class="text-red-600 dark:text-red-400 font-bold text-[11px] mt-1">
+              ⚠️ Cancha desactivada por el Administrador. Gestión de tarifas bloqueada. Comunícate con el administrador del sistema.
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="showSuspendedAlertModal('${f.name}')" class="bg-red-600 hover:bg-red-500 text-white font-black px-3.5 py-2 rounded-xl text-xs transition shadow-sm flex items-center space-x-1.5">
+              <i data-feather="lock" class="w-3.5 h-3.5"></i>
+              <span>Bloqueada</span>
+            </button>
+          </div>
         </div>
+      `;
+    }
+
+    return `
+      <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
         <div>
-          <label class="block text-amber-500 text-[10px] font-bold">Precio Pico</label>
-          <input type="number" id="pricePeak_${f.id}" value="${f.peak_price_per_hour}" class="w-24 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-900 dark:text-white font-bold text-xs">
+          <h5 class="font-black text-slate-900 dark:text-white text-sm">${f.name}</h5>
+          <span class="text-slate-500 text-[11px]">Tarifa normal vs Tarifa en alta demanda</span>
         </div>
-        <button onclick="saveFieldPrice('${f.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl mt-3 text-xs transition shadow-sm">
-          Actualizar
-        </button>
+        <div class="flex items-center space-x-3">
+          <div>
+            <label class="block text-slate-500 text-[10px] font-bold">Precio Valle</label>
+            <input type="number" id="priceValle_${f.id}" value="${f.default_price_per_hour}" class="w-24 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-900 dark:text-white font-bold text-xs">
+          </div>
+          <div>
+            <label class="block text-amber-500 text-[10px] font-bold">Precio Pico</label>
+            <input type="number" id="pricePeak_${f.id}" value="${f.peak_price_per_hour}" class="w-24 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-900 dark:text-white font-bold text-xs">
+          </div>
+          <button onclick="saveFieldPrice('${f.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl mt-3 text-xs transition shadow-sm">
+            Actualizar
+          </button>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+
+  if (window.feather) feather.replace();
 }
 
 async function saveFieldPrice(fieldId) {
@@ -980,9 +1098,16 @@ async function saveFieldPrice(fieldId) {
         peak_price_per_hour: Number(pico)
       })
     });
-    if (res.ok) {
+    const data = await res.json();
+    if (res.ok && data.success) {
       showToast('✅ Tarifas de cancha actualizadas correctamente.', 'success');
       await loadVenues();
+    } else {
+      if (data.suspended) {
+        showSuspendedAlertModal('Esta cancha');
+      } else {
+        showToast(data.error || 'Error al actualizar precios.', 'error');
+      }
     }
   } catch (e) {
     showToast('Error al actualizar precios.', 'error');
@@ -1344,4 +1469,23 @@ async function handleSaveSupabaseConfig(e) {
   } finally {
     if (btn) btn.disabled = false;
   }
+}
+
+// ============================================================
+// MODAL DE BLOQUEO Y ALERTA DE CANCHA / CUENTA SUSPENDIDA
+// ============================================================
+
+function showSuspendedAlertModal(targetName = 'Esta cancha') {
+  const modal = document.getElementById('modalSuspendedAlert');
+  const text = document.getElementById('suspendedModalText');
+  if (text) {
+    text.innerText = `${targetName} se encuentra actualmente desactivada o suspendida. Toda gestión de horarios, tarifas y reservas está temporalmente bloqueada. Por favor, comunícate con el administrador del sistema para restablecer el servicio.`;
+  }
+  if (modal) modal.classList.remove('hidden');
+  if (window.feather) feather.replace();
+}
+
+function closeSuspendedAlertModal() {
+  const modal = document.getElementById('modalSuspendedAlert');
+  if (modal) modal.classList.add('hidden');
 }

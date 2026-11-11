@@ -92,6 +92,16 @@ const createOrder = async (req, res, next) => {
     if (payment_method === 'charged_to_field' || reservation_id) {
       targetReservation = await db.findReservationById(reservation_id);
       if (targetReservation) {
+        // Validar si la cancha de la reserva está suspendida
+        const field = await db.findFieldById(targetReservation.field_id);
+        if (field && !field.is_active) {
+          return res.status(403).json({
+            success: false,
+            suspended: true,
+            error: 'No es posible cargar consumos a esta cancha porque se encuentra actualmente suspendida. Por favor, comunícate con el administrador del sistema.'
+          });
+        }
+
         // Se suma a la cuenta total y saldo pendiente de la reserva
         await db.updateReservation(targetReservation.id, {
           total_amount: targetReservation.total_amount + calculatedTotal,

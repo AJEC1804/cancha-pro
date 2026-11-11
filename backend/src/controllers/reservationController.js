@@ -22,6 +22,15 @@ const getGridAvailability = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Cancha no encontrada.' });
     }
 
+    // BLOQUEO ESTRICTO SI LA CANCHA ESTÁ SUSPENDIDA / DESACTIVADA
+    if (field.is_active === false) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: 'Esta cancha se encuentra actualmente suspendida. No es posible realizar reservas en esta instalación. Por favor, comunícate con el administrador del sistema para restablecer el servicio.'
+      });
+    }
+
     const venue = await db.findVenueById(field.venue_id);
 
     // Limpiar reservas 'held' expiradas en tiempo real
@@ -134,6 +143,15 @@ const holdSlot = async (req, res, next) => {
     const field = await db.findFieldById(field_id);
     if (!field) {
       return res.status(404).json({ success: false, error: 'Cancha no encontrada.' });
+    }
+
+    // BLOQUEO ESTRICTO SI LA CANCHA ESTÁ SUSPENDIDA / DESACTIVADA
+    if (field.is_active === false) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: 'Esta cancha se encuentra actualmente suspendida. No es posible realizar reservas en esta instalación. Por favor, comunícate con el administrador del sistema para restablecer el servicio.'
+      });
     }
 
     const venue = await db.findVenueById(field.venue_id);

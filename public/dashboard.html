@@ -545,6 +545,44 @@
       </div>
     </div>
 
+  <!-- Modal Alerta de Cancha / Cuenta Suspendida -->
+  <div id="modalSuspendedAlert" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border-2 border-red-500/50 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl text-center transition">
+      <div class="w-16 h-16 rounded-3xl bg-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-lg shadow-red-500/20">
+        <i data-feather="slash" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-red-600 text-white shadow-sm">
+          Bloqueo de Seguridad
+        </span>
+        <h3 class="text-lg font-black text-slate-900 dark:text-white mt-3">Cuenta / Cancha Suspendida</h3>
+        <p id="suspendedModalText" class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+          Esta cancha se encuentra actualmente desactivada o suspendida. No es posible realizar gestiones, reservas ni operaciones comerciales en esta instalación.
+        </p>
+      </div>
+
+      <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-left space-y-1.5">
+        <p class="text-xs font-bold text-red-600 dark:text-red-400 flex items-center space-x-1.5">
+          <i data-feather="alert-triangle" class="w-4 h-4"></i>
+          <span>Acción requerida:</span>
+        </p>
+        <p class="text-[11px] text-slate-600 dark:text-slate-400">
+          Por favor comunícate directamente con el <strong>Administrador del Sistema</strong> para solicitar el desbloqueo o reactivación del servicio.
+        </p>
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="closeSuspendedAlertModal()" class="w-1/2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs transition">
+          Cerrar
+        </button>
+        <a href="https://wa.me/573006799595?text=Hola,%20mi%20cancha%20o%20cuenta%20est%C3%A1%20suspendida%20en%20CanchaPro,%20solicito%20asistencia%20del%20administrador%20del%20sistema" target="_blank" class="w-1/2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-1.5">
+          <i data-feather="message-circle" class="w-4 h-4"></i>
+          <span>WhatsApp Admin</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
