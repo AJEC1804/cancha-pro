@@ -375,97 +375,249 @@ const db = {
   generateId: () => crypto.randomUUID ? crypto.randomUUID() : `id-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
 
   // Venues
-  findVenues: async () => {
+  findVenues: async (includeInactive = false) => {
+    let result = [];
     const sb = getSupabase();
     if (sb) {
       try {
-        const { data, error } = await sb.from('venues').select('*').eq('is_active', true);
-        if (!error && data && data.length > 0) return data;
+        let query = sb.from('venues').select('*');
+        if (!includeInactive) query = query.eq('is_active', true);
+        const { data, error } = await query.order('name');
+        if (!error && data) {
+          result = [...data];
+        }
       } catch (err) {
         // Fallback a memoria
       }
     }
-    return inMemoryStore.venues.filter(v => v.is_active);
+    // Mergear con inMemoryStore para no perder sedes creadas/modificadas localmente
+    const localVenues = inMemoryStore.venues.filter(v => includeInactive || v.is_active);
+    for (const lv of localVenues) {
+      const idx = result.findIndex(r => r.id === lv.id || r.slug === lv.slug);
+      if (idx >= 0) {
+        result[idx] = { ...result[idx], ...lv };
+      } else {
+        result.push(lv);
+      }
+    }
+    return result;
   },
   findVenueById: async (id) => {
+    const local = inMemoryStore.venues.find(v => v.id === id || v.slug === id);
     const sb = getSupabase();
     if (sb) {
       try {
-        const { data, error } = await sb.from('venues').select('*').or(`id.eq.${id},slug.eq.${id}`).single();
-        if (!error && data) return data;
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        const query = isUuid ? sb.from('venues').select('*').eq('id', id) : sb.from('venues').select('*').eq('slug', id);
+        const { data, error } = await query.maybeSingle();
+        if (!error && data) return local ? { ...data, ...local } : data;
       } catch (err) {
         // Fallback a memoria
       }
     }
-    return inMemoryStore.venues.find(v => v.id === id || v.slug === id);
+    return local;
   },
   createVenue: async (data) => {
     const venue = {
-      id: db.generateId(),
-      slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      is_active: true,
+      id: data.id || db.generateId(),
+      slug: data.slug || data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'),
+      is_active: data.is_active !== undefined ? data.is_active : true,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...data
     };
     inMemoryStore.venues.push(venue);
     const sb = getSupabase();
     if (sb) {
-      try { await sb.from('venues').insert([venue]); } catch (e) {}
+      try {
+        await sb.from('venues').insert([{
+          id: venue.id,
+          slug: venue.slug,
+          name: venue.name,
+          nit_rut: venue.nit_rut || null,
+          phone: venue.phone,
+          email: venue.email || null,
+          address: venue.address,
+          city: venue.city || 'Cartagena',
+          open_time: venue.open_time || '06:00:00',
+          close_time: venue.close_time || '23:00:00',
+          slot_duration_minutes: venue.slot_duration_minutes || 60,
+          deposit_percentage: venue.deposit_percentage || 50,
+          hold_timeout_minutes: venue.hold_timeout_minutes || 10,
+          cancellation_hours_notice: venue.cancellation_hours_notice || 6,
+          rules_and_conditions: venue.rules_and_conditions || null,
+          is_active: venue.is_active
+        }]);
+      } catch (e) {
+        console.warn('[DB] Supabase createVenue insert error:', e.message);
+      }
     }
     return venue;
   },
   updateVenue: async (id, data) => {
-    const idx = inMemoryStore.venues.findIndex(v => v.id === id);
-    if (idx === -1) return null;
-    inMemoryStore.venues[idx] = { ...inMemoryStore.venues[idx], ...data, updated_at: new Date().toISOString() };
+    let target = inMemoryStore.venues.find(v => v.id === id || v.slug === id);
+    if (target) {
+      Object.assign(target, data, { updated_at: new Date().toISOString() });
+    }
     const sb = getSupabase();
     if (sb) {
-      try { await sb.from('venues').update(data).eq('id', id); } catch (e) {}
+      try {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        const targetId = target ? target.id : (isUuid ? id : null);
+        let query;
+        if (targetId) {
+          query = sb.from('venues').update(data).eq('id', targetId);
+        } else {
+          query = sb.from('venues').update(data).eq('slug', id);
+        }
+        const { data: updatedData, error } = await query.select().maybeSingle();
+        if (!error && updatedData) {
+          if (target) {
+            Object.assign(target, updatedData);
+          } else {
+            inMemoryStore.venues.push(updatedData);
+          }
+          return updatedData;
+        }
+      } catch (e) {
+        console.warn('[DB] Supabase updateVenue update error:', e.message);
+      }
     }
-    return inMemoryStore.venues[idx];
+    return target;
   },
 
   // Users
-  findUserByEmail: async (email) => inMemoryStore.users.find(u => u.email.toLowerCase() === email.toLowerCase()),
-  findUserById: async (id) => inMemoryStore.users.find(u => u.id === id),
-  findUsersByVenue: async (venueId) => inMemoryStore.users.filter(u => u.venue_id === venueId),
+  findUserByEmail: async (email) => {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('users').select('*').ilike('email', cleanEmail).maybeSingle();
+        if (!error && data) return data;
+      } catch (e) {}
+    }
+    return inMemoryStore.users.find(u => u.email.toLowerCase() === cleanEmail);
+  },
+  findUserById: async (id) => {
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('users').select('*').eq('id', id).maybeSingle();
+        if (!error && data) return data;
+      } catch (e) {}
+    }
+    return inMemoryStore.users.find(u => u.id === id);
+  },
+  findUsersByVenue: async (venueId) => {
+    let result = [];
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('users').select('*').eq('venue_id', venueId);
+        if (!error && data) result = [...data];
+      } catch (e) {}
+    }
+    const localUsers = inMemoryStore.users.filter(u => u.venue_id === venueId);
+    for (const lu of localUsers) {
+      const idx = result.findIndex(r => r.id === lu.id || r.email.toLowerCase() === lu.email.toLowerCase());
+      if (idx >= 0) {
+        result[idx] = { ...result[idx], ...lu };
+      } else {
+        result.push(lu);
+      }
+    }
+    return result;
+  },
   createUser: async (data) => {
     const user = {
-      id: db.generateId(),
-      is_active: true,
+      id: data.id || db.generateId(),
+      is_active: data.is_active !== undefined ? data.is_active : true,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...data
     };
     inMemoryStore.users.push(user);
     const sb = getSupabase();
     if (sb) {
-      try { await sb.from('users').insert([user]); } catch (e) {}
+      try {
+        await sb.from('users').insert([{
+          id: user.id,
+          venue_id: user.venue_id || null,
+          role: user.role || 'cliente',
+          name: user.name,
+          email: user.email.toLowerCase(),
+          phone: user.phone || '',
+          document_id: user.document_id || null,
+          password_hash: user.password_hash || '$2b$10$hashedadmin123',
+          is_active: user.is_active
+        }]);
+      } catch (e) {
+        console.warn('[DB] Supabase createUser insert error:', e.message);
+      }
     }
     return user;
+  },
+  updateUser: async (id, data) => {
+    const idx = inMemoryStore.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      inMemoryStore.users[idx] = { ...inMemoryStore.users[idx], ...data, updated_at: new Date().toISOString() };
+    }
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from('users').update(data).eq('id', id);
+      } catch (e) {
+        console.warn('[DB] Supabase updateUser update error:', e.message);
+      }
+    }
+    return idx !== -1 ? inMemoryStore.users[idx] : null;
   },
 
   // Fields
   findFieldsByVenue: async (venueId, includeInactive = false) => {
+    let result = [];
     const sb = getSupabase();
     if (sb) {
       try {
         let query = sb.from('fields').select('*').eq('venue_id', venueId);
         if (!includeInactive) query = query.eq('is_active', true);
         const { data, error } = await query;
-        if (!error && data && data.length > 0) return data;
+        if (!error && data) {
+          result = [...data];
+        }
       } catch (err) {}
     }
-    return inMemoryStore.fields.filter(f => f.venue_id === venueId && (includeInactive || f.is_active));
+    const localFields = inMemoryStore.fields.filter(f => f.venue_id === venueId && (includeInactive || f.is_active));
+    for (const lf of localFields) {
+      const idx = result.findIndex(r => r.id === lf.id);
+      if (idx >= 0) {
+        result[idx] = { ...result[idx], ...lf };
+      } else {
+        result.push(lf);
+      }
+    }
+    return result;
   },
   findAllFields: async () => {
+    let result = [];
     const sb = getSupabase();
     if (sb) {
       try {
         const { data, error } = await sb.from('fields').select('*');
-        if (!error && data && data.length > 0) return data;
+        if (!error && data) {
+          result = [...data];
+        }
       } catch (err) {}
     }
-    return inMemoryStore.fields;
+    for (const lf of inMemoryStore.fields) {
+      const idx = result.findIndex(r => r.id === lf.id);
+      if (idx >= 0) {
+        result[idx] = { ...result[idx], ...lf };
+      } else {
+        result.push(lf);
+      }
+    }
+    return result;
   },
   findFieldById: async (id) => {
     const sb = getSupabase();

@@ -41,6 +41,14 @@ const login = async (req, res, next) => {
     let venue = null;
     if (user.venue_id) {
       venue = await db.findVenueById(user.venue_id);
+      // BLOQUEO ESTRICTO SI LA SEDE ESTÁ SUSPENDIDA
+      if (venue && !venue.is_active && user.role !== 'superadmin') {
+        return res.status(403).json({
+          success: false,
+          suspended: true,
+          error: `El complejo deportivo "${venue.name}" se encuentra suspendido. La gestión está bloqueada. Por favor, comunícate con el SuperAdmin del sistema.`
+        });
+      }
     }
 
     res.json({

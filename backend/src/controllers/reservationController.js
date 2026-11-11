@@ -32,6 +32,29 @@ const getGridAvailability = async (req, res, next) => {
     }
 
     const venue = await db.findVenueById(field.venue_id);
+    if (venue && !venue.is_active) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: `El complejo deportivo "${venue.name}" se encuentra actualmente suspendido. No es posible realizar reservas. Por favor, comunícate con el administrador del sistema.`
+      });
+    }
+    if (venue && !venue.is_active) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: `El complejo "${venue.name}" se encuentra suspendido. Las reservas están deshabilitadas temporalmente. Por favor comunícate con el administrador del sistema.`
+      });
+    }
+
+    // Obtener otras canchas de la MISMA sede para alternativas simultáneas (Cero mezcla entre sedes)
+    const otherFields = (await db.findFieldsByVenue(field.venue_id, false)).filter(f => f.id !== field.id);
+    const otherReservations = await Promise.all(
+      otherFields.map(async (of) => ({
+        field: of,
+        reservations: await db.findReservations({ field_id: of.id, booking_date: date })
+      }))
+    );
 
     // Limpiar reservas 'held' expiradas en tiempo real
     await lockTimerService.cleanExpiredReservations();
@@ -65,6 +88,7 @@ const getGridAvailability = async (req, res, next) => {
       let slotStatus = 'available';
       let reservationData = null;
       let secondsRemaining = 0;
+      let sameHourAlternatives = [];
 
       if (existingRes) {
         if (existingRes.status === 'held') {
@@ -94,6 +118,22 @@ const getGridAvailability = async (req, res, next) => {
             remaining_balance: existingRes.remaining_balance
           };
         }
+
+        // Buscar alternativas simultáneas libres en el mismo complejo
+        if (slotStatus !== 'available') {
+          sameHourAlternatives = otherReservations.filter(item => {
+            const hasConflict = item.reservations.some(r =>
+              !['cancelled', 'expired'].includes(r.status) &&
+              (startTime < r.end_time && endTime > r.start_time)
+            );
+            return !hasConflict;
+          }).map(item => ({
+            field_id: item.field.id,
+            field_name: item.field.name,
+            sport_type: item.field.sport_type,
+            price: isPeakHour ? item.field.peak_price_per_hour : item.field.default_price_per_hour
+          }));
+        }
       }
 
       slots.push({
@@ -103,7 +143,8 @@ const getGridAvailability = async (req, res, next) => {
         status: slotStatus,
         price: hourlyPrice,
         is_peak: isPeakHour,
-        reservation: reservationData
+        reservation: reservationData,
+        alternatives: sameHourAlternatives
       });
     }
 
@@ -155,6 +196,13 @@ const holdSlot = async (req, res, next) => {
     }
 
     const venue = await db.findVenueById(field.venue_id);
+    if (venue && !venue.is_active) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: `El complejo deportivo "${venue.name}" se encuentra actualmente suspendido. No es posible realizar reservas. Por favor, comunícate con el administrador del sistema.`
+      });
+    }
 
     // 1. Verificación atómica de conflicto de horario
     const conflict = await db.checkConflict(field_id, booking_date, start_time, end_time);
@@ -351,6 +399,14 @@ const getMultiGridAvailability = async (req, res, next) => {
     const venue = await db.findVenueById(targetVenueId);
     if (!venue) {
       return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
+    }
+
+    if (venue && !venue.is_active) {
+      return res.status(403).json({
+        success: false,
+        suspended: true,
+        error: `El complejo deportivo "${venue.name}" se encuentra actualmente suspendido. Las reservas están bloqueadas. Por favor comuníquese con el administrador del sistema.`
+      });
     }
 
     await lockTimerService.cleanExpiredReservations();

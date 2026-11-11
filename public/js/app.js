@@ -131,16 +131,61 @@ function showToast(message, type = 'success') {
   }, 4000);
 }
 
-// Cargar Sedes
+// Cargar Sedes (Multi-Tenant con soporte para parámetros URL ?venue=slug)
 async function loadVenues() {
   try {
-    const res = await fetch(`${API_BASE}/venues`);
+    const res = await fetch(`${API_BASE}/venues?all=true`);
     const data = await res.json();
-    if (data.success) {
+    if (data.success && data.venues) {
       state.venues = data.venues;
-      const v = state.venues.find(v => v.id === state.currentVenueId);
-      if (v && v.fields) {
-        state.fields = v.fields;
+
+      // 1. Detectar si la URL trae un parámetro de sede (?venue=la-favela o ?venue=id)
+      const urlParams = new URLSearchParams(window.location.search);
+      const venueParam = urlParams.get('venue');
+
+      if (venueParam) {
+        const found = state.venues.find(v => v.slug === venueParam || v.id === venueParam);
+        if (found) {
+          state.currentVenueId = found.id;
+        }
+      }
+
+      // 2. Determinar la sede activa
+      let currentVenue = state.venues.find(v => v.id === state.currentVenueId);
+      if (!currentVenue && state.venues.length > 0) {
+        currentVenue = state.venues[0];
+        state.currentVenueId = currentVenue.id;
+      }
+
+      // 3. Actualizar textos en la interfaz
+      const label = document.getElementById('currentVenueLabel');
+      if (label && currentVenue) {
+        label.innerText = `${currentVenue.name} (${currentVenue.city})`;
+      }
+
+      // 4. Actualizar selector de sede en el Menú Lateral
+      const drawerSelector = document.getElementById('drawerVenueSelector');
+      if (drawerSelector) {
+        drawerSelector.innerHTML = state.venues.map(v => `
+          <option value="${v.id}" ${v.id === state.currentVenueId ? 'selected' : ''}>
+            ${v.is_active ? '📍' : '⚠️'} ${v.name} (${v.city}) ${!v.is_active ? '[SUSPENDIDO]' : ''}
+          </option>
+        `).join('');
+      }
+
+      // 5. Validar suspensión global del complejo
+      const suspendedBanner = document.getElementById('venueSuspendedGlobalBanner');
+      if (suspendedBanner) {
+        if (currentVenue && !currentVenue.is_active) {
+          suspendedBanner.classList.remove('hidden');
+        } else {
+          suspendedBanner.classList.add('hidden');
+        }
+      }
+
+      // 6. Cargar canchas correspondientes única y exclusivamente a este complejo
+      if (currentVenue && currentVenue.fields) {
+        state.fields = currentVenue.fields;
         renderCourtTabs();
       }
     }
@@ -411,19 +456,40 @@ async function loadGridAvailability() {
           </div>
         `;
       } else {
+        const hasAlternatives = slot.alternatives && slot.alternatives.length > 0;
+        const alternativesHtml = hasAlternatives
+          ? `
+            <div class="mt-1 pt-1.5 border-t border-slate-200 dark:border-slate-800">
+              <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 block mb-1">💡 Disponible a las ${slot.start_time}:</span>
+              <div class="flex flex-wrap gap-1">
+                ${slot.alternatives.map(alt => `
+                  <button onclick="event.stopPropagation(); selectCourt('${alt.field_id}')" 
+                    title="Cambiar a ${alt.field_name}"
+                    class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-lg transition shadow-xs flex items-center space-x-1">
+                    <span>${alt.field_name.split('—')[1] || alt.field_name}</span>
+                    <span class="opacity-75">($${(alt.price/1000).toFixed(0)}k)</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `
+          : `
+            <div class="text-[10px] text-slate-500 bg-slate-200 dark:bg-slate-900 py-1 rounded-xl text-center font-semibold">
+              No disponible
+            </div>
+          `;
+
         return `
-          <div class="bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 p-4 rounded-3xl flex flex-col justify-between h-36 opacity-75">
+          <div class="bg-slate-100 dark:bg-slate-950/70 border ${hasAlternatives ? 'border-emerald-500/40 ring-1 ring-emerald-500/20' : 'border-slate-200 dark:border-slate-800/80 opacity-80'} p-3.5 rounded-3xl flex flex-col justify-between min-h-[9.5rem]">
             <div class="flex items-center justify-between">
               <span class="text-sm font-bold text-slate-500 dark:text-slate-400">${slot.start_time} - ${slot.end_time}</span>
               <i data-feather="check-circle" class="w-3.5 h-3.5 text-slate-400"></i>
             </div>
             <div>
               <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">Reservado</span>
-              <span class="text-[10px] text-slate-500">${slot.reservation?.client_name || 'Confirmado'}</span>
+              <span class="text-[10px] text-slate-500 truncate block">${slot.reservation?.client_name || 'Confirmado'}</span>
             </div>
-            <div class="text-[10px] text-slate-500 bg-slate-200 dark:bg-slate-900 py-1.5 rounded-xl text-center font-semibold">
-              No disponible
-            </div>
+            ${alternativesHtml}
           </div>
         `;
       }
@@ -771,20 +837,26 @@ function switchActiveRole(role) {
     if (btnSuper) btnSuper.className = 'px-3 py-1 rounded-xl font-black bg-purple-600 text-white transition';
     if (vSuper) vSuper.classList.remove('hidden');
     if (bannerTitle) bannerTitle.innerText = 'Panel de Control SuperAdmin (Alejandro)';
-    if (bannerDesc) bannerDesc.innerText = 'Control total: Activar/Desactivar canchas, alta de nuevos complejos y CRUD completo.';
+    if (bannerDesc) bannerDesc.innerText = 'Supervisión multi-tenant: Alta de complejos, vinculación de administradores y activación/suspensión de sedes.';
     if (bannerBadge) { bannerBadge.innerText = 'SuperAdmin'; bannerBadge.className = 'text-xs font-black px-3.5 py-1.5 rounded-full bg-purple-600 text-white uppercase'; }
     if (topUserName) topUserName.innerText = 'Alejandro SuperAdmin';
-    if (topUserRole) topUserRole.innerText = 'SuperAdmin • Control Global';
-    loadSuperadminFields();
+    if (topUserRole) topUserRole.innerText = 'SuperAdmin • Control Global Multi-Tenant';
     loadSuperadminVenues();
   } else if (role === 'tenant_admin') {
     if (btnTenant) btnTenant.className = 'px-3 py-1 rounded-xl font-black bg-emerald-500 text-slate-950 transition';
     if (vTenant) vTenant.classList.remove('hidden');
-    if (bannerTitle) bannerTitle.innerText = 'Panel de Negocio: Complejo La Bernabéu';
-    if (bannerDesc) bannerDesc.innerText = 'Control de tarifas dinámicas valle/pico, horarios apertura/cierre y personal de cancha.';
+    
+    const curV = state.venues.find(v => v.id === state.currentVenueId) || state.venues[0];
+    const venueName = curV ? curV.name : 'Complejo Deportivo';
+    const adminName = curV && curV.admin_name ? curV.admin_name : 'Admin Sede';
+
+    if (bannerTitle) bannerTitle.innerText = `Panel de Gestión: ${venueName}`;
+    if (bannerDesc) bannerDesc.innerText = 'Autogestión de tus sub-canchas (Cancha 1, 2, 3), formatos de fútbol, tarifas Valle/Pico y personal.';
     if (bannerBadge) { bannerBadge.innerText = 'Admin Sede'; bannerBadge.className = 'text-xs font-black px-3.5 py-1.5 rounded-full bg-emerald-500 text-slate-950 uppercase'; }
-    if (topUserName) topUserName.innerText = 'Don Mario Administrador';
-    if (topUserRole) topUserRole.innerText = 'Admin • Complejo La Bernabéu';
+    if (topUserName) topUserName.innerText = adminName;
+    if (topUserRole) topUserRole.innerText = `Admin • ${venueName}`;
+
+    loadTenantAdminFields();
     loadPricingCourts();
     loadStaffList();
     loadSubscriptions();
@@ -820,64 +892,288 @@ async function loadDashboardData() {
 }
 
 // ============================================================
-// CRUD DE CANCHAS PARA SUPERADMIN
+// SUPERADMIN: SUPERVISIÓN Y CONTROL DE COMPLEJOS DEPORTIVOS
 // ============================================================
 
-async function loadSuperadminFields() {
-  const container = document.getElementById('superadminFieldsTableContainer');
-  const countLabel = document.getElementById('superadminTotalFieldsCount');
+state.superadminVenues = [];
+state.venueStatusFilter = 'all';
+state.venueSearchQuery = '';
+
+async function loadSuperadminVenues() {
+  const container = document.getElementById('superadminVenuesList');
   if (!container) return;
 
   try {
-    const res = await fetch(`${API_BASE}/venues/fields/all`, {
+    const res = await fetch(`${API_BASE}/venues?all=true`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.venues) {
+      state.superadminVenues = data.venues;
+      renderSuperadminVenuesGrid();
+    }
+  } catch (e) {
+    console.error('Error cargando sedes para superadmin:', e);
+  }
+}
+
+function filterSuperadminVenues() {
+  const searchInput = document.getElementById('superadminVenueSearch');
+  state.venueSearchQuery = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  renderSuperadminVenuesGrid();
+}
+
+function setVenueStatusFilter(filter) {
+  state.venueStatusFilter = filter;
+  ['all', 'active', 'suspended'].forEach(f => {
+    const btn = document.getElementById(`btnFilterVenue${f.charAt(0).toUpperCase() + f.slice(1)}`);
+    if (btn) {
+      if (f === filter) {
+        btn.className = 'px-3 py-1.5 rounded-xl font-black bg-purple-600 text-white transition';
+      } else {
+        btn.className = 'px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition';
+      }
+    }
+  });
+  renderSuperadminVenuesGrid();
+}
+
+function renderSuperadminVenuesGrid() {
+  const container = document.getElementById('superadminVenuesList');
+  const countBadge = document.getElementById('superadminVenuesCountBadge');
+  if (!container) return;
+
+  let list = state.superadminVenues || [];
+
+  // Filtro de texto en tiempo real
+  if (state.venueSearchQuery) {
+    const q = state.venueSearchQuery;
+    list = list.filter(v => 
+      (v.name && v.name.toLowerCase().includes(q)) ||
+      (v.city && v.city.toLowerCase().includes(q)) ||
+      (v.address && v.address.toLowerCase().includes(q)) ||
+      (v.admin_email && v.admin_email.toLowerCase().includes(q)) ||
+      (v.admin_name && v.admin_name.toLowerCase().includes(q))
+    );
+  }
+
+  // Filtro de estado
+  if (state.venueStatusFilter === 'active') {
+    list = list.filter(v => v.is_active);
+  } else if (state.venueStatusFilter === 'suspended') {
+    list = list.filter(v => !v.is_active);
+  }
+
+  if (countBadge) {
+    countBadge.innerText = `Mostrando ${list.length} de ${state.superadminVenues.length} sedes`;
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full p-8 text-center bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800">
+        <p class="text-sm font-bold text-slate-700 dark:text-slate-300">No se encontraron complejos deportivos</p>
+        <p class="text-xs text-slate-500 mt-1">Intenta con otro término o cambia el filtro de estado.</p>
+      </div>
+    `;
+    if (window.feather) feather.replace();
+    return;
+  }
+
+  container.innerHTML = list.map(v => {
+    const isActive = v.is_active;
+    const statusBadge = isActive
+      ? `<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black px-2.5 py-1 rounded-full border border-emerald-500/20 text-[10px] flex items-center space-x-1.5 shadow-sm">
+           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+           <span>ACTIVO</span>
+         </span>`
+      : `<span class="bg-red-500/15 text-red-600 dark:text-red-400 font-black px-2.5 py-1 rounded-full border border-red-500/30 text-[10px] flex items-center space-x-1.5 shadow-sm">
+           <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+           <span>SUSPENDIDO</span>
+         </span>`;
+
+    const toggleButton = isActive
+      ? `<button onclick="toggleVenueStatus('${v.id}')" class="bg-slate-100 dark:bg-slate-800 hover:bg-red-600 hover:text-white text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-xs transition border border-slate-200 dark:border-slate-700">
+           Suspender Sede
+         </button>`
+      : `<button onclick="toggleVenueStatus('${v.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs transition shadow-sm">
+           Activar Sede
+         </button>`;
+
+    const fields = v.fields || [];
+    const fieldsList = fields.length > 0
+      ? fields.map(f => {
+          const isFActive = f.is_active;
+          return `<span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${isFActive ? 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800' : 'bg-red-500/10 text-red-500 line-through'}">
+            ${f.name}
+          </span>`;
+        }).join(' ')
+      : `<span class="text-[10px] text-slate-400 italic">Sin sub-canchas registradas</span>`;
+
+    return `
+      <div class="bg-white dark:bg-slate-950 border ${isActive ? 'border-slate-200 dark:border-slate-800' : 'border-red-500/40 bg-red-500/[0.02]'} p-5 rounded-3xl flex flex-col justify-between space-y-4 shadow-sm dark:shadow-none transition hover:shadow-md">
+        
+        <div class="flex justify-between items-start gap-2">
+          <div>
+            <span class="text-[10px] text-purple-600 dark:text-purple-400 font-black uppercase tracking-wider block">${v.city || 'Cartagena'}</span>
+            <h4 class="font-black text-slate-900 dark:text-white text-base mt-0.5 leading-snug">${v.name}</h4>
+            <p class="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1">
+              <span>📍</span>
+              <span class="truncate">${v.address}</span>
+            </p>
+          </div>
+          <div class="shrink-0">
+            ${statusBadge}
+          </div>
+        </div>
+
+        <!-- Administrador Vinculado Exclusivo -->
+        <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl text-[11px] space-y-1">
+          <div class="flex justify-between items-center text-slate-400 text-[10px] font-bold uppercase">
+            <span>Administrador Dueño</span>
+            <span>Tel: ${v.admin_phone || v.phone}</span>
+          </div>
+          <div class="font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+            <span>👤</span>
+            <span class="truncate">${v.admin_name || 'Administrador'}</span>
+          </div>
+          <div class="text-purple-600 dark:text-purple-400 font-mono text-[10px] font-semibold truncate">
+            ✉️ ${v.admin_email}
+          </div>
+        </div>
+
+        <!-- Resumen de Sub-canchas -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-bold text-slate-700 dark:text-slate-300">Sub-canchas internas (${v.fields_count || fields.length})</span>
+            <span class="text-[10px] text-slate-400">Horario: ${v.open_time || '06:00'} - ${v.close_time || '23:00'}</span>
+          </div>
+          <div class="flex flex-wrap gap-1">
+            ${fieldsList}
+          </div>
+        </div>
+
+        <!-- Acciones del SuperAdmin -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 gap-2">
+          <a href="index.html?venue=${v.slug || v.id}" target="_blank" class="bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 font-bold px-3 py-2 rounded-xl text-xs transition border border-purple-500/20 flex items-center space-x-1 shrink-0">
+            <span>Ver Portal</span>
+            <span>↗</span>
+          </a>
+          <div class="flex items-center space-x-1.5">
+            ${toggleButton}
+          </div>
+        </div>
+
+      </div>
+    `;
+  }).join('');
+
+  if (window.feather) feather.replace();
+}
+
+async function toggleVenueStatus(venueId) {
+  try {
+    const res = await fetch(`${API_BASE}/venues/${venueId}/toggle`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      await loadSuperadminVenues();
+      await loadVenues();
+    } else {
+      showToast(data.error || 'Error al cambiar estado del complejo.', 'error');
+    }
+  } catch (e) {
+    showToast('Error de conexión al conmutar estado de la sede.', 'error');
+  }
+}
+
+// ============================================================
+// ADMIN SEDE: AUTOGESTIÓN DE SUB-CANCHAS (CANCHA 1, 2, 3...)
+// ============================================================
+
+async function loadTenantAdminFields() {
+  const container = document.getElementById('tenantAdminFieldsContainer');
+  const titleEl = document.getElementById('tenantVenueTitle');
+  const badgeEl = document.getElementById('tenantVenueBadge');
+  if (!container) return;
+
+  const currentVenue = state.venues.find(v => v.id === state.currentVenueId) || state.venues[0];
+  if (currentVenue) {
+    if (titleEl) titleEl.innerText = `🏟️ Mis Sub-Canchas: ${currentVenue.name}`;
+    if (badgeEl) badgeEl.innerText = `${currentVenue.city} • Autogestión`;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/fields/all?venue_id=${state.currentVenueId}`, {
       headers: { 'Authorization': `Bearer ${state.authToken}` }
     });
     const data = await res.json();
     if (data.success && data.fields) {
-      if (countLabel) countLabel.innerText = `${data.fields.length} Canchas`;
+      state.fields = data.fields;
 
-      container.innerHTML = `
-        <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-          <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
-            <tr>
-              <th class="py-3 px-4">Cancha</th>
-              <th class="py-3 px-4">Sede / Ciudad</th>
-              <th class="py-3 px-4">Deporte</th>
-              <th class="py-3 px-4">Precios Valle / Pico</th>
-              <th class="py-3 px-4 text-center">Estado</th>
-              <th class="py-3 px-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-            ${data.fields.map(f => {
-              const isActive = f.is_active;
-              const statusBadge = isActive
-                ? '<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black px-2.5 py-1 rounded-full border border-emerald-500/20">ACTIVA</span>'
-                : '<span class="bg-slate-200 dark:bg-slate-800 text-slate-500 font-bold px-2.5 py-1 rounded-full">DESACTIVADA</span>';
+      if (data.fields.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full p-8 text-center bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Aún no tienes sub-canchas registradas.</p>
+            <p class="text-xs text-slate-500 mt-1">Haz clic en "+ Agregar Otra Cancha" para dar de alta tu Cancha 2 o Cancha 3.</p>
+          </div>
+        `;
+        return;
+      }
 
-              const toggleButton = isActive
-                ? `<button onclick="toggleCourtStatus('${f.id}')" class="bg-slate-200 dark:bg-slate-800 hover:bg-red-500/10 hover:text-red-600 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-1.5 rounded-xl transition border border-slate-300 dark:border-slate-700">Desactivar</button>`
-                : `<button onclick="toggleCourtStatus('${f.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-1.5 rounded-xl transition shadow-sm">Activar</button>`;
+      container.innerHTML = data.fields.map(f => {
+        const isActive = f.is_active;
+        const wkndValle = f.weekend_price_per_hour || 130000;
+        const wkndPeak = f.weekend_peak_price_per_hour || 160000;
 
-              return `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
-                  <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${f.name}</td>
-                  <td class="py-3 px-4 text-slate-500 font-medium">${f.venue_name} (${f.venue_city || 'Cartagena'})</td>
-                  <td class="py-3 px-4 uppercase text-[11px] font-semibold text-slate-600 dark:text-slate-400">${f.sport_type}</td>
-                  <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">$${f.default_price_per_hour.toLocaleString('es-CO')} / <strong class="text-amber-500">$${f.peak_price_per_hour.toLocaleString('es-CO')}</strong></td>
-                  <td class="py-3 px-4 text-center">${statusBadge}</td>
-                  <td class="py-3 px-4 text-right space-x-1.5">
-                    ${toggleButton}
-                    <button onclick='openEditFieldModal(${JSON.stringify(f).replace(/'/g, "&apos;")})' class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold px-2.5 py-1.5 rounded-xl transition">
-                      Editar
-                    </button>
-                    <button onclick="deleteCourt('${f.id}')" class="text-red-500 hover:text-red-600 font-bold px-2 py-1.5">
-                      ✕
-                    </button>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
+        return `
+          <div class="bg-slate-50 dark:bg-slate-950 border ${isActive ? 'border-slate-200 dark:border-slate-800' : 'border-red-500/40 bg-red-500/[0.02]'} p-4 rounded-3xl flex flex-col justify-between space-y-3 shadow-sm transition">
+            
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">${f.sport_type?.toUpperCase() || 'FÚTBOL 5'}</span>
+                <h4 class="font-black text-slate-900 dark:text-white text-sm ${!isActive ? 'line-through opacity-70' : ''}">${f.name}</h4>
+                <p class="text-[11px] text-slate-500 mt-0.5">${f.surface_type || 'Sintética monofilamento'}</p>
+              </div>
+              <span class="${isActive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30'} text-[10px] font-black px-2.5 py-0.5 rounded-full border">
+                ${isActive ? 'ACTIVA' : 'DESACTIVADA'}
+              </span>
+            </div>
+
+            <!-- Precios de la Cancha -->
+            <div class="grid grid-cols-2 gap-2 text-[10px] bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <span class="text-slate-400 block">Lun-Vie Valle/Pico:</span>
+                <span class="font-bold text-slate-800 dark:text-white">$${(f.default_price_per_hour/1000).toFixed(0)}k / <strong class="text-amber-500">$${(f.peak_price_per_hour/1000).toFixed(0)}k</strong></span>
+              </div>
+              <div>
+                <span class="text-slate-400 block">Finde Valle/Pico:</span>
+                <span class="font-bold text-slate-800 dark:text-white">$${(wkndValle/1000).toFixed(0)}k / <strong class="text-amber-500">$${(wkndPeak/1000).toFixed(0)}k</strong></span>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex items-center justify-between pt-1 text-xs">
+              <button onclick="toggleCourtStatus('${f.id}')" class="${isActive ? 'text-slate-600 dark:text-slate-400 hover:text-red-500' : 'text-emerald-600 dark:text-emerald-400 font-bold'} text-[11px] underline">
+                ${isActive ? 'Desactivar Cancha' : 'Activar Cancha'}
+              </button>
+              <button onclick='openEditFieldModal(${JSON.stringify(f).replace(/'/g, "&apos;")})' class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition">
+                Editar Tarifas
+              </button>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      if (window.feather) feather.replace();
+    }
+  } catch (e) {
+    console.error('Error cargando sub-canchas del tenant:', e);
+  }
+}
           </tbody>
         </table>
       `;
@@ -926,27 +1222,76 @@ async function deleteCourt(fieldId) {
   }
 }
 
-// Modal Crear/Editar Cancha
+// Modal Crear/Editar Sub-Cancha (Autogestión Admin Sede & SuperAdmin)
 function openNewFieldModal() {
-  document.getElementById('modalFieldFormTitle').innerText = 'Crear Nueva Cancha';
+  const titleEl = document.getElementById('modalFieldFormTitle');
+  if (titleEl) titleEl.innerText = 'Crear Nueva Sub-Cancha';
+
   document.getElementById('fieldFormId').value = '';
   document.getElementById('fieldFormName').value = '';
-  document.getElementById('fieldFormPriceValley').value = 110000;
-  document.getElementById('fieldFormPricePeak').value = 130000;
+  document.getElementById('fieldFormSport').value = 'futbol_5';
+  document.getElementById('fieldFormSurface').value = 'sintetica_monofilamento';
+  document.getElementById('fieldFormPriceValley').value = 120000;
+  document.getElementById('fieldFormPricePeak').value = 140000;
+  
+  const wkValle = document.getElementById('fieldFormWeekendValley');
+  const wkPeak = document.getElementById('fieldFormWeekendPeak');
+  if (wkValle) wkValle.value = 130000;
+  if (wkPeak) wkPeak.value = 160000;
+
   document.getElementById('fieldFormDesc').value = '';
+
+  const venueContainer = document.getElementById('fieldFormVenueContainer');
+  const venueSelect = document.getElementById('fieldFormVenue');
+
+  if (state.activeRole === 'tenant_admin') {
+    // Si es Admin Sede, fijar automáticamente su sede
+    if (venueSelect) venueSelect.value = state.currentVenueId;
+    if (venueContainer) venueContainer.classList.add('hidden');
+  } else {
+    // Si es SuperAdmin, permitir elegir a qué complejo pertenece
+    if (venueContainer) venueContainer.classList.remove('hidden');
+    if (venueSelect && state.venues.length > 0) {
+      venueSelect.innerHTML = state.venues.map(v => `<option value="${v.id}">${v.name} (${v.city})</option>`).join('');
+      venueSelect.value = state.currentVenueId;
+    }
+  }
+
   document.getElementById('modalNewField')?.classList.remove('hidden');
 }
 
 function openEditFieldModal(field) {
-  document.getElementById('modalFieldFormTitle').innerText = `Editar Cancha: ${field.name}`;
+  const titleEl = document.getElementById('modalFieldFormTitle');
+  if (titleEl) titleEl.innerText = `Editar Sub-Cancha: ${field.name}`;
+
   document.getElementById('fieldFormId').value = field.id;
-  document.getElementById('fieldFormVenue').value = field.venue_id;
   document.getElementById('fieldFormName').value = field.name;
-  document.getElementById('fieldFormSport').value = field.sport_type;
-  document.getElementById('fieldFormSurface').value = field.surface_type;
+  document.getElementById('fieldFormSport').value = field.sport_type || 'futbol_5';
+  document.getElementById('fieldFormSurface').value = field.surface_type || 'sintetica_monofilamento';
   document.getElementById('fieldFormPriceValley').value = field.default_price_per_hour;
   document.getElementById('fieldFormPricePeak').value = field.peak_price_per_hour;
+
+  const wkValle = document.getElementById('fieldFormWeekendValley');
+  const wkPeak = document.getElementById('fieldFormWeekendPeak');
+  if (wkValle) wkValle.value = field.weekend_price_per_hour || 130000;
+  if (wkPeak) wkPeak.value = field.weekend_peak_price_per_hour || 160000;
+
   document.getElementById('fieldFormDesc').value = field.description || '';
+
+  const venueContainer = document.getElementById('fieldFormVenueContainer');
+  const venueSelect = document.getElementById('fieldFormVenue');
+
+  if (state.activeRole === 'tenant_admin') {
+    if (venueSelect) venueSelect.value = field.venue_id || state.currentVenueId;
+    if (venueContainer) venueContainer.classList.add('hidden');
+  } else {
+    if (venueContainer) venueContainer.classList.remove('hidden');
+    if (venueSelect && state.venues.length > 0) {
+      venueSelect.innerHTML = state.venues.map(v => `<option value="${v.id}">${v.name} (${v.city})</option>`).join('');
+      venueSelect.value = field.venue_id;
+    }
+  }
+
   document.getElementById('modalNewField')?.classList.remove('hidden');
 }
 
@@ -957,12 +1302,14 @@ function closeNewFieldModal() {
 async function handleSaveField(e) {
   e.preventDefault();
   const id = document.getElementById('fieldFormId').value;
-  const venueId = document.getElementById('fieldFormVenue').value;
+  const venueId = document.getElementById('fieldFormVenue')?.value || state.currentVenueId;
   const name = document.getElementById('fieldFormName').value;
   const sport = document.getElementById('fieldFormSport').value;
   const surface = document.getElementById('fieldFormSurface').value;
   const valley = document.getElementById('fieldFormPriceValley').value;
   const peak = document.getElementById('fieldFormPricePeak').value;
+  const wkValley = document.getElementById('fieldFormWeekendValley')?.value || 130000;
+  const wkPeak = document.getElementById('fieldFormWeekendPeak')?.value || 160000;
   const desc = document.getElementById('fieldFormDesc').value;
 
   const payload = {
@@ -972,6 +1319,8 @@ async function handleSaveField(e) {
     surface_type: surface,
     default_price_per_hour: Number(valley),
     peak_price_per_hour: Number(peak),
+    weekend_price_per_hour: Number(wkValley),
+    weekend_peak_price_per_hour: Number(wkPeak),
     description: desc
   };
 
@@ -989,60 +1338,20 @@ async function handleSaveField(e) {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(id ? 'Cancha actualizada con éxito' : 'Nueva cancha creada con éxito', 'success');
+      showToast(id ? 'Sub-cancha actualizada con éxito.' : 'Nueva sub-cancha creada con éxito.', 'success');
       closeNewFieldModal();
-      await loadSuperadminFields();
       await loadVenues();
+      if (state.activeRole === 'tenant_admin') {
+        loadTenantAdminFields();
+        loadPricingCourts();
+      } else {
+        loadSuperadminVenues();
+      }
+    } else {
+      showToast(data.error || 'Error al guardar cancha.', 'error');
     }
   } catch (err) {
-    showToast('Error al guardar cancha.', 'error');
-  }
-}
-
-// Carga Sedes SuperAdmin
-async function loadSuperadminVenues() {
-  const container = document.getElementById('superadminVenuesList');
-  if (!container) return;
-
-  try {
-    const res = await fetch(`${API_BASE}/venues`);
-    const data = await res.json();
-    if (data.success) {
-      container.innerHTML = data.venues.map(v => `
-        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl flex flex-col justify-between space-y-3 shadow-sm dark:shadow-none transition">
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase block">${v.city}</span>
-              <h4 class="font-black text-slate-900 dark:text-white text-base">${v.name}</h4>
-              <p class="text-xs text-slate-500 mt-0.5">${v.address}</p>
-            </div>
-            <span class="w-3 h-3 rounded-full bg-emerald-500 pulse-live"></span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 text-[11px] bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl text-center">
-            <div>
-              <span class="text-slate-400 block font-medium">Canchas</span>
-              <span class="font-bold text-slate-800 dark:text-white">${v.fields_count || 3}</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block font-medium">Horario</span>
-              <span class="font-bold text-slate-800 dark:text-white">${v.open_time} - ${v.close_time}</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block font-medium">Abono Min</span>
-              <span class="font-bold text-emerald-600 dark:text-emerald-400">${v.deposit_percentage}%</span>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between pt-1 text-xs">
-            <span class="text-slate-500">Tel: ${v.phone}</span>
-            <button class="font-bold text-purple-600 dark:text-purple-400 hover:underline">Configurar Sede →</button>
-          </div>
-        </div>
-      `).join('');
-    }
-  } catch (e) {
-    console.error(e);
+    showToast('Error de conexión al guardar cancha.', 'error');
   }
 }
 
@@ -1388,6 +1697,16 @@ async function handleCreateVenue(e) {
   const city = document.getElementById('newVenueCity').value;
   const address = document.getElementById('newVenueAddress').value;
   const phone = document.getElementById('newVenuePhone').value;
+  const admin_email = document.getElementById('newVenueAdminEmail')?.value;
+  const admin_name = document.getElementById('newVenueAdminName')?.value;
+  const admin_password = document.getElementById('newVenueAdminPass')?.value;
+  const default_sport_type = document.getElementById('newVenueDefaultSport')?.value || 'futbol_5';
+
+  const btnSubmit = document.getElementById('btnSubmitNewVenue');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<span>Creando complejo y vinculando admin...</span>`;
+  }
 
   try {
     const res = await fetch(`${API_BASE}/venues`, {
@@ -1396,17 +1715,34 @@ async function handleCreateVenue(e) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${state.authToken}`
       },
-      body: JSON.stringify({ name, city, address, phone })
+      body: JSON.stringify({
+        name,
+        city,
+        address,
+        phone,
+        admin_email,
+        admin_name,
+        admin_password,
+        default_sport_type
+      })
     });
     const data = await res.json();
     if (data.success) {
-      showToast('🎉 Nueva sede deportiva dada de alta con éxito.', 'success');
+      showToast(data.message || '🎉 Nuevo complejo creado con administrador vinculado y Cancha 1.', 'success');
       closeNewVenueModal();
-      loadSuperadminVenues();
-      loadVenues();
+      await loadSuperadminVenues();
+      await loadVenues();
+    } else {
+      showToast(data.error || 'Error al dar de alta el complejo.', 'error');
     }
   } catch (e) {
-    showToast('Error al crear sede.', 'error');
+    showToast('Error de conexión al dar de alta el complejo.', 'error');
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<i data-feather="check-circle" class="w-4 h-4"></i><span>Crear Complejo, Vincular Dueño y Generar Cancha 1</span>`;
+      if (window.feather) feather.replace();
+    }
   }
 }
 

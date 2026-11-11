@@ -3,16 +3,23 @@
 // ============================================================
 const db = require('../config/database');
 
-// Listar todas las sedes activas (público / clientes / superadmin)
+// Listar todas las sedes (público / clientes / superadmin)
 const listVenues = async (req, res, next) => {
   try {
-    const venues = await db.findVenues();
-    // Adjuntar canchas (activas e inactivas con su bandera de estado) de cada sede
+    const includeInactive = req.query.all === 'true' || (req.user && req.user.role === 'superadmin');
+    const venues = await db.findVenues(includeInactive);
+    // Adjuntar canchas, conteo y administrador vinculado
     const result = await Promise.all(
       venues.map(async (v) => {
         const fields = await db.findFieldsByVenue(v.id, true);
+        const users = await db.findUsersByVenue(v.id);
+        const adminUser = users.find(u => u.role === 'tenant_admin') || users[0];
+
         return {
           ...v,
+          admin_email: adminUser ? adminUser.email : (v.email || 'Sin admin asignado'),
+          admin_name: adminUser ? adminUser.name : 'Administrador',
+          admin_phone: adminUser ? adminUser.phone : v.phone,
           fields_count: fields.length,
           fields
         };
@@ -33,44 +40,131 @@ const getVenue = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
     }
     const fields = await db.findFieldsByVenue(venue.id, true);
-    res.json({ success: true, venue: { ...venue, fields } });
+    const users = await db.findUsersByVenue(venue.id);
+    const adminUser = users.find(u => u.role === 'tenant_admin') || users[0];
+
+    res.json({
+      success: true,
+      venue: {
+        ...venue,
+        admin_email: adminUser ? adminUser.email : venue.email,
+        admin_name: adminUser ? adminUser.name : 'Administrador',
+        admin_phone: adminUser ? adminUser.phone : venue.phone,
+        fields
+      }
+    });
   } catch (err) {
     next(err);
   }
 };
 
-// Crear nueva sede (SOLO SUPERADMIN)
+// Crear nueva sede / complejo con Administrador y Cancha Inicial Predeterminada (SOLO SUPERADMIN)
 const createVenue = async (req, res, next) => {
   try {
     const {
       name, slug, nit_rut, phone, email, address, city,
       open_time, close_time, slot_duration_minutes, deposit_percentage,
-      cancellation_hours_notice, rules_and_conditions, iot_broker_url
+      cancellation_hours_notice, rules_and_conditions,
+      admin_email, admin_name, admin_phone, admin_password,
+      default_sport_type
     } = req.body;
 
     if (!name || !phone || !address) {
       return res.status(400).json({ success: false, error: 'Nombre, teléfono y dirección son obligatorios.' });
     }
 
+    const cleanSlug = (slug || name).toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const finalAdminEmail = admin_email || email;
+    if (!finalAdminEmail) {
+      return res.status(400).json({ success: false, error: 'El correo personal del administrador es obligatorio.' });
+    }
+
     const newVenue = await db.createVenue({
       name,
-      slug: slug || name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-'),
-      nit_rut,
+      slug: cleanSlug,
+      nit_rut: nit_rut || '901000000-1',
       phone,
-      email,
+      email: finalAdminEmail,
       address,
       city: city || 'Cartagena',
-      open_time: open_time || '06:00',
-      close_time: close_time || '23:00',
-      slot_duration_minutes: slot_duration_minutes || 60,
-      deposit_percentage: deposit_percentage || 50,
+      open_time: open_time || '06:00:00',
+      close_time: close_time || '23:00:00',
+      slot_duration_minutes: Number(slot_duration_minutes || 60),
+      deposit_percentage: Number(deposit_percentage || 50),
       hold_timeout_minutes: 10,
-      cancellation_hours_notice: cancellation_hours_notice || 6,
-      rules_and_conditions: rules_and_conditions || 'Uso obligatorio de calzado deportivo.',
-      iot_broker_url: iot_broker_url || 'mqtt://broker.hivemq.com:1883'
+      cancellation_hours_notice: Number(cancellation_hours_notice || 6),
+      rules_and_conditions: rules_and_conditions || 'Uso obligatorio de calzado deportivo turf. Prohibido taches de aluminio.',
+      is_active: true
     });
 
-    res.status(201).json({ success: true, venue: newVenue });
+    // 1. Vincular o crear el usuario Administrador de Sede
+    let adminUser = null;
+    const existingUser = await db.findUserByEmail(finalAdminEmail);
+    if (existingUser) {
+      await db.updateUser(existingUser.id, {
+        venue_id: newVenue.id,
+        role: 'tenant_admin',
+        is_active: true
+      });
+      adminUser = { ...existingUser, venue_id: newVenue.id, role: 'tenant_admin', is_active: true };
+    } else {
+      adminUser = await db.createUser({
+        venue_id: newVenue.id,
+        name: admin_name || `Admin ${name}`,
+        email: finalAdminEmail,
+        phone: admin_phone || phone,
+        password_hash: admin_password || 'admin123',
+        role: 'tenant_admin',
+        is_active: true
+      });
+    }
+
+    // 2. Generar Cancha Inicial Predeterminada con el formato de fútbol seleccionado
+    const sportType = default_sport_type || 'futbol_5';
+    const sportLabels = {
+      futbol_5: 'Fútbol 5',
+      futbol_6: 'Fútbol 6',
+      futbol_7: 'Fútbol 7',
+      futbol_8: 'Fútbol 8',
+      futbol_9: 'Fútbol 9',
+      futbol_11: 'Fútbol 11',
+      padel: 'Pádel'
+    };
+    const sportLabel = sportLabels[sportType] || 'Fútbol';
+
+    const defaultField = await db.createField({
+      venue_id: newVenue.id,
+      name: `${name} — Cancha 1 (${sportLabel})`,
+      sport_type: sportType,
+      surface_type: 'sintetica_monofilamento',
+      default_price_per_hour: 120000,
+      peak_price_per_hour: 140000,
+      weekend_price_per_hour: 130000,
+      weekend_peak_price_per_hour: 160000,
+      open_time: open_time || '06:00:00',
+      close_time: close_time || '23:00:00',
+      is_active: true,
+      description: `Cancha predeterminada de ${sportLabel} con césped sintético profesional e iluminación LED de alta potencia.`
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `Complejo "${name}" creado exitosamente con administrador vinculado y Cancha 1 predeterminada.`,
+      venue: {
+        ...newVenue,
+        admin_email: finalAdminEmail,
+        admin_name: adminUser ? adminUser.name : null,
+        admin_phone: adminUser ? adminUser.phone : phone,
+        fields_count: 1,
+        fields: [defaultField]
+      },
+      admin: adminUser,
+      field: defaultField
+    });
   } catch (err) {
     next(err);
   }
@@ -86,12 +180,34 @@ const updateVenue = async (req, res, next) => {
     }
 
     // Validación multi-tenant: si es tenant_admin solo puede modificar su sede
-    if (req.user.role === 'tenant_admin' && req.user.venue_id !== venue.id) {
+    if (req.user && req.user.role === 'tenant_admin' && req.user.venue_id !== venue.id) {
       return res.status(403).json({ success: false, error: 'No tienes permiso para modificar esta sede.' });
     }
 
     const updated = await db.updateVenue(venue.id, req.body);
     res.json({ success: true, venue: updated });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Conmutar estado de Complejo (Activar / Suspender - SOLO SUPERADMIN)
+const toggleVenueStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const venue = await db.findVenueById(id);
+    if (!venue) {
+      return res.status(404).json({ success: false, error: 'Complejo no encontrado.' });
+    }
+
+    const newStatus = typeof req.body?.is_active === 'boolean' ? req.body.is_active : !venue.is_active;
+    const updated = await db.updateVenue(venue.id, { is_active: newStatus });
+
+    res.json({
+      success: true,
+      message: `Complejo "${venue.name}" ha sido ${newStatus ? 'ACTIVADO' : 'SUSPENDIDO'} exitosamente.`,
+      venue: updated
+    });
   } catch (err) {
     next(err);
   }
@@ -275,6 +391,7 @@ module.exports = {
   getVenue,
   createVenue,
   updateVenue,
+  toggleVenueStatus,
   createStaff,
   listStaff,
   listAllFields,

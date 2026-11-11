@@ -159,43 +159,39 @@
         </div>
       </div>
 
-      <!-- SECCIÓN CRÍTICA: GESTIÓN Y CRUD DE CANCHAS (ACTIVAR / DESACTIVAR) -->
+      <!-- SECCIÓN PRINCIPAL SUPERADMIN: MÓDULOS DE COMPLEJOS DEPORTIVOS (CARDS) -->
       <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
-              <span>🏟️ Gestión y Control Total de Canchas</span>
-              <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-bold">CRUD SuperAdmin</span>
-            </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Activa o desactiva canchas instantáneamente, modifica tarifas o registra nuevas instalaciones deportivas.</p>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-bold">Arquitectura Multi-Tenant SaaS</span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">🏢 Complejos Deportivos y Sedes de Clientes</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Supervisa y administra los complejos proveedores. Cada negocio gestiona sus propias sub-canchas de manera 100% aislada.</p>
           </div>
-          <button onclick="openNewFieldModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
-            <i data-feather="plus-circle" class="w-4 h-4"></i>
-            <span>+ Crear Nueva Cancha</span>
-          </button>
-        </div>
-
-        <!-- Tabla de Canchas con Switch de Activar/Desactivar -->
-        <div id="superadminFieldsTableContainer" class="overflow-x-auto">
-          <!-- Renderizado dinámico de canchas -->
-        </div>
-      </div>
-
-      <!-- Gestión de Sedes & Complejos -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white">Complejos Deportivos Registrados</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Da de alta nuevos negocios para que administren sus canchas de forma autónoma.</p>
-          </div>
-          <button onclick="openNewVenueModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-purple-600/20">
+          <button onclick="openNewVenueModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-purple-600/20">
             <i data-feather="plus" class="w-4 h-4"></i>
-            <span>+ Agregar Nueva Sede</span>
+            <span>+ Agregar Nuevo Complejo</span>
           </button>
         </div>
 
-        <div id="superadminVenuesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Renderizado de Sedes -->
+        <!-- Barra de Búsqueda y Filtros en Tiempo Real -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div class="relative flex-1">
+            <i data-feather="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="superadminVenueSearch" oninput="filterSuperadminVenues()" placeholder="Buscar por nombre de cancha, ciudad, correo del dueño..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-purple-500">
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <button onclick="setVenueStatusFilter('all')" id="btnFilterVenueAll" class="px-3 py-1.5 rounded-xl font-black bg-purple-600 text-white transition">Todos</button>
+            <button onclick="setVenueStatusFilter('active')" id="btnFilterVenueActive" class="px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition">Activos</button>
+            <button onclick="setVenueStatusFilter('suspended')" id="btnFilterVenueSuspended" class="px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition">Suspendidos</button>
+            <span id="superadminVenuesCountBadge" class="text-[11px] font-bold text-slate-500 px-2">Mostrando sedes</span>
+          </div>
+        </div>
+
+        <!-- Cuadrícula Modular de Complejos (Cards) -->
+        <div id="superadminVenuesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Renderizado dinámico de tarjetas modulares -->
         </div>
       </div>
 
@@ -204,6 +200,28 @@
     <!-- ================= VISTA 2: ADMIN DE SEDE (DON MARIO / TENANT) ================= -->
     <div id="viewTenantAdmin" class="hidden space-y-8">
       
+      <!-- SECCIÓN PRINCIPAL ADMIN SEDE: MIS SUB-CANCHAS E INSTALACIONES DEPORTIVAS -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="tenantVenueBadge" class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">Autogestión de Sede</span>
+              <h3 id="tenantVenueTitle" class="text-lg font-black text-slate-900 dark:text-white">🏟️ Mis Sub-Canchas e Instalaciones Deportivas</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Crea y autogestiona tus canchas internas (Cancha 1, Cancha 2, Cancha 3), define su formato de fútbol (Fútbol 5, 6, 7, 8, 9, 11) y configura tarifas Valle/Pico.</p>
+          </div>
+          <button onclick="openNewFieldModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+            <i data-feather="plus-circle" class="w-4 h-4"></i>
+            <span>+ Agregar Otra Cancha</span>
+          </button>
+        </div>
+
+        <!-- Cuadrícula de Canchas del Administrador de Sede -->
+        <div id="tenantAdminFieldsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Renderizado dinámico de sub-canchas -->
+        </div>
+      </div>
+
       <!-- Configuración del Negocio -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -471,92 +489,173 @@
   </main>
 
   <!-- ================= MODALES AUXILIARES ================= -->
-  <!-- Modal Crear/Editar Cancha (CRUD SuperAdmin) -->
+  <!-- Modal Crear/Editar Sub-Cancha (Autogestión Admin Sede & Superadmin) -->
   <div id="modalNewField" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl transition">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl p-6 space-y-4 shadow-2xl transition max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-        <h3 id="modalFieldFormTitle" class="font-black text-slate-900 dark:text-white text-sm">Crear Nueva Cancha</h3>
+        <div>
+          <h3 id="modalFieldFormTitle" class="font-black text-slate-900 dark:text-white text-base">Crear Nueva Sub-Cancha</h3>
+          <p class="text-[11px] text-slate-500">Configura el formato de fútbol, superficie y tarifas Valle/Pico.</p>
+        </div>
         <button onclick="closeNewFieldModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
       </div>
-      <form onsubmit="handleSaveField(event)" class="space-y-3 text-xs">
+      <form onsubmit="handleSaveField(event)" class="space-y-3.5 text-xs">
         <input type="hidden" id="fieldFormId" value="">
-        <div>
-          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Sede / Complejo</label>
+        
+        <div id="fieldFormVenueContainer">
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Complejo Deportivo</label>
           <select id="fieldFormVenue" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-            <option value="a0000000-0000-0000-0000-000000000001">La Bernabéu (Cartagena)</option>
-            <option value="a0000000-0000-0000-0000-000000000002">Camp Nou Arena VIP (Bogotá)</option>
+            <option value="a0000000-0000-0000-0000-000000000001">Complejo Deportivo La Bernabéu</option>
+            <option value="a0000000-0000-0000-0000-000000000002">Camp Nou Arena VIP</option>
           </select>
         </div>
+
         <div>
-          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre de la Cancha</label>
-          <input type="text" id="fieldFormName" required placeholder="Ej. Cancha 4: Maracaná 2" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre de la Cancha / Sub-Cancha</label>
+          <input type="text" id="fieldFormName" required placeholder="Ej. Cancha 2 — San Siro (Fútbol 7)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
         </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Tipo de Deporte</label>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Formato Deportivo</label>
             <select id="fieldFormSport" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-              <option value="futbol_5">Fútbol 5</option>
-              <option value="futbol_7">Fútbol 7</option>
-              <option value="futbol_9">Fútbol 9</option>
-              <option value="padel">Pádel</option>
+              <option value="futbol_5">⚽ Fútbol 5</option>
+              <option value="futbol_6">⚽ Fútbol 6</option>
+              <option value="futbol_7">⚽ Fútbol 7</option>
+              <option value="futbol_8">⚽ Fútbol 8</option>
+              <option value="futbol_9">⚽ Fútbol 9</option>
+              <option value="futbol_11">⚽ Fútbol 11 (Reglamentaria)</option>
+              <option value="padel">🎾 Pádel Pro</option>
             </select>
           </div>
           <div>
-            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Superficie</label>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Tipo de Superficie</label>
             <select id="fieldFormSurface" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-              <option value="sintetica_monofilamento">Sintética Monofilamento</option>
-              <option value="sintetica_fibrilada">Sintética Fibrilada</option>
-              <option value="vidrio_padel">Vidrio Templado Pádel</option>
+              <option value="sintetica_monofilamento">Grama Monofilamento 50mm</option>
+              <option value="sintetica_fibrilada">Grama Fibrilada</option>
+              <option value="vidrio_padel">Vidrio Panorámico Templado</option>
+              <option value="natural">Grama Natural</option>
             </select>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Precio Valle ($/hora)</label>
-            <input type="number" id="fieldFormPriceValley" required placeholder="110000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-          </div>
-          <div>
-            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Precio Pico ($/hora)</label>
-            <input type="number" id="fieldFormPricePeak" required placeholder="130000" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+
+        <!-- Tarifas de Semana -->
+        <div class="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <span class="text-[10px] uppercase font-black tracking-wider text-slate-500 block">Tarifas Lunes a Viernes</span>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 dark:text-slate-400 mb-1 font-semibold">Valle (06:00 - 17:00)</label>
+              <input type="number" id="fieldFormPriceValley" required placeholder="120000" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-600 dark:text-slate-400 mb-1 font-semibold">Pico (17:00 - 23:00)</label>
+              <input type="number" id="fieldFormPricePeak" required placeholder="140000" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
           </div>
         </div>
+
+        <!-- Tarifas de Fin de Semana -->
+        <div class="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <span class="text-[10px] uppercase font-black tracking-wider text-slate-500 block">Tarifas Sábados, Domingos & Festivos</span>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 dark:text-slate-400 mb-1 font-semibold">Finde Valle</label>
+              <input type="number" id="fieldFormWeekendValley" placeholder="130000" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-600 dark:text-slate-400 mb-1 font-semibold">Finde Pico</label>
+              <input type="number" id="fieldFormWeekendPeak" placeholder="160000" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+          </div>
+        </div>
+
         <div>
           <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Descripción / Características</label>
-          <input type="text" id="fieldFormDesc" placeholder="Grama FIFA Quality, cerramiento nuevo" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white">
+          <input type="text" id="fieldFormDesc" placeholder="Medidas reglamentarias, enmallado completo y gradería cubierta" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white">
         </div>
+
         <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
-          Guardar Cancha
+          Guardar Sub-Cancha
         </button>
       </form>
     </div>
   </div>
 
-  <!-- Modal Nueva Sede (Superadmin) -->
+  <!-- Modal Nueva Sede / Alta de Proveedor (SuperAdmin) -->
   <div id="modalNewVenue" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl transition">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl p-6 space-y-4 shadow-2xl transition max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-        <h3 class="font-bold text-slate-900 dark:text-white text-sm">Registrar Nuevo Complejo Deportivo</h3>
+        <div>
+          <h3 class="font-black text-slate-900 dark:text-white text-base">🏢 Alta de Proveedor: Nuevo Complejo</h3>
+          <p class="text-[11px] text-slate-500">Crea el complejo, vincula al administrador y genera su cancha predeterminada.</p>
+        </div>
         <button onclick="closeNewVenueModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
       </div>
-      <form onsubmit="handleCreateVenue(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Nombre del Complejo</label>
-          <input type="text" id="newVenueName" required placeholder="Ej. Arena Maracaná Medellín" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+      <form onsubmit="handleCreateVenue(event)" class="space-y-3.5 text-xs">
+        
+        <!-- Datos del Negocio -->
+        <div class="space-y-3">
+          <span class="text-[10px] uppercase font-black tracking-wider text-purple-600 dark:text-purple-400 block">1. Datos del Complejo Deportivo</span>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre del Negocio / Cancha Sintética</label>
+            <input type="text" id="newVenueName" required placeholder="Ej. Sintética La Favela" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Ciudad</label>
+              <input type="text" id="newVenueCity" required placeholder="Ej. Cartagena" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Teléfono / WhatsApp</label>
+              <input type="tel" id="newVenuePhone" required placeholder="3001234567" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+          </div>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Dirección Completa</label>
+            <input type="text" id="newVenueAddress" required placeholder="Ej. Barrio San Fernando, Calle 45 # 23-10" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+          </div>
         </div>
-        <div>
-          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Ciudad</label>
-          <input type="text" id="newVenueCity" required placeholder="Ej. Medellín" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+
+        <!-- Administrador Vinculado Exclusivo -->
+        <div class="bg-purple-500/5 border border-purple-500/20 p-3.5 rounded-2xl space-y-3">
+          <span class="text-[10px] uppercase font-black tracking-wider text-purple-600 dark:text-purple-400 block">2. Administrador Dueño de la Sede</span>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Correo Personal de Registro (Login único)</label>
+            <input type="email" id="newVenueAdminEmail" required placeholder="dueno@lafavela.com" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            <span class="text-[10px] text-slate-500 mt-0.5 block">Este correo tendrá acceso exclusivo e independiente a este complejo.</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Nombre del Administrador</label>
+              <input type="text" id="newVenueAdminName" placeholder="Andrés Favela" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Contraseña Inicial</label>
+              <input type="text" id="newVenueAdminPass" value="admin123" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Dirección</label>
-          <input type="text" id="newVenueAddress" required placeholder="Ej. Cra 70 # 45-10" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+
+        <!-- Cancha Inicial Predeterminada -->
+        <div class="bg-emerald-500/5 border border-emerald-500/20 p-3.5 rounded-2xl space-y-2">
+          <span class="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400 block">3. Cancha Predeterminada Inicial</span>
+          <div>
+            <label class="block text-slate-700 dark:text-slate-300 mb-1 font-bold">Tipo de Fútbol para su Cancha 1</label>
+            <select id="newVenueDefaultSport" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              <option value="futbol_5">⚽ Fútbol 5</option>
+              <option value="futbol_6">⚽ Fútbol 6</option>
+              <option value="futbol_7">⚽ Fútbol 7</option>
+              <option value="futbol_8">⚽ Fútbol 8</option>
+              <option value="futbol_9">⚽ Fútbol 9</option>
+              <option value="futbol_11">⚽ Fútbol 11</option>
+            </select>
+            <span class="text-[10px] text-slate-500 mt-0.5 block">Se creará automáticamente "Cancha 1" con este formato para que el dueño no arranque en blanco.</span>
+          </div>
         </div>
-        <div>
-          <label class="block text-slate-700 dark:text-slate-300 mb-1 font-semibold">Teléfono / WhatsApp</label>
-          <input type="tel" id="newVenuePhone" required placeholder="3001234567" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-        </div>
-        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-2.5 rounded-xl transition shadow-md shadow-purple-600/20">
-          Crear y Activar Complejo
+
+        <button type="submit" id="btnSubmitNewVenue" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-3 rounded-2xl transition shadow-lg shadow-purple-600/20 flex items-center justify-center space-x-2">
+          <i data-feather="check-circle" class="w-4 h-4"></i>
+          <span>Crear Complejo, Vincular Dueño y Generar Cancha 1</span>
         </button>
       </form>
     </div>

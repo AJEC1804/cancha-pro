@@ -13,6 +13,7 @@ router.get('/:id', venueController.getVenue);
 // Gestión de sedes por Superadmin
 router.post('/', authenticate, requireRoles('superadmin'), venueController.createVenue);
 router.put('/:id', authenticate, requireRoles('superadmin', 'tenant_admin'), requireVenueAccess, venueController.updateVenue);
+router.patch('/:id/toggle', authenticate, requireRoles('superadmin'), venueController.toggleVenueStatus);
 
 // Personal de la sede (Cancheros / Empleados)
 router.get('/:venueId/staff', authenticate, requireRoles('superadmin', 'tenant_admin'), requireVenueAccess, venueController.listStaff);
