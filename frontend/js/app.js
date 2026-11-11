@@ -2681,3 +2681,88 @@ function populateModalFieldSelects() {
   if (blockSelect && blockSelect.options.length === 0) blockSelect.innerHTML = options;
   if (matchSelect && matchSelect.options.length === 0) matchSelect.innerHTML = options;
 }
+
+// ============================================================
+// CONSTRUIR-LANDING-PAGES: LEGAL COMPLIANCE & CONVERSION HELPERS
+// ============================================================
+
+// 1. Gestión de Banner de Cookies (localStorage)
+function initCookieConsent() {
+  const cookieBanner = document.getElementById('cookieBanner');
+  if (!cookieBanner) return;
+  const consent = localStorage.getItem('canchapro_cookie_consent');
+  if (!consent) {
+    cookieBanner.classList.remove('hidden');
+  } else {
+    cookieBanner.classList.add('hidden');
+  }
+}
+
+function setCookieConsent(choice) {
+  localStorage.setItem('canchapro_cookie_consent', choice);
+  const cookieBanner = document.getElementById('cookieBanner');
+  if (cookieBanner) cookieBanner.classList.add('hidden');
+  if (choice === 'all') {
+    showToast('✓ Preferencias de cookies guardadas: Todas aceptadas.', 'success');
+  } else {
+    showToast('✓ Preferencias de cookies guardadas: Solo cookies esenciales.', 'info');
+  }
+}
+
+// 2. Modales de Documentos Legales Obligatorios (Ley 1581 Colombia)
+function openLegalModal(tab = 'privacidad') {
+  const modal = document.getElementById('modalLegalDocs');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  switchLegalTab(tab);
+  if (window.feather) feather.replace();
+}
+
+function closeLegalModal() {
+  const modal = document.getElementById('modalLegalDocs');
+  if (modal) modal.classList.add('hidden');
+}
+
+function switchLegalTab(tab) {
+  // Quitar active de todos los tabs y ocultar secciones
+  const tabs = ['privacidad', 'terminos', 'tratamiento', 'cookies'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`tabBtn_${t}`);
+    const section = document.getElementById(`legalSection_${t}`);
+    if (btn) btn.classList.remove('active', 'text-emerald-500', 'border-b-2', 'border-emerald-500', 'dark:text-emerald-400');
+    if (section) section.classList.add('hidden');
+  });
+
+  const activeBtn = document.getElementById(`tabBtn_${tab}`);
+  const activeSection = document.getElementById(`legalSection_${tab}`);
+  if (activeBtn) activeBtn.classList.add('active', 'text-emerald-500', 'border-b-2', 'border-emerald-500', 'dark:text-emerald-400');
+  if (activeSection) activeSection.classList.remove('hidden');
+}
+
+// 3. Acordeón Interactivo de Preguntas Frecuentes (FAQ)
+function toggleFaq(index) {
+  const item = document.getElementById(`faqItem_${index}`);
+  if (!item) return;
+  const isOpen = item.classList.contains('open');
+
+  // Cerrar todos los demás
+  document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+
+  // Abrir el seleccionado si estaba cerrado
+  if (!isOpen) {
+    item.classList.add('open');
+  }
+}
+
+// 4. Smooth Scroll para CTA
+function scrollToBooking() {
+  const target = document.getElementById('parrilla');
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Inicializar cookies al cargar DOM
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initCookieConsent, 800);
+});

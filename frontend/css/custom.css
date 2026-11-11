@@ -171,6 +171,59 @@ html:not(.dark) .bg-turf-pattern {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
 }
 
+/* ================= CUMPLIMIENTO LEGAL & COOKIE BANNER ================= */
+.cookie-banner {
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideUpCookie 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpCookie {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal Legal Tabs */
+.legal-tab-btn.active {
+  border-bottom: 2px solid #10B981;
+  color: #10B981;
+  font-weight: 800;
+}
+
+/* Acordeón FAQ */
+.faq-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.faq-item.open .faq-content {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.faq-item.open .faq-chevron {
+  transform: rotate(180deg);
+}
+
+/* Mobile Sticky Booking Bar */
+.mobile-sticky-bar {
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Botón de Alta Conversión con Elevación WCAG (Skill construir-landing-pages) */
+.btn-cta-conversion {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-cta-conversion:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -5px rgba(16, 185, 129, 0.45);
+}
+
 /* Scrollbar personalizado */
 ::-webkit-scrollbar {
   width: 7px;
