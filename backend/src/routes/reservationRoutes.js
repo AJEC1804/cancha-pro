@@ -28,6 +28,12 @@ router.get('/', authenticate, reservationController.listReservations);
 // Bloqueo temporal preventivo (10 min hold)
 router.post('/hold', reservationController.holdSlot);
 
+// Flujo Folio de Deuda y Pagos
+router.get('/:id/folio', reservationController.getFolio);
+router.post('/:id/receipt', reservationController.uploadReceipt);
+router.post('/:id/approve', authenticate, reservationController.approveReservation);
+router.post('/:id/settle-folio', authenticate, reservationController.settleFolio);
+
 // Confirmación de pago / abono
 router.put('/:id/confirm-payment', reservationController.confirmPayment);
 

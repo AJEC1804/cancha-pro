@@ -282,7 +282,8 @@ CREATE POLICY "Public Full Access Orders" ON pos_orders FOR ALL USING (true);
 INSERT INTO venues (id, slug, name, nit_rut, phone, email, address, city, open_time, close_time, slot_duration_minutes, deposit_percentage, hold_timeout_minutes, cancellation_hours_notice, rules_and_conditions)
 VALUES 
 ('a0000000-0000-0000-0000-000000000001', 'la-bernabeu', 'Complejo Deportivo La Bernabéu', '901456789-1', '3006799595', 'contacto@labernabeu.co', 'Dg al CC San Fernando, detrás del Totumazo Cartagenero', 'Cartagena', '06:00:00', '23:00:00', 60, 50.00, 10, 6, 'Uso obligatorio de tenis turf. Prohibido taches de aluminio.'),
-('a0000000-0000-0000-0000-000000000002', 'camp-nou-arena', 'Camp Nou Arena VIP', '900987654-3', '3158889900', 'info@campnouarena.co', 'Calle 127 # 45-20, Autopista Norte', 'Bogotá', '06:00:00', '23:00:00', 60, 50.00, 10, 6, 'Presentar documento de identidad al ingreso.')
+('a0000000-0000-0000-0000-000000000002', 'camp-nou-arena', 'Camp Nou Arena VIP', '900987654-3', '3158889900', 'info@campnouarena.co', 'Calle 127 # 45-20, Autopista Norte', 'Bogotá', '06:00:00', '23:00:00', 60, 50.00, 10, 6, 'Presentar documento de identidad al ingreso.'),
+('a0000000-0000-0000-0000-000000000003', 'la-favela', 'Complejo Deportivo La Favela', '901765432-8', '3201234567', 'contacto@lafavela.co', 'Cra 43A # 1-50, El Poblado', 'Medellín', '06:00:00', '23:00:00', 60, 50.00, 10, 6, 'Uso obligatorio de calzado deportivo turf.')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO users (id, venue_id, role, name, email, phone, document_id, password_hash)
@@ -297,7 +298,9 @@ VALUES
 ('f0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Cancha 1 — Santiago Bernabéu (5v5)', 'futbol_5', 'sintetica_monofilamento', 130000.00, 150000.00, '06:00:00', '23:00:00', true, 'Grama sintética monofilamento de 50mm con caucho criogénico'),
 ('f0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Cancha 2 — San Siro (5v5)', 'futbol_5', 'sintetica_monofilamento', 120000.00, 140000.00, '06:00:00', '23:00:00', true, 'Excelente amortiguación, enmallado completo y graderías cubiertas'),
 ('f0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000001', 'Cancha 3 — La Bombonera (7v7)', 'futbol_7', 'sintetica_fibrilada', 180000.00, 220000.00, '06:00:00', '23:00:00', true, 'Medidas reglamentarias para fútbol 7'),
-('f0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000002', 'Cancha Camp Nou Central (5v5)', 'futbol_5', 'sintetica_monofilamento', 140000.00, 160000.00, '06:00:00', '23:00:00', true, 'Cancha techada con iluminación profesional')
+('f0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000002', 'Cancha Camp Nou Central (5v5)', 'futbol_5', 'sintetica_monofilamento', 140000.00, 160000.00, '06:00:00', '23:00:00', true, 'Cancha techada con iluminación profesional'),
+('f0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000003', 'Cancha 1: La Favela Maracaná (5v5)', 'futbol_5', 'sintetica_monofilamento', 130000.00, 150000.00, '06:00:00', '23:00:00', true, 'Grama sintética monofilamento de alta densidad.'),
+('f0000000-0000-0000-0000-000000000006', 'a0000000-0000-0000-0000-000000000003', 'Cancha 2: La Favela San Siro (7v7)', 'futbol_7', 'sintetica_monofilamento', 170000.00, 200000.00, '06:00:00', '23:00:00', true, 'Cancha sintética para partidos 7v7.')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO pos_categories (id, venue_id, name, icon)

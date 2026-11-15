@@ -363,7 +363,7 @@ const cancelReservation = async (req, res, next) => {
 };
 
 /**
- * Listar reservas con filtros
+ * Listar reservas con filtros y folio de deuda
  * GET /api/reservations
  */
 const listReservations = async (req, res, next) => {
@@ -372,7 +372,8 @@ const listReservations = async (req, res, next) => {
     if (req.query.venue_id) query.venue_id = req.query.venue_id;
     if (req.query.field_id) query.field_id = req.query.field_id;
     if (req.query.date) query.booking_date = req.query.date;
-    if (req.query.status) query.status = req.query.status;
+    if (req.query.status && req.query.status !== 'all') query.status = req.query.status;
+    if (req.query.user_id) query.user_id = req.query.user_id;
 
     // Si es cliente regular, solo puede consultar sus reservas
     if (req.user && req.user.role === 'cliente') {
@@ -380,7 +381,16 @@ const listReservations = async (req, res, next) => {
     }
 
     const reservations = await db.findReservations(query);
-    res.json({ success: true, reservations });
+    const enriched = await Promise.all(
+      reservations.map(async r => {
+        const folio = await db.getFolio(r.id);
+        return {
+          ...r,
+          folio: folio || null
+        };
+      })
+    );
+    res.json({ success: true, reservations: enriched });
   } catch (err) {
     next(err);
   }
@@ -422,6 +432,8 @@ const getMultiGridAvailability = async (req, res, next) => {
     const bookingDateObj = new Date(targetDate + 'T00:00:00');
     const dayOfWeek = bookingDateObj.getDay(); // 0=Dom, 6=Sáb
     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const dayName = dayNames[dayOfWeek] || 'Día';
 
     const openHour = 6;
     const closeHour = 23;
@@ -521,6 +533,7 @@ const getMultiGridAvailability = async (req, res, next) => {
       success: true,
       venue: { id: venue.id, name: venue.name, city: venue.city },
       date: targetDate,
+      day_name: dayName,
       is_weekend: isWeekend,
       fields: fields.map(f => ({ id: f.id, name: f.name, sport_type: f.sport_type, is_active: f.is_active })),
       matrix
@@ -746,6 +759,109 @@ const redeemVoucher = async (req, res, next) => {
   }
 };
 
+/**
+ * OBTENER FOLIO DE LA RESERVA (CANCHA + 50% ABONO + CAFETERÍA ÍTEM X ÍTEM)
+ * GET /api/reservations/:id/folio
+ */
+const getFolio = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const folio = await db.getFolio(id);
+    if (!folio) {
+      return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+    }
+    res.json({ success: true, folio });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * LIQUIDAR FOLIO COMPLETO (CANCHA + CAFETERÍA)
+ * POST /api/reservations/:id/settle-folio
+ */
+const settleFolio = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await db.settleFolio(id, req.body);
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+    }
+    res.json({
+      success: true,
+      message: `Folio liquidado con éxito por un total de $${result.total_settled.toLocaleString('es-CO')}. Cuenta cerrada.`,
+      ...result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * SUBIR / REPORTAR COMPROBANTE DE PAGO (CLIENTE)
+ * POST /api/reservations/:id/receipt
+ */
+const uploadReceipt = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { receipt_url, payment_mode, notes } = req.body;
+
+    const reservation = await db.findReservationById(id);
+    if (!reservation) {
+      return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+    }
+
+    const isFullPayment = (payment_mode === 'full');
+    const depositAmount = isFullPayment ? reservation.total_amount : Math.round(reservation.total_amount * 0.5);
+
+    const updated = await db.updateReservation(id, {
+      receipt_url: receipt_url || `COMPROBANTE-TRANSFERENCIA-${Date.now()}`,
+      status: 'pending_verification',
+      payment_status: isFullPayment ? 'pending_verification' : 'partial',
+      payment_mode: payment_mode || reservation.payment_mode,
+      deposit_paid: depositAmount,
+      remaining_balance: Math.max(0, reservation.total_amount - depositAmount),
+      notes: (reservation.notes ? reservation.notes + ' | ' : '') + (notes || 'Comprobante de transferencia adjuntado por cliente')
+    });
+
+    res.json({
+      success: true,
+      message: '🎉 Comprobante registrado exitosamente. Tu reserva quedó en estado "Pendiente de Verificación".',
+      reservation: updated
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * APROBAR COMPROBANTE DE PAGO (ADMIN SEDE)
+ * POST /api/reservations/:id/approve
+ */
+const approveReservation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const reservation = await db.findReservationById(id);
+    if (!reservation) {
+      return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+    }
+
+    const updated = await db.updateReservation(id, {
+      status: 'confirmed',
+      payment_status: reservation.deposit_paid >= reservation.total_amount ? 'paid' : 'partial',
+      updated_at: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: `¡Comprobante aprobado con éxito! La reserva de "${reservation.client_name}" quedó CONFIRMADA.`,
+      reservation: updated
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getGridAvailability,
   getMultiGridAvailability,
@@ -753,6 +869,10 @@ module.exports = {
   confirmPayment,
   cancelReservation,
   listReservations,
+  getFolio,
+  settleFolio,
+  uploadReceipt,
+  approveReservation,
   createRecurringSubscription,
   listSubscriptions,
   createOperationalBlock,

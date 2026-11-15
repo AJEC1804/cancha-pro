@@ -82,6 +82,7 @@ const register = async (req, res, next) => {
       return res.status(409).json({ success: false, error: 'Ya existe una cuenta con este correo electrónico.' });
     }
 
+    const targetVenueId = req.body.venue_id || req.body.complex_id || null;
     const newUser = await db.createUser({
       name,
       email,
@@ -89,11 +90,11 @@ const register = async (req, res, next) => {
       document_id: document_id || null,
       password_hash: password, // En producción se usa bcrypt.hash
       role: 'cliente',
-      venue_id: null
+      venue_id: targetVenueId
     });
 
     const token = jwt.sign(
-      { id: newUser.id, email: newUser.email, role: newUser.role, venue_id: null },
+      { id: newUser.id, email: newUser.email, role: newUser.role, venue_id: targetVenueId },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -106,7 +107,8 @@ const register = async (req, res, next) => {
         name: newUser.name,
         email: newUser.email,
         phone: newUser.phone,
-        role: newUser.role
+        role: newUser.role,
+        venue_id: targetVenueId
       }
     });
   } catch (err) {
@@ -156,9 +158,21 @@ const getDemoAccounts = async (req, res) => {
   res.json({ success: true, accounts: users });
 };
 
+// Configuración pública de autenticación y Demo Mode
+const getConfig = (req, res) => {
+  const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== undefined
+    ? process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+    : (process.env.DEMO_MODE !== undefined ? process.env.DEMO_MODE === 'true' : true);
+  res.json({
+    success: true,
+    demo_mode: demoMode
+  });
+};
+
 module.exports = {
   login,
   register,
   getMe,
-  getDemoAccounts
+  getDemoAccounts,
+  getConfig
 };

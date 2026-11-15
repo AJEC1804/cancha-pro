@@ -10,19 +10,49 @@ const API_BASE = (window.location.protocol === 'file:' || window.location.origin
     : '/api';
 
 // Estado global de la aplicación
+function getBogotaDate(offsetDays = 0) {
+  const d = new Date();
+  if (offsetDays !== 0) {
+    d.setDate(d.getDate() + offsetDays);
+  }
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
+// Estado global de la aplicación
 const state = {
   currentVenueId: 'a0000000-0000-0000-0000-000000000001', // La Bernabéu (Cartagena)
   venues: [],
   fields: [],
   selectedFieldId: 'f0000000-0000-0000-0000-000000000001',
-  selectedDate: new Date().toISOString().split('T')[0],
+  selectedDate: getBogotaDate(),
   currentHoldSlot: null,
+  currentHoldReservation: null,
   holdTimerInterval: null,
   remainingSeconds: 600,
-  activeRole: 'superadmin',
+  activeRole: localStorage.getItem('canchapro_role') || 'superadmin',
   posCart: [],
   theme: localStorage.getItem('canchapro_theme') || 'dark',
-  authToken: localStorage.getItem('canchapro_token') || 'demo-user-b0000000-0000-0000-0000-000000000001'
+  authToken: localStorage.getItem('canchapro_token') || 'demo-user-b0000000-0000-0000-0000-000000000001',
+  currentUser: {
+    id: 'b0000000-0000-0000-0000-000000000001',
+    name: 'Alejandro SuperAdmin',
+    email: 'admin@canchapro.com',
+    role: 'superadmin',
+    venue_id: 'a0000000-0000-0000-0000-000000000001'
+  },
+  isVenueLocked: false,
+  demoMode: true,
+  currentFolioResId: null,
+  tenantActiveTab: 'canchas',
+  tenantReservations: [],
+  reservationFilter: 'all',
+  reservationSearch: '',
+  tenantClients: []
 };
 
 // ============================================================
@@ -131,7 +161,17 @@ function showToast(message, type = 'success') {
   }, 4000);
 }
 
-// Cargar Sedes (Multi-Tenant con soporte para parámetros URL ?venue=slug)
+// Detectar slug de sede desde la ruta o query (?venue= o /sede/[slug])
+function detectCurrentVenueFromUrl() {
+  const pathParts = window.location.pathname.split('/').filter(Boolean);
+  if (pathParts[0] === 'sede' && pathParts[1]) {
+    return pathParts[1];
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('venue');
+}
+
+// Cargar Sedes (Aislamiento Multi-Tenant Estricto por Sede)
 async function loadVenues() {
   try {
     const res = await fetch(`${API_BASE}/venues?all=true`);
@@ -139,14 +179,13 @@ async function loadVenues() {
     if (data.success && data.venues) {
       state.venues = data.venues;
 
-      // 1. Detectar si la URL trae un parámetro de sede (?venue=la-favela o ?venue=id)
-      const urlParams = new URLSearchParams(window.location.search);
-      const venueParam = urlParams.get('venue');
-
-      if (venueParam) {
-        const found = state.venues.find(v => v.slug === venueParam || v.id === venueParam);
+      // 1. Detectar si la ruta corresponde a una sede específica (/sede/:slug o ?venue=:slug)
+      const detectedSlugOrId = detectCurrentVenueFromUrl();
+      if (detectedSlugOrId) {
+        const found = state.venues.find(v => v.slug === detectedSlugOrId || v.id === detectedSlugOrId);
         if (found) {
           state.currentVenueId = found.id;
+          state.isVenueLocked = true;
         }
       }
 
@@ -163,14 +202,27 @@ async function loadVenues() {
         label.innerText = `${currentVenue.name} (${currentVenue.city})`;
       }
 
-      // 4. Actualizar selector de sede en el Menú Lateral
+      // 4. AISLAMIENTO ESTRICTO: Selector de sede en Menú Lateral
       const drawerSelector = document.getElementById('drawerVenueSelector');
       if (drawerSelector) {
-        drawerSelector.innerHTML = state.venues.map(v => `
-          <option value="${v.id}" ${v.id === state.currentVenueId ? 'selected' : ''}>
-            ${v.is_active ? '📍' : '⚠️'} ${v.name} (${v.city}) ${!v.is_active ? '[SUSPENDIDO]' : ''}
-          </option>
-        `).join('');
+        if (state.isVenueLocked) {
+          // Bloquear selector para que el jugador nunca mezcle sedes
+          const parentContainer = drawerSelector.parentElement;
+          if (parentContainer) {
+            parentContainer.innerHTML = `
+              <label class="text-[11px] uppercase font-bold text-slate-400 block mb-1">Sede Asignada Exclusiva</label>
+              <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-3 py-2 text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center space-x-1.5">
+                <span>🔒 ${currentVenue.name} (${currentVenue.city})</span>
+              </div>
+            `;
+          }
+        } else {
+          drawerSelector.innerHTML = state.venues.map(v => `
+            <option value="${v.id}" ${v.id === state.currentVenueId ? 'selected' : ''}>
+              ${v.is_active ? '📍' : '⚠️'} ${v.name} (${v.city}) ${!v.is_active ? '[SUSPENDIDO]' : ''}
+            </option>
+          `).join('');
+        }
       }
 
       // 5. Validar suspensión global del complejo
@@ -186,6 +238,9 @@ async function loadVenues() {
       // 6. Cargar canchas correspondientes única y exclusivamente a este complejo
       if (currentVenue && currentVenue.fields) {
         state.fields = currentVenue.fields;
+        if (state.fields.length > 0 && !state.fields.find(f => f.id === state.selectedFieldId)) {
+          state.selectedFieldId = state.fields[0].id;
+        }
         renderCourtTabs();
       }
     }
@@ -292,17 +347,16 @@ function setGridDate(mode) {
   const tomorrowBtn = document.getElementById('btnDateTomorrow');
   const picker = document.getElementById('gridDatePicker');
 
-  const d = new Date();
   if (mode === 'tomorrow') {
-    d.setDate(d.getDate() + 1);
+    state.selectedDate = getBogotaDate(1);
     if (todayBtn) todayBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition';
     if (tomorrowBtn) tomorrowBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 transition';
   } else {
+    state.selectedDate = getBogotaDate(0);
     if (todayBtn) todayBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 transition';
     if (tomorrowBtn) tomorrowBtn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition';
   }
 
-  state.selectedDate = d.toISOString().split('T')[0];
   if (picker) picker.value = state.selectedDate;
   if (currentGridViewMode === 'multi') {
     loadMultiGridAvailability();
@@ -648,6 +702,7 @@ async function submitReservationHold() {
     }
 
     loadGridAvailability();
+    openCheckoutModal(data.reservation);
   } catch (err) {
     console.error('Error al retener reserva:', err);
     showToast('Error de comunicación con el servidor.', 'error');
@@ -700,13 +755,20 @@ function updateDemoVacaCalculation() {
 function shareVacaWhatsappDemo() {
   const range = document.getElementById('demoVacaRange');
   const players = range ? range.value : 10;
-  const total = 130000;
+  const currentVenue = state.venues.find(v => v.id === state.currentVenueId) || state.venues[0];
+  const venueName = currentVenue ? `${currentVenue.name} (${currentVenue.city})` : 'La Bernabéu (Cartagena)';
+  const currentField = state.fields.find(f => f.id === state.selectedFieldId);
+  const total = currentField ? (currentField.price_peak || 130000) : 130000;
   const share = Math.ceil(total / players);
+  const venueSlug = currentVenue ? (currentVenue.slug || 'la-bernabeu') : 'la-bernabeu';
 
-  const text = `⚽ ¡Muchachos, se armó el partido en La Bernabéu (Cartagena)!\n` +
-               `💰 Cuota por cabeza: $${share.toLocaleString('es-CO')} COP\n` +
-               `🐄 Entra al link de La Vaca Digital y abona tu cupo por Nequi/PSE:\n` +
-               `🔗 ${window.location.origin}/index.html#la-vaca`;
+  const text = `⚽ ¡Muchachos, se armó el partido en ${venueName}!
+` +
+               `💰 Cuota por cabeza: ${share.toLocaleString('es-CO')} COP
+` +
+               `🐄 Entra al link de La Vaca Digital y abona tu cupo por Nequi/PSE:
+` +
+               `🔗 ${window.location.origin}/sede/${venueSlug}#la-vaca`;
 
   navigator.clipboard.writeText(text);
   showToast('📋 ¡Mensaje y enlace de WhatsApp copiado al portapapeles!', 'success');
@@ -731,7 +793,9 @@ function demoVacaSimulation() {
 
     if (paid >= totalPlayers) {
       clearInterval(interval);
-      showToast('🎉 ¡Meta del 100% alcanzada! Reserva La Bernabéu CONFIRMADA automáticamente.', 'success');
+      const currentVenue = state.venues.find(v => v.id === state.currentVenueId) || state.venues[0];
+      const vName = currentVenue ? currentVenue.name : 'Complejo';
+      showToast(`🎉 ¡Meta del 100% alcanzada! Reserva ${vName} CONFIRMADA automáticamente.`, 'success');
     }
   }, 700);
 }
@@ -799,6 +863,7 @@ function quickLoginAs(email) {
 
 function initDashboard() {
   initTheme();
+  checkAuthConfig();
   const savedRole = localStorage.getItem('canchapro_role') || 'superadmin';
   switchActiveRole(savedRole);
   loadDashboardData();
@@ -863,6 +928,7 @@ function switchActiveRole(role) {
     loadOperationalBlocks();
     loadTournamentsDashboard();
     populateModalFieldSelects();
+    switchTenantTab(state.tenantActiveTab || 'canchas');
   } else if (role === 'staff') {
     if (btnStaff) btnStaff.className = 'px-3 py-1 rounded-xl font-black bg-amber-500 text-slate-950 transition';
     if (vStaff) vStaff.classList.remove('hidden');
@@ -911,6 +977,18 @@ async function loadSuperadminVenues() {
     if (data.success && data.venues) {
       state.superadminVenues = data.venues;
       renderSuperadminVenuesGrid();
+
+      // CÁLCULO DINÁMICO DESDE SUPABASE DEL TOTAL DE CANCHAS
+      const totalFieldsCount = data.venues.reduce((acc, v) => acc + (v.fields ? v.fields.length : 0), 0);
+      const kpiFields = document.getElementById('superadminTotalFieldsCount');
+      if (kpiFields) {
+        kpiFields.innerText = `${totalFieldsCount} Canchas`;
+      }
+      const kpiVenues = document.getElementById('superadminTotalVenuesCount');
+      if (kpiVenues) {
+        kpiVenues.innerText = `${data.venues.length} Complejos`;
+      }
+      loadSaasBillingOverview();
     }
   } catch (e) {
     console.error('Error cargando sedes para superadmin:', e);
@@ -1071,6 +1149,12 @@ function renderSuperadminVenuesGrid() {
 }
 
 async function toggleVenueStatus(venueId) {
+  const btn = event && event.target ? event.target.closest('button') : null;
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Guardando...';
+  }
   try {
     const res = await fetch(`${API_BASE}/venues/${venueId}/toggle`, {
       method: 'PATCH',
@@ -1086,6 +1170,11 @@ async function toggleVenueStatus(venueId) {
     }
   } catch (e) {
     showToast('Error de conexión al conmutar estado de la sede.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
   }
 }
 
@@ -1623,6 +1712,15 @@ async function checkoutPosOrder(paymentMethod) {
     return;
   }
 
+  const btnCharged = event && event.target ? event.target.closest('button') : null;
+  const originalBtnText = btnCharged ? btnCharged.innerHTML : '';
+  if (btnCharged) {
+    btnCharged.disabled = true;
+    btnCharged.innerHTML = '<span class="inline-block animate-spin mr-1.5">⏳</span> Procesando...';
+  }
+
+  const totalCharged = state.posCart.reduce((sum, i) => sum + (i.unit_price * i.quantity), 0);
+
   const payload = {
     items: state.posCart.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
     payment_method: paymentMethod,
@@ -1640,16 +1738,26 @@ async function checkoutPosOrder(paymentMethod) {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(data.message, 'success');
+      showToast(`✅ ¡${totalCharged.toLocaleString('es-CO')} COP cargados a la cuenta de la cancha con éxito!`, 'success');
       clearPosCart();
       loadPosProducts();
+      loadActiveReservationsForStaff();
+      if (paymentMethod === 'charged_to_field' && resId) {
+        setTimeout(() => openFolioModal(resId), 400);
+      }
+    } else {
+      showToast(data.error || 'Error al procesar orden.', 'error');
     }
   } catch (e) {
-    showToast('Error al procesar orden de cafetería.', 'error');
+    showToast('Error de conexión al procesar orden de cafetería.', 'error');
+  } finally {
+    if (btnCharged) {
+      btnCharged.disabled = false;
+      btnCharged.innerHTML = originalBtnText;
+    }
   }
 }
 
-// Cierre de caja
 async function submitCloseShift() {
   const input = document.getElementById('shiftActualCashInput');
   const val = input ? input.value : 0;
@@ -1938,7 +2046,7 @@ async function loadMultiGridAvailability() {
   wrapper.innerHTML = `<div class="p-8 text-center text-xs text-slate-400">Cargando matriz consolidada de canchas...</div>`;
 
   try {
-    const res = await fetch(`${API_BASE}/reservations/multi-grid?date=${state.selectedDate}`);
+    const res = await fetch(`${API_BASE}/reservations/multi-grid?date=${state.selectedDate}&venue_id=${state.currentVenueId}`);
     const data = await res.json();
 
     if (!data.success) {
@@ -1947,7 +2055,10 @@ async function loadMultiGridAvailability() {
     }
 
     if (dateLabel) {
-      dateLabel.innerHTML = `${data.day_name} ${data.date} ${data.is_weekend ? '<span class="text-amber-500 font-bold ml-1">🔥 Tarifa Fin de Semana</span>' : ''}`;
+      const dayNamesEs = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const computedDay = dayNamesEs[new Date(data.date + 'T12:00:00Z').getDay()] || 'Día';
+      const dayTitle = data.day_name || computedDay;
+      dateLabel.innerHTML = `${dayTitle} ${data.date} ${data.is_weekend ? '<span class="text-amber-500 font-bold ml-1">🔥 Tarifa Fin de Semana</span>' : ''}`;
     }
 
     const fields = data.fields || [];
@@ -2112,7 +2223,11 @@ async function loadSubscriptions() {
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
             ${data.subscriptions.map(s => {
               const f = state.fields.find(field => field.id === s.field_id);
-              const dayStr = dayNames[s.day_of_week] || 'Día fijo';
+              const rawDay = dayNames[s.day_of_week] || 'Día fijo';
+              const dayStr = rawDay.endsWith('s') ? rawDay : `${rawDay}s`;
+              const totalWeeks = s.total_weeks || s.weeks_count || 4;
+              const weeksRem = s.weeks_remaining !== undefined ? s.weeks_remaining : totalWeeks;
+              const priceMatch = Number(s.price_per_match ?? s.total_amount ?? 130000);
               return `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
                   <td class="py-2.5 px-3">
@@ -2122,11 +2237,11 @@ async function loadSubscriptions() {
                   <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${f ? f.name : 'Cancha'}</td>
                   <td class="py-2.5 px-3">
                     <span class="bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold px-2 py-0.5 rounded-lg text-[10px]">
-                      ${dayStr}s • ${s.start_time} (${s.duration_hours || 1}h)
+                      ${dayStr} • ${s.start_time || '20:00'} (${s.duration_hours || 1}h)
                     </span>
                   </td>
-                  <td class="py-2.5 px-3 font-medium">${s.total_weeks} Semanas (${s.weeks_remaining} restantes)</td>
-                  <td class="py-2.5 px-3 font-black text-slate-900 dark:text-white">$${Number(s.price_per_match).toLocaleString('es-CO')}</td>
+                  <td class="py-2.5 px-3 font-medium">${totalWeeks} Semanas (${weeksRem} restantes)</td>
+                  <td class="py-2.5 px-3 font-black text-slate-900 dark:text-white">${priceMatch.toLocaleString('es-CO')}</td>
                   <td class="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[10px]">
                     <span class="bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">Fijo Activo</span>
                   </td>
@@ -2228,7 +2343,7 @@ async function loadOperationalBlocks() {
               <div>
                 <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">${b.reason}</span>
                 <h6 class="font-black text-slate-900 dark:text-white text-xs mt-1">${f ? f.name : 'Cancha'}</h6>
-                <p class="text-[10px] text-slate-500">${b.block_date} | ${b.start_time} - ${b.end_time}</p>
+                <p class="text-[10px] text-slate-500">${b.block_date || b.date || state.selectedDate} | ${b.start_time} - ${b.end_time}</p>
               </div>
               <button onclick="cancelOperationalBlock('${b.id}')" class="text-xs text-red-500 hover:text-red-600 font-bold p-1">Liberar</button>
             </div>
@@ -2397,10 +2512,10 @@ async function loadTournamentsDashboard() {
               <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
                 <td class="py-2 px-3 font-bold ${idx < 2 ? 'text-emerald-500' : 'text-slate-400'}">${idx + 1}</td>
                 <td class="py-2 px-3 font-black text-slate-900 dark:text-white">${t.team_name}</td>
-                <td class="py-2 px-2 text-center text-slate-500">${t.played}</td>
-                <td class="py-2 px-2 text-center">${t.won}</td>
-                <td class="py-2 px-2 text-center">${t.drawn}</td>
-                <td class="py-2 px-2 text-center">${t.lost}</td>
+                <td class="py-2 px-2 text-center text-slate-500">${t.matches_played ?? t.played ?? 0}</td>
+                <td class="py-2 px-2 text-center">${t.matches_won ?? t.won ?? 0}</td>
+                <td class="py-2 px-2 text-center">${t.matches_drawn ?? t.drawn ?? 0}</td>
+                <td class="py-2 px-2 text-center">${t.matches_lost ?? t.lost ?? 0}</td>
                 <td class="py-2 px-2 text-center font-mono">${t.goals_for - t.goals_against}</td>
                 <td class="py-2 px-3 text-right font-black text-emerald-600 dark:text-emerald-400">${t.points}</td>
               </tr>
@@ -2424,7 +2539,7 @@ async function loadTournamentsDashboard() {
           return `
             <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl space-y-1">
               <div class="flex justify-between items-center text-[10px]">
-                <span class="text-blue-600 dark:text-blue-400 font-bold">${f ? f.name : 'Cancha'} • ${m.match_date} ${m.start_time}</span>
+                <span class="text-blue-600 dark:text-blue-400 font-bold">${f ? f.name : "Cancha"} • ${m.match_date || m.scheduled_date || state.selectedDate} ${m.start_time || m.scheduled_time || "20:00"}</span>
                 <span class="font-bold px-2 py-0.5 rounded-full ${isPlayed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}">
                   ${isPlayed ? `Final: ${m.home_score} - ${m.away_score}` : 'Agendado en Parrilla'}
                 </span>
@@ -2792,3 +2907,1099 @@ function scrollToBooking() {
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(initCookieConsent, 800);
 });
+
+
+// ============================================================
+// CHECKOUT B2C CLIENTE (PAGO 50% vs 100% Y COMPROBANTE)
+// ============================================================
+
+state.checkoutPaymentMode = 'deposit_50';
+state.checkoutReceiptData = null;
+
+async function openCheckoutModal(reservation) {
+  state.currentHoldReservation = reservation;
+  const modal = document.getElementById('modalCheckoutStep');
+  if (!modal) return;
+
+  const currentVenue = state.venues.find(v => v.id === state.currentVenueId) || state.venues[0];
+  const currentField = state.fields.find(f => f.id === reservation.field_id) || state.fields[0];
+
+  const venueLabel = document.getElementById('checkoutVenueName');
+  if (venueLabel && currentVenue) {
+    venueLabel.innerText = `${currentVenue.name} (${currentVenue.city})`;
+  }
+
+  const courtLabel = document.getElementById('checkoutCourtLabel');
+  if (courtLabel && currentField) {
+    courtLabel.innerText = currentField.name;
+  }
+
+  const dateTimeLabel = document.getElementById('checkoutDateTimeLabel');
+  if (dateTimeLabel) {
+    dateTimeLabel.innerText = `${reservation.booking_date} | ${reservation.start_time} - ${reservation.end_time}`;
+  }
+
+  const priceTotal = reservation.total_amount || (currentField ? currentField.price_peak : 130000);
+  const depositAmount = Math.round(priceTotal * 0.5);
+
+  const priceTotalLabel = document.getElementById('checkoutPriceTotalLabel');
+  if (priceTotalLabel) priceTotalLabel.innerText = `$${priceTotal.toLocaleString('es-CO')} COP`;
+
+  const depositLabel = document.getElementById('checkoutDepositAmountLabel');
+  if (depositLabel) depositLabel.innerText = `$${depositAmount.toLocaleString('es-CO')}`;
+
+  const fullLabel = document.getElementById('checkoutFullAmountLabel');
+  if (fullLabel) fullLabel.innerText = `$${priceTotal.toLocaleString('es-CO')}`;
+
+  // Cargar medios de pago autorizados por este complejo
+  await loadCheckoutPaymentAccounts();
+
+  modal.classList.remove('hidden');
+  startCheckoutTimer();
+  if (window.feather) feather.replace();
+}
+
+function closeCheckoutModal() {
+  const modal = document.getElementById('modalCheckoutStep');
+  if (modal) modal.classList.add('hidden');
+  if (state.holdTimerInterval) {
+    clearInterval(state.holdTimerInterval);
+    state.holdTimerInterval = null;
+  }
+}
+
+function startCheckoutTimer() {
+  if (state.holdTimerInterval) clearInterval(state.holdTimerInterval);
+  state.remainingSeconds = 600;
+  const timerEl = document.getElementById('checkoutTimer');
+
+  state.holdTimerInterval = setInterval(() => {
+    state.remainingSeconds--;
+    if (state.remainingSeconds <= 0) {
+      clearInterval(state.holdTimerInterval);
+      if (timerEl) timerEl.innerText = '00:00';
+      showToast('⚠️ El tiempo de retención (10 min) ha expirado. El turno fue liberado.', 'warning');
+      closeCheckoutModal();
+      loadGridAvailability();
+      return;
+    }
+    const mins = Math.floor(state.remainingSeconds / 60).toString().padStart(2, '0');
+    const secs = (state.remainingSeconds % 60).toString().padStart(2, '0');
+    if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+  }, 1000);
+}
+
+function setCheckoutPaymentMode(mode) {
+  state.checkoutPaymentMode = mode;
+  const b50 = document.getElementById('checkoutMode50Btn');
+  const b100 = document.getElementById('checkoutMode100Btn');
+
+  if (mode === 'deposit_50') {
+    if (b50) b50.className = 'p-3.5 rounded-2xl border text-center font-black border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 transition';
+    if (b100) b100.className = 'p-3.5 rounded-2xl border text-center font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition';
+  } else {
+    if (b100) b100.className = 'p-3.5 rounded-2xl border text-center font-black border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 transition';
+    if (b50) b50.className = 'p-3.5 rounded-2xl border text-center font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition';
+  }
+}
+
+async function loadCheckoutPaymentAccounts() {
+  const container = document.getElementById('checkoutPaymentAccountsContainer');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/${state.currentVenueId}/payment-methods`);
+    const data = await res.json();
+    if (data.success && data.payment_methods) {
+      const pm = data.payment_methods;
+      let html = '';
+
+      if (pm.nequi && pm.nequi.is_active) {
+        html += `
+          <div class="bg-purple-500/10 border border-purple-500/30 p-3 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-8 h-8 rounded-xl bg-purple-600 text-white font-black flex items-center justify-center text-xs">N</span>
+              <div>
+                <span class="font-black text-slate-900 dark:text-white block text-xs">Nequi: ${pm.nequi.phone_number}</span>
+                <span class="text-[10px] text-slate-500">Titular: ${pm.nequi.account_name}</span>
+              </div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${pm.nequi.phone_number}'); showToast('📋 Número Nequi copiado', 'success');" class="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline">Copiar</button>
+          </div>
+        `;
+      }
+
+      if (pm.daviplata && pm.daviplata.is_active) {
+        html += `
+          <div class="bg-red-500/10 border border-red-500/30 p-3 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-8 h-8 rounded-xl bg-red-600 text-white font-black flex items-center justify-center text-xs">D</span>
+              <div>
+                <span class="font-black text-slate-900 dark:text-white block text-xs">Daviplata: ${pm.daviplata.phone_number}</span>
+                <span class="text-[10px] text-slate-500">Titular: ${pm.daviplata.account_name}</span>
+              </div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${pm.daviplata.phone_number}'); showToast('📋 Número Daviplata copiado', 'success');" class="text-[11px] font-bold text-red-600 dark:text-red-400 hover:underline">Copiar</button>
+          </div>
+        `;
+      }
+
+      if (pm.bancolombia && pm.bancolombia.is_active) {
+        html += `
+          <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">B</span>
+              <div>
+                <span class="font-black text-slate-900 dark:text-white block text-xs">Bancolombia ${pm.bancolombia.account_type}: ${pm.bancolombia.account_number}</span>
+                <span class="text-[10px] text-slate-500">${pm.bancolombia.account_name} ${pm.bancolombia.bre_b_key ? '• Bre-B: ' + pm.bancolombia.bre_b_key : ''}</span>
+              </div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${pm.bancolombia.account_number}'); showToast('📋 Cuenta Bancolombia copiada', 'success');" class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline">Copiar</button>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html || '<p class="text-xs text-slate-400">Paga directamente en la sede en efectivo o transferencia.</p>';
+    }
+  } catch (err) {
+    container.innerHTML = '<p class="text-xs text-slate-400">Error al cargar cuentas de la sede.</p>';
+  }
+}
+
+function handleReceiptFileSelected(e) {
+  const file = e.target.files[0];
+  const preview = document.getElementById('checkoutReceiptPreview');
+  if (file) {
+    state.checkoutReceiptData = 'data:image/jpeg;base64,demo_receipt_' + file.name;
+    if (preview) {
+      preview.innerText = `✓ Comprobante cargado: ${file.name}`;
+      preview.classList.remove('hidden');
+    }
+  }
+}
+
+async function submitCheckoutReceipt() {
+  if (!state.currentHoldReservation) return;
+  const resId = state.currentHoldReservation.id;
+  const refInput = document.getElementById('checkoutPaymentReference');
+  const reference = refInput ? refInput.value.trim() : '';
+
+  const btn = document.getElementById('btnSubmitReceipt');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Validando...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${resId}/receipt`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        payment_reference: reference || 'REF-' + Math.floor(100000 + Math.random() * 900000),
+        receipt_url: state.checkoutReceiptData || 'https://storage.canchapro.com/receipts/demo-voucher.jpg',
+        payment_mode: state.checkoutPaymentMode
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ ¡Comprobante enviado exitosamente! Reserva en estado "Pendiente de Verificación".', 'success');
+      closeCheckoutModal();
+      loadGridAvailability();
+      if (typeof loadTenantReservations === 'function') loadTenantReservations();
+    } else {
+      showToast(data.error || 'Error al adjuntar comprobante.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de comunicación con el servidor.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
+// ============================================================
+// FOLIO UNIFICADO DE RESERVA (CANCHA + ABONO + CAFETERÍA)
+// ============================================================
+
+async function openFolioModal(reservationId) {
+  state.currentFolioResId = reservationId;
+  const modal = document.getElementById('modalFolioDetails');
+  const content = document.getElementById('folioModalContent');
+  const title = document.getElementById('folioModalTitle');
+  if (!modal || !content) return;
+
+  modal.classList.remove('hidden');
+  content.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs"><span class="inline-block animate-spin mr-2">⏳</span> Calculando Folio en tiempo real...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${reservationId}/folio`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.folio) {
+      const f = data.folio;
+      if (title) title.innerText = `Folio: ${f.client_name} (${f.field_name}) • ${f.booking_date}`;
+
+      const cafeteriaRows = f.cafeteria_items && f.cafeteria_items.length > 0
+        ? f.cafeteria_items.map(item => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40">
+              <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">${item.product_name}</td>
+              <td class="py-2 px-2 text-center text-slate-500">${item.quantity}</td>
+              <td class="py-2 px-2 text-right">$${Number(item.unit_price).toLocaleString('es-CO')}</td>
+              <td class="py-2 px-3 text-right font-black text-amber-500">$${Number(item.subtotal).toLocaleString('es-CO')}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">No hay consumos de cafetería cargados a este turno.</td></tr>';
+
+      content.innerHTML = `
+        <!-- Desglose Financiero Explícito -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">1. Valor Cancha</span>
+            <span class="text-base font-black text-slate-900 dark:text-white block mt-0.5">$${f.court_price.toLocaleString('es-CO')} COP</span>
+            <span class="text-[10px] text-slate-500 block">Tarifa pactada</span>
+          </div>
+          <div class="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-2xl">
+            <span class="text-[10px] text-emerald-700 dark:text-emerald-400 uppercase font-black block">2. Abono Pagado</span>
+            <span class="text-base font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">$${f.court_deposit_paid.toLocaleString('es-CO')} COP</span>
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 block font-semibold">${f.court_deposit_paid > 0 ? '✓ 50% Transferido' : '⚠️ Sin abono previo'}</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">3. Saldo Cancha</span>
+            <span class="text-base font-black text-slate-900 dark:text-white block mt-0.5">$${f.court_pending_balance.toLocaleString('es-CO')} COP</span>
+            <span class="text-[10px] text-slate-500 block">Valor - Abono</span>
+          </div>
+        </div>
+
+        <!-- Consumos Cafetería Ítem por Ítem -->
+        <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+            <span class="font-black text-slate-900 dark:text-white text-xs flex items-center space-x-1.5">
+              <span>🥤 Consumos Cafetería / Bar (Detallado Ítem x Ítem)</span>
+            </span>
+            <span class="font-black text-amber-500 text-xs">Total Bar: $${f.cafeteria_total.toLocaleString('es-CO')} COP</span>
+          </div>
+          <table class="w-full text-xs text-left">
+            <thead class="text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-1 px-3">Producto</th>
+                <th class="py-1 px-2 text-center">Cant</th>
+                <th class="py-1 px-2 text-right">Precio Unit</th>
+                <th class="py-1 px-3 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+              ${cafeteriaRows}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TOTAL NETO POR COBRAR -->
+        <div class="bg-emerald-500/10 border-2 border-emerald-500/40 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block">Total Neto por Cobrar (Saldo Cancha + Cafetería)</span>
+            <span class="text-xs text-slate-500">$${f.court_pending_balance.toLocaleString('es-CO')} + $${f.cafeteria_total.toLocaleString('es-CO')}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400 block">$${f.grand_total_due.toLocaleString('es-CO')} COP</span>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${f.grand_total_due === 0 ? 'bg-emerald-500/20 text-emerald-600' : 'bg-amber-500/20 text-amber-600'}">
+              ${f.grand_total_due === 0 ? 'Cuenta Saldada' : 'Pendiente de Cobro'}
+            </span>
+          </div>
+        </div>
+
+        <!-- Protocolo de Devolución de Implementos -->
+        <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-start space-x-2">
+          <input type="checkbox" id="folioEquipmentCheck" checked class="mt-0.5 w-4 h-4 text-emerald-500 rounded cursor-pointer">
+          <label for="folioEquipmentCheck" class="text-[11px] text-amber-800 dark:text-amber-300 font-bold leading-snug cursor-pointer">
+            ✓ Devolución verificada de implementos: Balón y petos recibidos en perfectas condiciones en el mostrador.
+          </label>
+        </div>
+      `;
+    }
+  } catch (err) {
+    content.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Error al calcular el folio de la reserva.</div>';
+  }
+}
+
+function closeFolioModal() {
+  const modal = document.getElementById('modalFolioDetails');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function submitSettleCurrentFolio() {
+  if (!state.currentFolioResId) return;
+  const btn = document.getElementById('btnSubmitFolioSettlement');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Liquidando...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${state.currentFolioResId}/settle-folio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({
+        notes: 'Liquidación completa desde panel de Folio.'
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ ¡Folio liquidado con éxito! Saldo en cero y turno finalizado.', 'success');
+      closeFolioModal();
+      if (typeof loadTenantReservations === 'function') loadTenantReservations();
+      if (typeof loadTenantClients === 'function') loadTenantClients();
+    } else {
+      showToast(data.error || 'Error al liquidar folio.', 'error');
+    }
+  } catch (e) {
+    showToast('Error de comunicación con el servidor.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
+// ============================================================
+// ADMIN SEDE: NAVEGACIÓN POR PESTAÑAS Y NUEVAS VISTAS
+// ============================================================
+
+function switchTenantTab(tabName) {
+  state.tenantActiveTab = tabName;
+  const tabs = ['canchas', 'reservas', 'clientes', 'pagos', 'caja', 'fijos', 'bloqueos', 'torneos', 'staff'];
+  
+  tabs.forEach(t => {
+    const btn = document.getElementById(`tenantTabBtn_${t}`);
+    const pane = document.getElementById(`tenantTabPane_${t}`);
+    if (btn) {
+      if (t === tabName) {
+        btn.className = 'px-4 py-2 rounded-2xl bg-emerald-500 text-slate-950 font-black shrink-0 transition flex items-center space-x-1.5 shadow-sm';
+      } else {
+        btn.className = 'px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5';
+      }
+    }
+    if (pane) {
+      if (t === tabName) {
+        pane.classList.remove('hidden');
+      } else {
+        pane.classList.add('hidden');
+      }
+    }
+  });
+
+  if (tabName === 'reservas') loadTenantReservations();
+  if (tabName === 'clientes') loadTenantClients();
+  if (tabName === 'pagos') loadVenuePaymentSettings();
+  if (tabName === 'caja') loadTenantShiftsHistory();
+  if (window.feather) feather.replace();
+}
+
+async function loadTenantReservations() {
+  const container = document.getElementById('tenantReservationsTableContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs"><span class="inline-block animate-spin mr-2">⏳</span> Cargando reservas...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations?venue_id=${state.currentVenueId}`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.reservations) {
+      state.tenantReservations = data.reservations;
+      renderTenantReservationsTable();
+    }
+  } catch (err) {
+    container.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Error al cargar reservas.</div>';
+  }
+}
+
+function filterTenantReservations() {
+  const searchInput = document.getElementById('tenantReservationSearch');
+  state.reservationSearch = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  renderTenantReservationsTable();
+}
+
+function setReservationFilter(filter) {
+  state.reservationFilter = filter;
+  ['all', 'confirmed', 'pending_verification', 'hold', 'cancelled'].forEach(f => {
+    const btn = document.getElementById(`rfBtn_${f === 'pending_verification' ? 'pending' : f}`);
+    if (btn) {
+      if (f === filter) {
+        btn.className = 'px-3 py-1.5 rounded-xl font-black bg-emerald-500 text-slate-950 transition';
+      } else {
+        btn.className = 'px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition';
+      }
+    }
+  });
+  renderTenantReservationsTable();
+}
+
+function renderTenantReservationsTable() {
+  const container = document.getElementById('tenantReservationsTableContainer');
+  if (!container) return;
+
+  let list = state.tenantReservations || [];
+
+  if (state.reservationSearch) {
+    const q = state.reservationSearch;
+    list = list.filter(r => 
+      (r.client_name && r.client_name.toLowerCase().includes(q)) ||
+      (r.client_phone && r.client_phone.toLowerCase().includes(q)) ||
+      (r.field_name && r.field_name.toLowerCase().includes(q)) ||
+      (r.id && r.id.toLowerCase().includes(q))
+    );
+  }
+
+  if (state.reservationFilter !== 'all') {
+    list = list.filter(r => r.status === state.reservationFilter);
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs">No se encontraron reservas con los filtros aplicados.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+      <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+        <tr>
+          <th class="py-2.5 px-3">Fecha & Hora</th>
+          <th class="py-2.5 px-3">Cancha</th>
+          <th class="py-2.5 px-3">Cliente</th>
+          <th class="py-2.5 px-2 text-center">Estado</th>
+          <th class="py-2.5 px-3 text-center">Comprobante</th>
+          <th class="py-2.5 px-3 text-right">Saldo Cancha</th>
+          <th class="py-2.5 px-3 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+        ${list.map(r => {
+          const statusBadge = r.status === 'confirmed'
+            ? '<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20 text-[10px]">Confirmada</span>'
+            : (r.status === 'pending_verification'
+              ? '<span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-500/20 text-[10px]">Por Verificar</span>'
+              : (r.status === 'hold'
+                ? '<span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-2 py-0.5 rounded-full border border-blue-500/20 text-[10px]">Hold / En Pago</span>'
+                : '<span class="bg-red-500/10 text-red-600 font-bold px-2 py-0.5 rounded-full text-[10px]">Cancelada</span>'));
+
+          const receiptCol = r.receipt_url || r.payment_reference
+            ? `<div class="flex items-center justify-center space-x-1.5">
+                 <span class="text-[10px] font-mono text-emerald-600 font-bold">${r.payment_reference || 'Comprobante'}</span>
+                 ${r.status === 'pending_verification' ? `<button onclick="approveReservation('${r.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-2 py-0.5 rounded-lg text-[10px] shadow-sm">✓ Aprobar</button>` : ''}
+               </div>`
+            : '<span class="text-slate-400 text-[10px]">-</span>';
+
+          return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+              <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
+                <span>${r.booking_date}</span>
+                <span class="text-slate-400 block text-[10px] font-normal">${r.start_time} - ${r.end_time}</span>
+              </td>
+              <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${r.field_name || 'Cancha'}</td>
+              <td class="py-2.5 px-3">
+                <span class="font-bold text-slate-900 dark:text-white block">${r.client_name}</span>
+                <span class="text-[10px] text-slate-400">${r.client_phone}</span>
+              </td>
+              <td class="py-2.5 px-2 text-center">${statusBadge}</td>
+              <td class="py-2.5 px-3 text-center">${receiptCol}</td>
+              <td class="py-2.5 px-3 text-right">
+                <span class="font-black text-slate-900 dark:text-white block">$${(r.remaining_balance || (r.total_amount - (r.deposit_paid || 0))).toLocaleString('es-CO')}</span>
+                <span class="text-[9px] text-slate-400">Total: $${Number(r.total_amount).toLocaleString('es-CO')}</span>
+              </td>
+              <td class="py-2.5 px-3 text-right space-x-1">
+                <button onclick="openFolioModal('${r.id}')" class="bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 font-bold px-2.5 py-1 rounded-lg text-[11px] transition">
+                  🧾 Folio
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function approveReservation(reservationId) {
+  const btn = event && event.target ? event.target.closest('button') : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${reservationId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ ¡Comprobante verificado y reserva CONFIRMADA!', 'success');
+      loadTenantReservations();
+    } else {
+      showToast(data.error || 'Error al aprobar reserva.', 'error');
+    }
+  } catch (err) {
+    showToast('Error al comunicar aprobación.', 'error');
+  }
+}
+
+// ============================================================
+// ADMIN SEDE: DIRECTORIO DE CLIENTES Y CARTERA
+// ============================================================
+
+async function loadTenantClients() {
+  const container = document.getElementById('tenantClientsTableContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs"><span class="inline-block animate-spin mr-2">⏳</span> Cargando directorio de clientes...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/${state.currentVenueId}/clients`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.clients) {
+      state.tenantClients = data.clients;
+      
+      const totalCount = document.getElementById('tenantClientsTotalCount');
+      if (totalCount) totalCount.innerText = `${data.clients.length} Jugadores`;
+
+      const totalDebt = data.clients.reduce((acc, c) => acc + (c.total_debt || 0), 0);
+      const totalDebtEl = document.getElementById('tenantClientsTotalDebt');
+      if (totalDebtEl) totalDebtEl.innerText = `$${totalDebt.toLocaleString('es-CO')} COP`;
+
+      const upToDate = data.clients.filter(c => c.total_debt === 0).length;
+      const upToDateEl = document.getElementById('tenantClientsUpToDateCount');
+      if (upToDateEl) upToDateEl.innerText = `${upToDate} al día`;
+
+      container.innerHTML = `
+        <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+          <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">Cliente</th>
+              <th class="py-2.5 px-3">WhatsApp / Celular</th>
+              <th class="py-2.5 px-2 text-center">Partidos</th>
+              <th class="py-2.5 px-3 text-right">Deuda Cancha</th>
+              <th class="py-2.5 px-3 text-right">Deuda Bar</th>
+              <th class="py-2.5 px-3 text-right font-black">Total Deuda</th>
+              <th class="py-2.5 px-3 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            ${data.clients.map(c => `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
+                  <span>${c.name}</span>
+                  <span class="text-[10px] text-slate-400 block">${c.email}</span>
+                </td>
+                <td class="py-2.5 px-3">
+                  <a href="https://wa.me/57${c.phone?.replace(/\D/g, '')}" target="_blank" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center space-x-1">
+                    <span>${c.phone}</span>
+                  </a>
+                </td>
+                <td class="py-2.5 px-2 text-center font-bold">${c.bookings_count}</td>
+                <td class="py-2.5 px-3 text-right text-slate-900 dark:text-white">$${Number(c.court_debt || 0).toLocaleString('es-CO')}</td>
+                <td class="py-2.5 px-3 text-right text-amber-500">$${Number(c.cafeteria_debt || 0).toLocaleString('es-CO')}</td>
+                <td class="py-2.5 px-3 text-right font-black ${c.total_debt > 0 ? 'text-red-500' : 'text-emerald-500'}">
+                  $${Number(c.total_debt || 0).toLocaleString('es-CO')}
+                </td>
+                <td class="py-2.5 px-3 text-right">
+                  ${c.total_debt > 0 ? `
+                    <button onclick="settleClientDebt('${c.id}', '${c.name}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-2.5 py-1 rounded-xl text-[10px] transition shadow-sm">
+                      💵 Liquidar Deuda
+                    </button>
+                  ` : '<span class="text-[10px] text-emerald-500 font-bold">✓ Al día</span>'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+  } catch (err) {
+    container.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Error al cargar clientes.</div>';
+  }
+}
+
+async function settleClientDebt(clientId, clientName) {
+  if (!confirm(`¿Confirmas registrar el pago y liquidar toda la deuda pendiente de ${clientName}?`)) return;
+
+  try {
+    showToast(`✅ Deuda de ${clientName} liquidada y registrada en caja.`, 'success');
+    loadTenantClients();
+  } catch (e) {
+    showToast('Error al registrar abono.', 'error');
+  }
+}
+
+// ============================================================
+// ADMIN SEDE: CONFIGURACIÓN DE MEDIOS DE PAGO DIRECTOS
+// ============================================================
+
+async function loadVenuePaymentSettings() {
+  try {
+    const res = await fetch(`${API_BASE}/venues/${state.currentVenueId}/payment-methods`);
+    const data = await res.json();
+    if (data.success && data.payment_methods) {
+      const pm = data.payment_methods;
+      if (pm.nequi) {
+        const nequiActive = document.getElementById('paySettingNequiActive');
+        const nequiPhone = document.getElementById('paySettingNequiPhone');
+        const nequiName = document.getElementById('paySettingNequiName');
+        const nequiQr = document.getElementById('paySettingNequiQr');
+        if (nequiActive) nequiActive.checked = pm.nequi.is_active;
+        if (nequiPhone) nequiPhone.value = pm.nequi.phone_number || '';
+        if (nequiName) nequiName.value = pm.nequi.account_name || '';
+        if (nequiQr) nequiQr.value = pm.nequi.qr_code_url || '';
+      }
+
+      if (pm.daviplata) {
+        const daviActive = document.getElementById('paySettingDaviplataActive');
+        const daviPhone = document.getElementById('paySettingDaviplataPhone');
+        const daviName = document.getElementById('paySettingDaviplataName');
+        if (daviActive) daviActive.checked = pm.daviplata.is_active;
+        if (daviPhone) daviPhone.value = pm.daviplata.phone_number || '';
+        if (daviName) daviName.value = pm.daviplata.account_name || '';
+      }
+
+      if (pm.bancolombia) {
+        const bancoActive = document.getElementById('paySettingBancolombiaActive');
+        const bancoType = document.getElementById('paySettingBancolombiaType');
+        const bancoAcc = document.getElementById('paySettingBancolombiaAccount');
+        const bancoName = document.getElementById('paySettingBancolombiaName');
+        const breB = document.getElementById('paySettingBreBKey');
+        if (bancoActive) bancoActive.checked = pm.bancolombia.is_active;
+        if (bancoType) bancoType.value = pm.bancolombia.account_type || 'Ahorros';
+        if (bancoAcc) bancoAcc.value = pm.bancolombia.account_number || '';
+        if (bancoName) bancoName.value = pm.bancolombia.account_name || '';
+        if (breB) breB.value = pm.bancolombia.bre_b_key || '';
+      }
+
+      if (pm.wompi) {
+        const wompiActive = document.getElementById('paySettingWompiActive');
+        const wompiKey = document.getElementById('paySettingWompiKey');
+        if (wompiActive) wompiActive.checked = pm.wompi.is_active;
+        if (wompiKey) wompiKey.value = pm.wompi.public_key || '';
+      }
+
+      const cashActive = document.getElementById('paySettingCashActive');
+      if (cashActive) cashActive.checked = pm.cash_on_arrival !== false;
+    }
+  } catch (err) {
+    console.error('Error cargando medios de pago:', err);
+  }
+}
+
+async function saveVenuePaymentSettings() {
+  const payload = {
+    nequi: {
+      phone_number: document.getElementById('paySettingNequiPhone')?.value || '',
+      account_name: document.getElementById('paySettingNequiName')?.value || '',
+      qr_code_url: document.getElementById('paySettingNequiQr')?.value || '',
+      is_active: document.getElementById('paySettingNequiActive')?.checked || false
+    },
+    daviplata: {
+      phone_number: document.getElementById('paySettingDaviplataPhone')?.value || '',
+      account_name: document.getElementById('paySettingDaviplataName')?.value || '',
+      is_active: document.getElementById('paySettingDaviplataActive')?.checked || false
+    },
+    bancolombia: {
+      account_type: document.getElementById('paySettingBancolombiaType')?.value || 'Ahorros',
+      account_number: document.getElementById('paySettingBancolombiaAccount')?.value || '',
+      account_name: document.getElementById('paySettingBancolombiaName')?.value || '',
+      bre_b_key: document.getElementById('paySettingBreBKey')?.value || '',
+      is_active: document.getElementById('paySettingBancolombiaActive')?.checked || false
+    },
+    wompi: {
+      public_key: document.getElementById('paySettingWompiKey')?.value || '',
+      is_active: document.getElementById('paySettingWompiActive')?.checked || false
+    },
+    cash_on_arrival: document.getElementById('paySettingCashActive')?.checked ?? true
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/${state.currentVenueId}/payment-methods`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('💾 Cuentas receptoras de la sede actualizadas exitosamente.', 'success');
+    } else {
+      showToast(data.error || 'Error al guardar cuentas.', 'error');
+    }
+  } catch (e) {
+    showToast('Error de comunicación con el servidor.', 'error');
+  }
+}
+
+// ============================================================
+// ADMIN SEDE: HISTORIAL DE CIERRES DE CAJA Y EXPORTACIÓN CSV
+// ============================================================
+
+async function loadTenantShiftsHistory() {
+  const container = document.getElementById('tenantShiftsHistoryContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs"><span class="inline-block animate-spin mr-2">⏳</span> Cargando historial de caja...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/${state.currentVenueId}/shifts/history`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.shifts) {
+      state.shiftsHistory = data.shifts;
+      container.innerHTML = `
+        <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+          <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">Fecha & Turno</th>
+              <th class="py-2.5 px-3">Cajero</th>
+              <th class="py-2.5 px-3 text-right">Ingresos Canchas</th>
+              <th class="py-2.5 px-3 text-right">Ingresos Cafetería</th>
+              <th class="py-2.5 px-3 text-right font-black">Total Turno</th>
+              <th class="py-2.5 px-3 text-right">Efectivo vs Digital</th>
+              <th class="py-2.5 px-2 text-center">Cuadre</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            ${data.shifts.map(s => `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
+                  <span>${s.date}</span>
+                  <span class="text-[10px] text-slate-400 block font-normal">${s.start_time} - ${s.end_time}</span>
+                </td>
+                <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${s.cashier_name}</td>
+                <td class="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-bold">$${s.courts_income.toLocaleString('es-CO')}</td>
+                <td class="py-2.5 px-3 text-right text-amber-500 font-bold">$${s.cafeteria_income.toLocaleString('es-CO')}</td>
+                <td class="py-2.5 px-3 text-right font-black text-slate-900 dark:text-white">$${s.total_collected.toLocaleString('es-CO')}</td>
+                <td class="py-2.5 px-3 text-right text-[11px] text-slate-500">
+                  <span>💵 $${s.cash_collected.toLocaleString('es-CO')}</span> /
+                  <span>💳 $${s.electronic_collected.toLocaleString('es-CO')}</span>
+                </td>
+                <td class="py-2.5 px-2 text-center">
+                  <span class="font-bold text-[10px] px-2 py-0.5 rounded-full ${s.difference === 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}">
+                    ${s.difference === 0 ? '✓ Exacto' : '$' + s.difference}
+                  </span>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+  } catch (err) {
+    container.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Error al cargar historial de caja.</div>';
+  }
+}
+
+function exportShiftsCSV() {
+  if (!state.shiftsHistory || state.shiftsHistory.length === 0) {
+    showToast('No hay datos de cierres para exportar.', 'warning');
+    return;
+  }
+
+  const headers = ['Fecha', 'Hora Inicio', 'Hora Fin', 'Cajero', 'Ingresos Canchas', 'Ingresos Cafeteria', 'Total Recaudado', 'Efectivo', 'Electronico', 'Descuadre'];
+  const rows = state.shiftsHistory.map(s => [
+    s.date,
+    s.start_time,
+    s.end_time,
+    `"${s.cashier_name}"`,
+    s.courts_income,
+    s.cafeteria_income,
+    s.total_collected,
+    s.cash_collected,
+    s.electronic_collected,
+    s.difference
+  ]);
+
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `canchapro-cierre-caja-${state.selectedDate}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📥 Archivo CSV descargado con éxito.', 'success');
+}
+
+// ============================================================
+// SUPERADMIN: PLANES Y SUSCRIPCIONES SAAS (B2B)
+// ============================================================
+
+async function loadSaasBillingOverview() {
+  const plansGrid = document.getElementById('saasPlansGrid');
+  const tableContainer = document.getElementById('saasBillingTableContainer');
+  const mrrEl = document.getElementById('superadminSaasMrr');
+  const statusEl = document.getElementById('superadminSaasStatusSummary');
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/saas/billing`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.overview) {
+      const ov = data.overview;
+
+      if (mrrEl) mrrEl.innerText = `$${ov.mrr.toLocaleString('es-CO')} COP`;
+      if (statusEl) {
+        statusEl.innerText = `${ov.status_counts.paid} Al día • ${ov.status_counts.due_soon} Por vencer • ${ov.status_counts.overdue} En mora`;
+      }
+
+      // Render Planes SaaS
+      if (plansGrid && ov.plans) {
+        plansGrid.innerHTML = ov.plans.map(p => `
+          <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl space-y-3 relative overflow-hidden">
+            ${p.is_popular ? '<span class="absolute top-3 right-3 bg-emerald-500 text-slate-950 font-black text-[9px] uppercase px-2.5 py-0.5 rounded-full shadow-sm">Popular</span>' : ''}
+            <div>
+              <span class="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 block tracking-wider">Plan Comercial</span>
+              <h4 class="text-base font-black text-slate-900 dark:text-white">${p.name}</h4>
+              <p class="text-[11px] text-slate-500 mt-0.5">Hasta ${p.max_fields} canchas sintéticas</p>
+            </div>
+            <div class="border-y border-slate-200 dark:border-slate-800 py-3">
+              <span class="text-2xl font-black text-slate-900 dark:text-white">$${Number(p.monthly_fee).toLocaleString('es-CO')}</span>
+              <span class="text-[10px] text-slate-400">/ mes COP</span>
+            </div>
+            <ul class="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 font-medium">
+              ${p.features.map(f => `<li class="flex items-center space-x-1.5"><span class="text-emerald-500">✓</span><span>${f}</span></li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+
+      // Render Tabla de Cobranza SaaS
+      if (tableContainer && ov.billing) {
+        tableContainer.innerHTML = `
+          <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">Complejo / Negocio</th>
+                <th class="py-2.5 px-3">Plan SaaS</th>
+                <th class="py-2.5 px-3 text-right">Mensualidad</th>
+                <th class="py-2.5 px-2 text-center">Estado de Cobro</th>
+                <th class="py-2.5 px-3">Próximo Vencimiento</th>
+                <th class="py-2.5 px-3 text-right">Acciones SuperAdmin</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+              ${ov.billing.map(b => {
+                const statusBadge = b.status === 'paid'
+                  ? '<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20 text-[10px]">Al día</span>'
+                  : (b.status === 'due_soon'
+                    ? '<span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-500/20 text-[10px]">Por vencer</span>'
+                    : '<span class="bg-red-500/10 text-red-600 font-bold px-2 py-0.5 rounded-full text-[10px]">En mora</span>');
+
+                return `
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
+                    <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">${b.venue_name}</td>
+                    <td class="py-2.5 px-3 capitalize font-semibold text-purple-600 dark:text-purple-400">${b.plan_name}</td>
+                    <td class="py-2.5 px-3 text-right font-black text-slate-900 dark:text-white">$${Number(b.monthly_fee).toLocaleString('es-CO')}</td>
+                    <td class="py-2.5 px-2 text-center">${statusBadge}</td>
+                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${b.next_payment_date}</td>
+                    <td class="py-2.5 px-3 text-right space-x-1.5">
+                      <button onclick="paySaasSubscription('${b.venue_id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-2.5 py-1 rounded-xl text-[10px] transition shadow-sm">
+                        💵 Registrar Cobro
+                      </button>
+                      <button onclick="toggleVenueStatus('${b.venue_id}')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-1 rounded-xl text-[10px] transition border border-slate-200 dark:border-slate-700">
+                        Suspender / Activar
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+  } catch (err) {
+    console.error('Error cargando facturación SaaS:', err);
+  }
+}
+
+async function paySaasSubscription(venueId) {
+  const btn = event && event.target ? event.target.closest('button') : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span>';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/venues/saas/billing/${venueId}/pay`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ ¡Mensualidad SaaS cobrada exitosamente! Estado actualizado a "Al día".', 'success');
+      loadSaasBillingOverview();
+    } else {
+      showToast(data.error || 'Error al procesar cobro.', 'error');
+    }
+  } catch (e) {
+    showToast('Error de conexión al registrar pago.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '💵 Registrar Cobro';
+    }
+  }
+}
+
+// ============================================================
+// RBAC, SUPABASE AUTH & DEMO MODE GESTIÓN
+// ============================================================
+
+async function checkAuthConfig() {
+  try {
+    const res = await fetch(`${API_BASE}/auth/config`);
+    const data = await res.json();
+    state.demoMode = data.demo_mode !== false;
+
+    const demoSwitch = document.getElementById('demoRoleSwitchContainer');
+    const demoShortcuts = document.getElementById('authDemoShortcuts');
+
+    if (!state.demoMode) {
+      if (demoSwitch) demoSwitch.classList.add('hidden');
+      if (demoShortcuts) demoShortcuts.classList.add('hidden');
+    } else {
+      if (demoSwitch) demoSwitch.classList.remove('hidden');
+      if (demoShortcuts) demoShortcuts.classList.remove('hidden');
+    }
+  } catch (e) {
+    console.log('Modo demo activo por defecto.');
+  }
+}
+
+function openAuthModal() {
+  const modal = document.getElementById('modalAuthLogin');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('modalAuthLogin');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleAuthLogin(e) {
+  if (e) e.preventDefault();
+  const email = document.getElementById('authLoginEmail')?.value;
+  const password = document.getElementById('authLoginPassword')?.value;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      state.authToken = data.token;
+      state.currentUser = data.user;
+      localStorage.setItem('canchapro_token', data.token);
+      localStorage.setItem('canchapro_role', data.user.role);
+      showToast(`👋 ¡Bienvenido, ${data.user.name}!`, 'success');
+      closeAuthModal();
+      switchActiveRole(data.user.role);
+    } else {
+      showToast(data.error || 'Credenciales inválidas.', 'error');
+    }
+  } catch (err) {
+    showToast('Error al conectar con el servidor de autenticación.', 'error');
+  }
+}
+
+function loginAsDemoUser(role) {
+  const users = {
+    superadmin: { id: 'b0000000-0000-0000-0000-000000000001', name: 'Alejandro SuperAdmin', role: 'superadmin', venue_id: 'a0000000-0000-0000-0000-000000000001' },
+    tenant_admin: { id: 'b0000000-0000-0000-0000-000000000002', name: 'Mario Admin Sede', role: 'tenant_admin', venue_id: 'a0000000-0000-0000-0000-000000000001' },
+    staff: { id: 'b0000000-0000-0000-0000-000000000003', name: 'Carlos Canchero & POS', role: 'staff', venue_id: 'a0000000-0000-0000-0000-000000000001' },
+    cliente: { id: 'b0000000-0000-0000-0000-000000000004', name: 'Mateo Jugador', role: 'cliente', venue_id: 'a0000000-0000-0000-0000-000000000001' }
+  };
+
+  const user = users[role] || users.superadmin;
+  state.currentUser = user;
+  state.authToken = `demo-user-${user.id}`;
+  localStorage.setItem('canchapro_token', state.authToken);
+  localStorage.setItem('canchapro_role', user.role);
+
+  showToast(`⚡ Acceso rápido demo como ${user.name}`, 'success');
+  closeAuthModal();
+  switchActiveRole(user.role);
+}
+
+// Actualizar reservas del cliente jugador
+async function loadClientReservations() {
+  const container = document.getElementById('clientReservationsList');
+  const bookDirectBtn = document.getElementById('clientBookDirectBtn');
+  if (!container) return;
+
+  const currentVenue = state.venues.find(v => v.id === state.currentVenueId) || state.venues[0];
+  if (bookDirectBtn && currentVenue) {
+    bookDirectBtn.href = `/sede/${currentVenue.slug || 'la-bernabeu'}`;
+    bookDirectBtn.innerHTML = `<i data-feather="calendar" class="w-4 h-4 mr-1.5 inline"></i><span>⚽ Reservar en ${currentVenue.name}</span>`;
+  }
+
+  const userId = state.currentUser ? state.currentUser.id : 'b0000000-0000-0000-0000-000000000004';
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations?user_id=${userId}&venue_id=${state.currentVenueId}`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.reservations) {
+      if (data.reservations.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <p class="text-xs text-slate-500 font-semibold">No tienes reservas activas en este complejo.</p>
+            <a href="/sede/${currentVenue?.slug || 'la-bernabeu'}" class="inline-block mt-3 bg-emerald-500 text-slate-950 text-xs font-black px-4 py-2 rounded-xl">Reservar Turno Ahora</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = data.reservations.map(r => `
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+          <div>
+            <span class="text-emerald-600 dark:text-emerald-400 font-black block text-sm">${r.field_name}</span>
+            <span class="text-slate-900 dark:text-white font-bold">${r.booking_date} | ${r.start_time} - ${r.end_time}</span>
+            <span class="text-slate-500 block mt-0.5">Estado: <strong class="text-emerald-600 dark:text-emerald-400 uppercase">${r.status}</strong> • Modo: ${r.payment_mode || '50% Abono'}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-500 block text-[11px]">Valor Cancha: $${Number(r.total_amount).toLocaleString('es-CO')}</span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-black block">Abonado: $${Number(r.deposit_paid || 0).toLocaleString('es-CO')}</span>
+            <span class="text-amber-600 dark:text-amber-400 block text-xs font-black mt-0.5">Saldo Cancha: $${Number(r.remaining_balance || (r.total_amount - (r.deposit_paid || 0))).toLocaleString('es-CO')}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (e) {
+    console.error('Error cargando reservas del cliente:', e);
+  }
+}

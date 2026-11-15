@@ -13,6 +13,14 @@
     {
       "source": "/dashboard",
       "destination": "/dashboard.html"
+    },
+    {
+      "source": "/sede/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sede",
+      "destination": "/index.html"
     }
   ],
   "headers": [

@@ -25,6 +25,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../../public')));
 app.use(express.static(path.join(__dirname, '../../frontend')));
 
+// Rutas Dedicadas por Sede (Aislamiento Multi-Tenant) y Dashboard
+app.get(['/sede/:slug', '/sede'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../../public/index.html'));
+});
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../public/dashboard.html'));
+});
+
 // Rutas de la API REST
 app.use('/api/auth', authRoutes);
 app.use('/api/venues', venueRoutes);

@@ -42,8 +42,8 @@
           <span class="text-lg font-black tracking-tight text-slate-900 dark:text-white">CANCHA<span class="text-emerald-500 dark:text-emerald-400">PRO</span></span>
         </a>
 
-        <!-- Conmutador Rápido de Roles (Simulador en Vivo) -->
-        <div class="hidden sm:flex items-center space-x-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
+        <!-- Conmutador Rápido de Roles (Simulador Demo en Vivo) -->
+        <div id="demoRoleSwitchContainer" class="hidden sm:flex items-center space-x-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
           <button onclick="switchActiveRole('superadmin')" id="roleBtnSuperadmin" class="px-3 py-1 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">👑 SuperAdmin</button>
           <button onclick="switchActiveRole('tenant_admin')" id="roleBtnTenant" class="px-3 py-1 rounded-xl font-bold bg-emerald-500 text-slate-950 transition">🏢 Admin Sede</button>
           <button onclick="switchActiveRole('staff')" id="roleBtnStaff" class="px-3 py-1 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">⚡ Canchero/POS</button>
@@ -52,10 +52,15 @@
       </div>
 
       <!-- Controles: Selector Modo Claro/Oscuro + Usuario y Salir -->
-      <div class="flex items-center space-x-3 text-xs">
+      <div class="flex items-center space-x-2.5 text-xs">
         <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema Claro / Oscuro" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 hover:scale-105 transition">
           <i data-feather="sun" id="themeIconSun" class="w-4 h-4 hidden dark:block"></i>
           <i data-feather="moon" id="themeIconMoon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+
+        <button onclick="openAuthModal()" title="Iniciar sesión o cambiar cuenta" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center space-x-1.5 transition font-semibold">
+          <i data-feather="user" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span class="hidden md:inline">Cuenta</span>
         </button>
 
         <div class="text-right hidden sm:block">
@@ -99,32 +104,68 @@
             <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Sedes Registradas</span>
             <i data-feather="home" class="w-5 h-5 text-purple-500"></i>
           </div>
-          <p class="text-2xl font-black text-slate-900 dark:text-white mt-2">2 Complejos</p>
-          <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">Cartagena & Bogotá</p>
+          <p id="superadminTotalVenuesCount" class="text-2xl font-black text-slate-900 dark:text-white mt-2">3 Complejos</p>
+          <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">Cartagena, Bogotá & Medellín</p>
         </div>
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Total Canchas en el Sistema</span>
             <i data-feather="grid" class="w-5 h-5 text-emerald-500"></i>
           </div>
-          <p id="superadminTotalFieldsCount" class="text-2xl font-black text-slate-900 dark:text-white mt-2">3 Canchas</p>
-          <p class="text-xs text-slate-500 mt-1">Fútbol 5, 7 y Pádel</p>
+          <p id="superadminTotalFieldsCount" class="text-2xl font-black text-slate-900 dark:text-white mt-2">-- Canchas</p>
+          <p class="text-xs text-slate-500 mt-1">Cálculo dinámico en Supabase</p>
         </div>
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Volumen Transaccionado</span>
-            <i data-feather="dollar-sign" class="w-5 h-5 text-amber-500"></i>
+            <i data-feather="activity" class="w-5 h-5 text-amber-500"></i>
           </div>
           <p class="text-2xl font-black text-slate-900 dark:text-white mt-2">$24.850.000 COP</p>
           <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">+18% este mes</p>
         </div>
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm dark:shadow-none transition">
           <div class="flex justify-between items-start">
-            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Comisión Plataforma (SaaS)</span>
-            <i data-feather="trending-up" class="w-5 h-5 text-blue-500"></i>
+            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">MRR Mensual SaaS</span>
+            <i data-feather="dollar-sign" class="w-5 h-5 text-blue-500"></i>
           </div>
-          <p class="text-2xl font-black text-slate-900 dark:text-white mt-2">$1.242.500 COP</p>
-          <p class="text-xs text-slate-500 mt-1">Comisión del 5% recaudada</p>
+          <p id="superadminSaasMrr" class="text-2xl font-black text-slate-900 dark:text-white mt-2">$947.000 COP</p>
+          <p id="superadminSaasStatusSummary" class="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">2 Sedes al día • 1 por vencer</p>
+        </div>
+      </div>
+
+      <!-- SECCIÓN SUPERADMIN: PLANES Y SUSCRIPCIONES SAAS (BÁSICO, PRO, ENTERPRISE) -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+        <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-bold">Modelo B2B SaaS</span>
+            <h3 class="text-lg font-black text-slate-900 dark:text-white">🚀 Planes y Suscripciones SaaS (CanchaPro Engine)</h3>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Planes comerciales con límites de sub-canchas y tarifa mensual cobrada a cada complejo deportivo.</p>
+        </div>
+
+        <div id="saasPlansGrid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Renderizado dinámico de Planes SaaS (Básico, Pro, Enterprise) -->
+        </div>
+      </div>
+
+      <!-- SECCIÓN SUPERADMIN: FACTURACIÓN SAAS A CADA COMPLEJO -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">Cobranza Recurrente</span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">💳 Facturación SaaS y Estado de Cobro por Sede</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Supervisión en tiempo real de pagos mensuales: sedes al día, por vencer o en mora con activación y suspensión automática o manual.</p>
+          </div>
+          <button onclick="loadSaasBillingOverview()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5">
+            <i data-feather="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Actualizar Facturación</span>
+          </button>
+        </div>
+
+        <div id="saasBillingTableContainer" class="overflow-x-auto">
+          <!-- Renderizado de tabla de sedes, plan, mensualidad, estado y botón de registrar pago -->
         </div>
       </div>
 
@@ -198,178 +239,480 @@
     </div>
 
     <!-- ================= VISTA 2: ADMIN DE SEDE (DON MARIO / TENANT) ================= -->
-    <div id="viewTenantAdmin" class="hidden space-y-8">
+    <div id="viewTenantAdmin" class="hidden space-y-6">
       
-      <!-- SECCIÓN PRINCIPAL ADMIN SEDE: MIS SUB-CANCHAS E INSTALACIONES DEPORTIVAS -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span id="tenantVenueBadge" class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">Autogestión de Sede</span>
-              <h3 id="tenantVenueTitle" class="text-lg font-black text-slate-900 dark:text-white">🏟️ Mis Sub-Canchas e Instalaciones Deportivas</h3>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Crea y autogestiona tus canchas internas (Cancha 1, Cancha 2, Cancha 3), define su formato de fútbol (Fútbol 5, 6, 7, 8, 9, 11) y configura tarifas Valle/Pico.</p>
-          </div>
-          <button onclick="openNewFieldModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
-            <i data-feather="plus-circle" class="w-4 h-4"></i>
-            <span>+ Agregar Otra Cancha</span>
+      <!-- Barra de Pestañas de Navegación de Sede -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-2.5 shadow-sm dark:shadow-none transition">
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs font-bold scrollbar-none">
+          <button type="button" onclick="switchTenantTab('canchas')" id="tenantTabBtn_canchas" class="px-4 py-2 rounded-2xl bg-emerald-500 text-slate-950 font-black shrink-0 transition flex items-center space-x-1.5">
+            <span>🏟️ Sub-Canchas & Precios</span>
           </button>
-        </div>
-
-        <!-- Cuadrícula de Canchas del Administrador de Sede -->
-        <div id="tenantAdminFieldsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Renderizado dinámico de sub-canchas -->
+          <button type="button" onclick="switchTenantTab('reservas')" id="tenantTabBtn_reservas" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>📋 Reservas & Folios</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('clientes')" id="tenantTabBtn_clientes" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>👥 Clientes & Cuentas x Cobrar</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('pagos')" id="tenantTabBtn_pagos" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>💳 Medios de Pago Sede</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('caja')" id="tenantTabBtn_caja" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>📊 Caja & Reportes</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('fijos')" id="tenantTabBtn_fijos" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>🔄 Fijos Semanales</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('bloqueos')" id="tenantTabBtn_bloqueos" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>🌧️ Bloqueos & Lluvia</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('torneos')" id="tenantTabBtn_torneos" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>🏆 Torneos</span>
+          </button>
+          <button type="button" onclick="switchTenantTab('staff')" id="tenantTabBtn_staff" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-white shrink-0 transition flex items-center space-x-1.5">
+            <span>👨‍💼 Staff</span>
+          </button>
         </div>
       </div>
 
-      <!-- Configuración del Negocio -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Horarios y Políticas -->
-        <div class="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
-          <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-            <i data-feather="sliders" class="w-5 h-5 text-emerald-500"></i>
-            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Horarios y Parámetros</h3>
-          </div>
-          <form onsubmit="saveVenueSettings(event)" class="space-y-3 text-xs">
+      <!-- PESTAÑA 1: SUB-CANCHAS & PRECIOS -->
+      <div id="tenantTabPane_canchas" class="space-y-6">
+        <!-- SECCIÓN PRINCIPAL ADMIN SEDE: MIS SUB-CANCHAS E INSTALACIONES DEPORTIVAS -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hora de Apertura</label>
-              <input type="time" id="settingOpenTime" value="06:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              <div class="flex items-center space-x-2">
+                <span id="tenantVenueBadge" class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">Autogestión de Sede</span>
+                <h3 id="tenantVenueTitle" class="text-lg font-black text-slate-900 dark:text-white">🏟️ Mis Sub-Canchas e Instalaciones Deportivas</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Crea y autogestiona tus canchas internas (Cancha 1, Cancha 2, Cancha 3), define su formato de fútbol (Fútbol 5, 6, 7, 8, 9, 11) y configura tarifas Valle/Pico.</p>
             </div>
-            <div>
-              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hora de Cierre</label>
-              <input type="time" id="settingCloseTime" value="23:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-            </div>
-            <div>
-              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">% Mínimo de Abono</label>
-              <input type="number" id="settingDepositPct" value="50" min="10" max="100" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-            </div>
-            <div>
-              <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Horas mínimas para cancelación</label>
-              <input type="number" id="settingCancelHours" value="6" min="1" max="48" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-            </div>
-            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
-              Guardar Parámetros de Sede
+            <button onclick="openNewFieldModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+              <i data-feather="plus-circle" class="w-4 h-4"></i>
+              <span>+ Agregar Otra Cancha</span>
             </button>
-          </form>
+          </div>
+
+          <!-- Cuadrícula de Canchas del Administrador de Sede -->
+          <div id="tenantAdminFieldsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Renderizado dinámico de sub-canchas -->
+          </div>
         </div>
 
-        <!-- Ajuste de Precios por Cancha -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div class="flex items-center space-x-2">
-              <i data-feather="dollar-sign" class="w-5 h-5 text-amber-500"></i>
-              <h3 class="font-bold text-slate-900 dark:text-white text-sm">Ajustar Precios de Canchas (Valle vs Pico)</h3>
+        <!-- Configuración del Negocio -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Horarios y Políticas -->
+          <div class="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <i data-feather="sliders" class="w-5 h-5 text-emerald-500"></i>
+              <h3 class="font-bold text-slate-900 dark:text-white text-sm">Horarios y Parámetros</h3>
             </div>
-            <span class="text-[11px] text-slate-500">Hora Pico: desde las 17:00</span>
+            <form onsubmit="saveVenueSettings(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hora de Apertura</label>
+                <input type="time" id="settingOpenTime" value="06:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hora de Cierre</label>
+                <input type="time" id="settingCloseTime" value="23:00" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">% Mínimo de Abono Exigido</label>
+                <input type="number" id="settingDepositPct" value="50" min="10" max="100" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Horas mínimas para cancelación</label>
+                <input type="number" id="settingCancelHours" value="6" min="1" max="48" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+                Guardar Parámetros de Sede
+              </button>
+            </form>
           </div>
-          
-          <div id="pricingCourtsContainer" class="space-y-3">
-            <!-- Renderizado de canchas con inputs de precio -->
-          </div>
-        </div>
 
-      </div>
-
-      <!-- SECCIÓN 2: SUSCRIPCIONES Y CLIENTES FIJOS SEMANALES (40% - 60% INGRESOS) -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">Base Recurrente Segura</span>
-              <h3 class="font-bold text-slate-900 dark:text-white text-base">Reservas Fijas Semanales (Suscripciones)</h3>
+          <!-- Ajuste de Precios por Cancha -->
+          <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="flex items-center space-x-2">
+                <i data-feather="dollar-sign" class="w-5 h-5 text-emerald-500"></i>
+                <h3 class="font-bold text-slate-900 dark:text-white text-sm">Tarifas Valle / Pico y Fin de Semana</h3>
+              </div>
+              <span class="text-[10px] text-slate-400">Moneda: COP</span>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bloquea turnos fijos mensuales para grupos habituales asegurando el 50% de ocupación base de la sede.</p>
-          </div>
-          <button onclick="openNewSubscriptionModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-purple-600/20">
-            <i data-feather="calendar" class="w-4 h-4"></i>
-            <span>+ Nueva Suscripción Fija</span>
-          </button>
-        </div>
-
-        <div id="subscriptionsListContainer" class="overflow-x-auto">
-          <!-- Renderizado de suscripciones activas -->
-        </div>
-      </div>
-
-      <!-- SECCIÓN 3: BLOQUEOS OPERATIVOS & PROTOCOLO DE LLUVIA (BONOS DE REPROGRAMACIÓN) -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold">Mantenimiento & Fuerza Mayor</span>
-              <h3 class="font-bold text-slate-900 dark:text-white text-base">Bloqueos Operativos y Protocolo por Lluvia</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Ajusta los precios diferenciados por franja horaria. Las tarifas valle estimulan el uso diurno (06:00 - 17:00) y las pico maximizan ingresos nocturnos (17:00 - 23:00).
+            </p>
+            <div id="pricingConfigContainer" class="space-y-3">
+              <!-- Renderizado de inputs de precio por cancha -->
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Bloquea canchas por cepillado, tormentas eléctricas o escuelas. Emite bonos de reprogramación automáticos a favor del cliente sin perder el abono.</p>
-          </div>
-          <button onclick="openOperationalBlockModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-amber-500/20">
-            <i data-feather="alert-triangle" class="w-4 h-4"></i>
-            <span>+ Bloquear por Lluvia / Mantenimiento</span>
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <!-- Bloqueos Activos -->
-          <div class="space-y-3">
-            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bloqueos Registrados en Parrilla</h5>
-            <div id="operationalBlocksList" class="space-y-2 text-xs"></div>
-          </div>
-          <!-- Bonos Emitidos -->
-          <div class="space-y-3">
-            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bonos de Reprogramación Emitidos (Lluvia)</h5>
-            <div id="reprogrammingVouchersList" class="space-y-2 text-xs"></div>
           </div>
         </div>
       </div>
 
-      <!-- SECCIÓN 4: GESTIÓN DE TORNEOS VINCULADOS A LA PARRILLA -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-bold">Torneos & Fixtures</span>
-              <h3 class="font-bold text-slate-900 dark:text-white text-base">Campeonatos con Programación en Parrilla</h3>
+      <!-- PESTAÑA 2: RESERVAS & FOLIOS -->
+      <div id="tenantTabPane_reservas" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold">Control Operativo</span>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white">📋 Gestión Integral de Reservas & Folios de Deuda</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Supervisa partidos agendados, verifica comprobantes de transferencia y gestiona el cobro unificado (50% Cancha + Bar).</p>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Inscripción de equipos, control de arbitraje ($50.000 COP), marcadores, sanciones y reserva de franjas horarias.</p>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="openRegisterTeamModal()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition">
-              + Inscribir Equipo
+            <button onclick="loadTenantReservations()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5">
+              <i data-feather="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Actualizar Lista</span>
             </button>
-            <button onclick="openScheduleTournamentMatchModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2 rounded-xl transition shadow-md shadow-blue-600/20 flex items-center space-x-1.5">
+          </div>
+
+          <!-- Filtros de Estado y Búsqueda -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="relative flex-1">
+              <i data-feather="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="tenantReservationSearch" oninput="filterTenantReservations()" placeholder="Buscar por cliente, teléfono o código de reserva..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="flex items-center space-x-1.5 text-xs overflow-x-auto pb-1 sm:pb-0">
+              <button onclick="setReservationFilter('all')" id="rfBtn_all" class="px-3 py-1.5 rounded-xl font-black bg-emerald-500 text-slate-950 transition">Todas</button>
+              <button onclick="setReservationFilter('confirmed')" id="rfBtn_confirmed" class="px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition">Confirmadas</button>
+              <button onclick="setReservationFilter('pending_verification')" id="rfBtn_pending" class="px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition">Por Verificar</button>
+              <button onclick="setReservationFilter('hold')" id="rfBtn_hold" class="px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition">En Pago / Hold</button>
+              <button onclick="setReservationFilter('cancelled')" id="rfBtn_cancelled" class="px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-white transition">Canceladas</button>
+            </div>
+          </div>
+
+          <!-- Tabla de Reservas -->
+          <div id="tenantReservationsTableContainer" class="overflow-x-auto text-xs">
+            <!-- Renderizado dinámico de reservas -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: CLIENTES & CUENTAS POR COBRAR -->
+      <div id="tenantTabPane_clientes" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-bold">Directorio & Cartera</span>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white">👥 Clientes de la Sede y Cuentas por Cobrar</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Directorio de jugadores vinculados exclusivamente a este complejo con detalle de saldos adeudados en cancha y cafetería.</p>
+            </div>
+            <button onclick="loadTenantClients()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5">
+              <i data-feather="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Recargar Directorio</span>
+            </button>
+          </div>
+
+          <!-- Métricas de Cartera de Clientes -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Jugadores Registrados</span>
+              <p id="tenantClientsTotalCount" class="text-2xl font-black text-slate-900 dark:text-white mt-1">--</p>
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Exclusivos de esta sede</span>
+            </div>
+            <div class="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/30">
+              <span class="text-[10px] uppercase font-black text-amber-700 dark:text-amber-400 block">Cartera Total Adeudada</span>
+              <p id="tenantClientsTotalDebt" class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">$0 COP</p>
+              <span class="text-[10px] text-slate-500 block">Saldos de partido + consumos bar</span>
+            </div>
+            <div class="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/30">
+              <span class="text-[10px] uppercase font-black text-emerald-700 dark:text-emerald-400 block">Clientes al Día</span>
+              <p id="tenantClientsUpToDateCount" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">--</p>
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Cero saldo pendiente</span>
+            </div>
+          </div>
+
+          <!-- Tabla Directorio de Clientes -->
+          <div id="tenantClientsTableContainer" class="overflow-x-auto text-xs">
+            <!-- Renderizado dinámico de clientes -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 4: MEDIOS DE PAGO SEDE -->
+      <div id="tenantTabPane_pagos" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">Cobro Directo B2C</span>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white">💳 Cuentas Receptoras y Medios de Pago de la Sede</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configura las cuentas y pasarelas a donde tus clientes pagarán directamente. <strong>Cero comisión sobre el valor de tu cancha</strong>.</p>
+            </div>
+            <button onclick="saveVenuePaymentSettings()" id="btnSavePaymentSettingsTop" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+              <i data-feather="save" class="w-4 h-4"></i>
+              <span>Guardar Cuentas</span>
+            </button>
+          </div>
+
+          <!-- Formulario de Configuración de Cuentas Receptoras -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            
+            <!-- Nequi -->
+            <div class="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                <div class="flex items-center space-x-2">
+                  <span class="w-7 h-7 rounded-xl bg-purple-600 text-white font-black flex items-center justify-center text-xs">N</span>
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">Nequi (Receptor Directo)</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="paySettingNequiActive" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Número de Celular Nequi</label>
+                <input type="tel" id="paySettingNequiPhone" placeholder="300 123 4567" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Nombre del Titular</label>
+                <input type="text" id="paySettingNequiName" placeholder="Mario Gómez" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">URL / Enlace de Código QR Nequi (Opcional)</label>
+                <input type="url" id="paySettingNequiQr" placeholder="https://..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white">
+              </div>
+            </div>
+
+            <!-- Daviplata -->
+            <div class="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                <div class="flex items-center space-x-2">
+                  <span class="w-7 h-7 rounded-xl bg-red-600 text-white font-black flex items-center justify-center text-xs">D</span>
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">Daviplata</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="paySettingDaviplataActive" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Número Celular Daviplata</label>
+                <input type="tel" id="paySettingDaviplataPhone" placeholder="310 987 6543" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Nombre del Titular</label>
+                <input type="text" id="paySettingDaviplataName" placeholder="Mario Gómez" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+            </div>
+
+            <!-- Bancolombia / Bre-B -->
+            <div class="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                <div class="flex items-center space-x-2">
+                  <span class="w-7 h-7 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">B</span>
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">Bancolombia & Bre-B</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="paySettingBancolombiaActive" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Tipo de Cuenta</label>
+                  <select id="paySettingBancolombiaType" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+                    <option value="Ahorros">Ahorros</option>
+                    <option value="Corriente">Corriente</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Número de Cuenta</label>
+                  <input type="text" id="paySettingBancolombiaAccount" placeholder="123-456789-01" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold font-mono">
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Titular de la Cuenta</label>
+                <input type="text" id="paySettingBancolombiaName" placeholder="Complejo Deportivo La Bernabéu S.A.S." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Llave Bre-B (Interoperabilidad)</label>
+                <input type="text" id="paySettingBreBKey" placeholder="labernabeu@breb" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono">
+              </div>
+            </div>
+
+            <!-- Efectivo y Pasarela Digital (Wompi) -->
+            <div class="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                <div class="flex items-center space-x-2">
+                  <span class="w-7 h-7 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center text-xs">W</span>
+                  <span class="font-bold text-slate-900 dark:text-white text-sm">Wompi / Pasarela Digital</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="paySettingWompiActive" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+              <div>
+                <label class="block text-slate-600 dark:text-slate-400 font-bold mb-1">Llave Pública (Public Key de la Sede)</label>
+                <input type="text" id="paySettingWompiKey" placeholder="pub_prod_..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono">
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div>
+                  <span class="font-bold text-slate-900 dark:text-white block">Efectivo en Mostrador</span>
+                  <span class="text-[10px] text-slate-400">Permitir abonar o liquidar en cash</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="paySettingCashActive" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+            <button onclick="saveVenuePaymentSettings()" id="btnSavePaymentSettingsBottom" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-6 py-3 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+              <i data-feather="check" class="w-4 h-4"></i>
+              <span>Guardar Configuración de Medios de Pago</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 5: CAJA & REPORTES -->
+      <div id="tenantTabPane_caja" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">Arqueo & Finanzas</span>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white">📊 Historial de Cierres de Turno y Cuadre de Caja</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Auditoría contable: separa ingresos recaudados de <strong>Canchas</strong> vs. <strong>Cafetería</strong> con desglose de medios de pago.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="exportShiftsCSV()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-1.5 transition">
+                <i data-feather="download" class="w-4 h-4 text-emerald-500"></i>
+                <span>Exportar CSV</span>
+              </button>
+              <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-1.5 transition shadow-sm">
+                <i data-feather="printer" class="w-4 h-4"></i>
+                <span>Imprimir / PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabla de Historial de Cierres -->
+          <div id="tenantShiftsHistoryContainer" class="overflow-x-auto text-xs">
+            <!-- Renderizado dinámico de cierres de turno -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 6: FIJOS SEMANALES -->
+      <div id="tenantTabPane_fijos" class="hidden space-y-6">
+        <!-- SECCIÓN 2: RESERVAS FIJAS SEMANALES (SUSCRIPCIONES RECURRENTES) -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">Fidelización & MRR</span>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Suscripciones Fijas Semanales (Clientes Recurrentes)</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Garantiza el 40%-60% de ocupación base bloqueando la franja semanal fija para grupos corporativos y habituales.</p>
+            </div>
+            <button onclick="openNewSubscriptionModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-purple-600/20">
               <i data-feather="calendar" class="w-4 h-4"></i>
-              <span>Agendar Partido en Parrilla</span>
+              <span>+ Crear Nuevo Fijo Semanal</span>
             </button>
           </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-3">
-            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Tabla de Posiciones en Tiempo Real</h5>
-            <div id="tournamentStandingsTable" class="overflow-x-auto text-xs"></div>
-          </div>
-          <div class="lg:col-span-5 space-y-3">
-            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Próximos Partidos Agendados</h5>
-            <div id="tournamentMatchesList" class="space-y-2 text-xs max-h-72 overflow-y-auto"></div>
+          <div id="subscriptionsListContainer" class="overflow-x-auto">
+            <!-- Renderizado de la lista de clientes fijos -->
           </div>
         </div>
       </div>
 
-      <!-- Gestión de Empleados / Cancheros -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <h3 class="font-bold text-slate-900 dark:text-white text-base">Personal y Cancheros de La Bernabéu</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Crea credenciales para que tus empleados operen la caja y gestionen reservas en mostrador.</p>
+      <!-- PESTAÑA 7: BLOQUEOS & LLUVIA -->
+      <div id="tenantTabPane_bloqueos" class="hidden space-y-6">
+        <!-- SECCIÓN 3: PROTOCOLO POR LLUVIA Y BLOQUEOS OPERATIVOS -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold">Contingencias Climáticas</span>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Protocolo de Lluvia y Bloqueos Operativos</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Inhabilita franjas por cepillado, tormentas eléctricas o escuelas. Emite bonos de reprogramación automáticos a favor del cliente sin perder el abono.</p>
+            </div>
+            <button onclick="openOperationalBlockModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-amber-500/20">
+              <i data-feather="alert-triangle" class="w-4 h-4"></i>
+              <span>+ Bloquear por Lluvia / Mantenimiento</span>
+            </button>
           </div>
-          <button onclick="openNewStaffModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
-            <i data-feather="user-plus" class="w-4 h-4"></i>
-            <span>+ Crear Usuario Empleado</span>
-          </button>
-        </div>
 
-        <div id="staffListTable" class="overflow-x-auto">
-          <!-- Renderizado de lista de staff -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Bloqueos Activos -->
+            <div class="space-y-3">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bloqueos Registrados en Parrilla</h5>
+              <div id="operationalBlocksList" class="space-y-2 text-xs"></div>
+            </div>
+            <!-- Bonos Emitidos -->
+            <div class="space-y-3">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bonos de Reprogramación Emitidos (Lluvia)</h5>
+              <div id="reprogrammingVouchersList" class="space-y-2 text-xs"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 8: TORNEOS & FIXTURES -->
+      <div id="tenantTabPane_torneos" class="hidden space-y-6">
+        <!-- SECCIÓN 4: GESTIÓN DE TORNEOS VINCULADOS A LA PARRILLA -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-bold">Torneos & Fixtures</span>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Campeonatos con Programación en Parrilla</h3>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Inscripción de equipos, control de arbitraje ($50.000 COP), marcadores, sanciones y reserva de franjas horarias.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="openRegisterTeamModal()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl transition">
+                + Inscribir Equipo
+              </button>
+              <button onclick="openScheduleTournamentMatchModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2 rounded-xl transition shadow-md shadow-blue-600/20 flex items-center space-x-1.5">
+                <i data-feather="calendar" class="w-4 h-4"></i>
+                <span>Agendar Partido en Parrilla</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 space-y-3">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Tabla de Posiciones en Tiempo Real</h5>
+              <div id="tournamentStandingsTable" class="overflow-x-auto text-xs"></div>
+            </div>
+            <div class="lg:col-span-5 space-y-3">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Próximos Partidos Agendados</h5>
+              <div id="tournamentMatchesList" class="space-y-2 text-xs max-h-72 overflow-y-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 9: PERSONAL & STAFF -->
+      <div id="tenantTabPane_staff" class="hidden space-y-6">
+        <!-- Gestión de Empleados / Cancheros -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base">Personal y Cancheros de La Bernabéu</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Crea credenciales para que tus empleados operen la caja y gestionen reservas en mostrador.</p>
+            </div>
+            <button onclick="openNewStaffModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+              <i data-feather="user-plus" class="w-4 h-4"></i>
+              <span>+ Crear Usuario Empleado</span>
+            </button>
+          </div>
+
+          <div id="staffListTable" class="overflow-x-auto">
+            <!-- Renderizado de lista de staff -->
+          </div>
         </div>
       </div>
 
@@ -476,9 +819,20 @@
 
     <!-- ================= VISTA 4: CLIENTE JUGADOR ================= -->
     <div id="viewCliente" class="hidden space-y-6">
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm dark:shadow-none transition">
-        <h3 class="font-bold text-slate-900 dark:text-white text-base">Mis Reservas y "La Vaca"</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Aquí puedes ver tus partidos reservados, comprobantes de pago y estado de las cuotas de tus amigos.</p>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none transition">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-bold">Portal del Jugador</span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">⚽ Mis Reservas y "La Vaca"</h3>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Historial de partidos reservados, comprobantes de pago y estado de las cuotas de tus amigos.</p>
+          </div>
+          <a id="clientBookDirectBtn" href="index.html" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl flex items-center space-x-2 transition shadow-md shadow-emerald-500/20">
+            <i data-feather="calendar" class="w-4 h-4"></i>
+            <span>⚽ Reservar en mi Sede Asignada</span>
+          </a>
+        </div>
         
         <div id="clientReservationsList" class="space-y-3">
           <!-- Renderizado de reservas del cliente -->
@@ -1123,6 +1477,88 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  
+  <!-- Modal Folio y Estado de Cuenta de Reserva (Cancha + Cafetería) -->
+  <div id="modalFolioDetails" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition">
+      <div class="bg-slate-50 dark:bg-slate-950 p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+            <i data-feather="file-text" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Folio Unificado de Cobro</span>
+            <h3 id="folioModalTitle" class="text-sm font-black text-slate-900 dark:text-white">Reserva #res-demo-001</h3>
+          </div>
+        </div>
+        <button onclick="closeFolioModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="p-6 space-y-5 overflow-y-auto text-xs" id="folioModalContent">
+        <!-- Renderizado dinámico del Folio -->
+      </div>
+
+      <div class="bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <button onclick="closeFolioModal()" class="px-3.5 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl">Cerrar</button>
+        <button onclick="submitSettleCurrentFolio()" id="btnSubmitFolioSettlement" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition flex items-center space-x-1.5">
+          <i data-feather="check-circle" class="w-4 h-4"></i>
+          <span>Liquidar Deuda y Cerrar Folio</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Autenticación y Acceso RBAC (Supabase Auth) -->
+  <div id="modalAuthLogin" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-4 transition">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-slate-950">
+            <i data-feather="lock" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-slate-900 dark:text-white text-sm">Iniciar Sesión en CanchaPro</h3>
+            <p class="text-[10px] text-slate-400">Acceso seguro con RBAC y Row Level Security</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="handleAuthLogin(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
+          <input type="email" id="authLoginEmail" required placeholder="tu@correo.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
+          <input type="password" id="authLoginPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <button type="submit" id="btnSubmitAuth" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <!-- Accesos Rápidos Demo (Solo cuando DEMO_MODE es activo) -->
+      <div id="authDemoShortcuts" class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Accesos Rápidos Demo:</span>
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+          <button onclick="loginAsDemoUser('superadmin')" class="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20 hover:bg-purple-500/20 text-left">
+            👑 SuperAdmin
+          </button>
+          <button onclick="loginAsDemoUser('tenant_admin')" class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 hover:bg-emerald-500/20 text-left">
+            🏢 Admin Sede
+          </button>
+          <button onclick="loginAsDemoUser('staff')" class="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20 hover:bg-amber-500/20 text-left">
+            ⚡ Canchero/POS
+          </button>
+          <button onclick="loginAsDemoUser('cliente')" class="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20 hover:bg-blue-500/20 text-left">
+            ⚽ Jugador
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

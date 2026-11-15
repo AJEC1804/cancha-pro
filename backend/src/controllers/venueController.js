@@ -386,9 +386,115 @@ const deleteField = async (req, res, next) => {
   }
 };
 
+// Medios de Pago de la Sede
+const getPaymentMethods = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const methods = await db.findVenuePaymentMethods(id);
+    if (!methods) {
+      return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
+    }
+    res.json({ success: true, payment_methods: methods });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updatePaymentMethods = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updated = await db.updateVenuePaymentMethods(id, req.body);
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
+    }
+    res.json({ success: true, message: 'Medios de pago actualizados correctamente.', payment_methods: updated });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// SaaS Facturación y Planes (Superadmin)
+const getSaasBilling = async (req, res, next) => {
+  try {
+    const overview = await db.getSaasBillingOverview();
+    res.json({
+      success: true,
+      ...overview,
+      overview: {
+        plans: overview.plans,
+        billing: overview.venues,
+        venues: overview.venues,
+        mrr: overview.summary.total_mrr,
+        status_counts: {
+          paid: overview.summary.al_dia_count,
+          due_soon: overview.summary.por_vencer_count,
+          overdue: overview.summary.en_mora_count
+        }
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const paySaasSubscription = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updatedVenue = await db.recordSaasPayment(id, req.body);
+    if (!updatedVenue) {
+      return res.status(404).json({ success: false, error: 'Sede no encontrada.' });
+    }
+    res.json({
+      success: true,
+      message: `Mensualidad SaaS registrada con éxito para "${updatedVenue.name}". Sede al día.`,
+      venue: updatedVenue
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Clientes y Cuentas por Cobrar (Admin Sede)
+const getClientsAndReceivables = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const clients = await db.getVenueClients(id);
+    res.json({ success: true, clients });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Historial de Cierres de Turno y Reportes (Admin Sede)
+const getShiftsHistory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const shifts = await db.getShiftHistory(id);
+    res.json({ success: true, shifts });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Consulta por slug
+const getVenueBySlug = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const venue = await db.findVenueById(slug);
+    if (!venue) {
+      return res.status(404).json({ success: false, error: `Sede con slug "${slug}" no encontrada.` });
+    }
+    const fields = await db.findFieldsByVenue(venue.id, true);
+    res.json({ success: true, venue: { ...venue, fields } });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   listVenues,
   getVenue,
+  getVenueBySlug,
   createVenue,
   updateVenue,
   toggleVenueStatus,
@@ -398,5 +504,11 @@ module.exports = {
   createField,
   updateField,
   toggleFieldStatus,
-  deleteField
+  deleteField,
+  getPaymentMethods,
+  updatePaymentMethods,
+  getSaasBilling,
+  paySaasSubscription,
+  getClientsAndReceivables,
+  getShiftsHistory
 };
