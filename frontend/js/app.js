@@ -884,12 +884,37 @@ function initDashboard() {
   const urlParams = new URLSearchParams(window.location.search);
   const path = window.location.pathname;
 
-  let initialRole = urlParams.get('role');
+  let initialRole = window.__INITIAL_ROLE__ || urlParams.get('role');
   if (!initialRole) {
     if (path.includes('/portal') || path.endsWith('/portal')) {
       initialRole = 'cliente';
+    } else if (path.includes('/admin') || path.endsWith('/admin')) {
+      initialRole = 'tenant_admin';
+    } else if (path.includes('/superadmin') || path.endsWith('/superadmin')) {
+      initialRole = 'superadmin';
     } else {
       initialRole = localStorage.getItem('canchapro_role') || 'superadmin';
+    }
+  }
+
+  // Aislamiento Multi-Tenant por Sede si viene en window.__INITIAL_VENUE__ o en path /sede/:slug
+  if (window.__INITIAL_VENUE__) {
+    state.currentVenueId = window.__INITIAL_VENUE__.id;
+    state.currentVenue = window.__INITIAL_VENUE__;
+    if (window.__INITIAL_VENUE__.fields) {
+      state.fields = window.__INITIAL_VENUE__.fields;
+      if (state.fields.length > 0) {
+        state.selectedFieldId = state.fields[0].id;
+      }
+    }
+  } else if (path.includes('/sede/')) {
+    const slug = path.split('/sede/')[1]?.split('/')[0];
+    if (slug) {
+      const found = state.venues?.find(v => v.slug === slug || v.id === slug);
+      if (found) {
+        state.currentVenueId = found.id;
+        state.currentVenue = found;
+      }
     }
   }
 

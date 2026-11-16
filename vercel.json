@@ -11,6 +11,14 @@
       "destination": "/api"
     },
     {
+      "source": "/superadmin",
+      "destination": "/api?path=superadmin"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api?path=admin"
+    },
+    {
       "source": "/dashboard",
       "destination": "/dashboard.html"
     },

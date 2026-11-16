@@ -9,7 +9,6 @@ interface Props {
   };
 }
 
-// Carga en el servidor (SSR) de los datos de la sede para eliminar cualquier parpadeo de carga
 async function getVenueData(slug: string): Promise<{ venue: Venue; fields: Field[] } | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
   
@@ -21,7 +20,6 @@ async function getVenueData(slug: string): Promise<{ venue: Venue; fields: Field
     const data = await res.json();
     if (!data.success || !data.venue) return null;
 
-    // Obtener canchas asociadas exclusivamente a esta sede
     const fieldsRes = await fetch(`${baseUrl}/api/fields?venue_id=${data.venue.id}`, {
       cache: 'no-store'
     });
@@ -53,12 +51,41 @@ export default async function SedeSlugPage({ params }: Props) {
   }
 
   const { venue, fields } = data;
+
+  // BLOQUEO INMEDIATO SI LA SEDE ESTÁ SUSPENDIDA
+  if (!venue.is_active) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+          <div className="w-16 h-16 rounded-3xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto text-3xl">
+            🚫
+          </div>
+          <span className="text-xs uppercase font-black tracking-widest text-red-500 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full">
+            Servicio Temporalmente Suspendido
+          </span>
+          <h1 className="text-2xl font-black text-white">{venue.name}</h1>
+          <p className="text-xs text-slate-400">
+            El portal público y sistema de reservas de este complejo deportivo han sido temporalmente desactivados por la administración.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition inline-block"
+            >
+              Volver a CanchaPro
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const isWeekend = [0, 6].includes(new Date().getDay());
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
       
-      {/* Barra de Navegación Ejecutiva y Limpia */}
+      {/* Header Sede Oficial */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -75,43 +102,61 @@ export default async function SedeSlugPage({ params }: Props) {
 
           <div className="flex items-center space-x-3">
             <Link
-              href={`/login?redirect=/portal&venue=${venue.slug}`}
-              className="text-xs font-bold text-slate-300 hover:text-white px-3 py-2 rounded-xl transition"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link
-              href={`/login?mode=register&redirect=/portal&venue=${venue.slug}`}
+              href={`/sede/${venue.slug}/portal`}
               className="text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl shadow-lg shadow-emerald-500/20 transition"
             >
               Portal Jugador
+            </Link>
+            <Link
+              href={`/sede/${venue.slug}/admin`}
+              className="hidden sm:inline-flex text-xs font-bold text-slate-400 hover:text-white px-3 py-2 rounded-xl border border-slate-800 hover:bg-slate-900 transition"
+            >
+              Admin Sede
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero Ejecutivo con Datos Directos de Servidor (Zero Flicker) */}
-      <section className="relative py-16 px-4 sm:px-6 max-w-7xl mx-auto w-full text-center sm:text-left">
-        <div className="max-w-3xl space-y-4">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 space-y-8">
+        
+        {/* Aviso de Reglas del Complejo (Estilo La Bernabéu) */}
+        <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3.5">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                Reglamento Oficial de {venue.name}
+              </h4>
+              <p className="text-xs text-slate-300 mt-0.5">
+                {venue.rules_and_conditions || 'Uso obligatorio de calzado deportivo turf. Prohibido terminantemente el ingreso con guayos de taches metálicos o de aluminio.'}
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold text-slate-400 shrink-0">Llegar 15 min antes</span>
+        </div>
+
+        {/* Hero Sede */}
+        <section className="space-y-4">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>Disponibilidad Oficial en Tiempo Real</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-white">
             Reserva tu partido en <span className="text-emerald-400">{venue.name}</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl">
+          <p className="text-sm text-slate-400 max-w-2xl">
             {venue.address}, {venue.city} • Consulta turnos disponibles, divide el pago con tu equipo en La Vaca Digital y recibe confirmación inmediata.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">
             <Link
-              href={`/login?redirect=/portal&venue=${venue.slug}`}
+              href={`/sede/${venue.slug}/portal`}
               className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs sm:text-sm shadow-xl shadow-emerald-500/20 transition flex items-center space-x-2"
             >
-              <span>⚡ Reservar Turno en {venue.name}</span>
+              <span>⚡ Ingresar al Portal del Jugador</span>
             </Link>
             <a
               href={`https://wa.me/57${venue.phone.replace(/\D/g, '')}`}
@@ -122,108 +167,74 @@ export default async function SedeSlugPage({ params }: Props) {
               <span>💬 Contactar por WhatsApp</span>
             </a>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 3 Tarjetas de Propuesta de Valor */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-900/60 border border-slate-800/80 p-6 rounded-3xl">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-black text-lg mb-4">
-              📅
+        {/* Sub-Canchas y Tarifas Consistentes */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-black text-white">Canchas y Tarifas de la Sede</h2>
+              <p className="text-xs text-slate-400">Tarifas unificadas para horarios diurnos, nocturnos y fines de semana.</p>
             </div>
-            <h3 className="text-base font-black text-white mb-1">Disponibilidad en Vivo</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Consulta los horarios libres de cada cancha sin llamar ni esperar chats. Lo que ves en parrilla está 100% reservable.
-            </p>
+            <span className="text-xs font-mono bg-slate-900 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl">
+              {isWeekend ? 'Tarifa Fin de Semana' : 'Tarifa Entre Semana'}
+            </span>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800/80 p-6 rounded-3xl">
-            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-black text-lg mb-4">
-              🐄
-            </div>
-            <h3 className="text-base font-black text-white mb-1">La Vaca Digital</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Divide el alquiler automáticamente entre 10 o 14 jugadores con link único para que cada amigo pague su parte por Nequi o Daviplata.
-            </p>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {fields.map(field => {
+              const valleyPrice = isWeekend 
+                ? (field.weekend_price_per_hour || field.default_price_per_hour)
+                : field.default_price_per_hour;
+              const peakPrice = isWeekend
+                ? (field.weekend_peak_price_per_hour || field.peak_price_per_hour)
+                : field.peak_price_per_hour;
 
-          <div className="bg-slate-900/60 border border-slate-800/80 p-6 rounded-3xl">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg mb-4">
-              🧾
-            </div>
-            <h3 className="text-base font-black text-white mb-1">Folio & Bar Integrado</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Tus consumos de bebidas y saldo de cancha en un solo folio transparente. Paga en línea o liquida en el mostrador.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Canchas y Tarifas Consistentes de la Sede */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-black text-white">Canchas y Tarifas Oficiales</h2>
-            <p className="text-xs text-slate-400">Tarifas unificadas para horarios diurnos, nocturnos y fines de semana.</p>
-          </div>
-          <span className="text-xs font-mono bg-slate-900 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-xl">
-            {isWeekend ? 'Tarifa Fin de Semana Activa' : 'Tarifa Entre Semana'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {fields.map(field => {
-            const valleyPrice = isWeekend 
-              ? (field.weekend_price_per_hour || field.default_price_per_hour)
-              : field.default_price_per_hour;
-            const peakPrice = isWeekend
-              ? (field.weekend_peak_price_per_hour || field.peak_price_per_hour)
-              : field.peak_price_per_hour;
-
-            return (
-              <div 
-                key={field.id}
-                className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between hover:border-slate-700 transition space-y-4"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
-                      {field.sport_type.replace('_', ' ')}
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-mono">
-                      {field.open_time} - {field.close_time}
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-black text-white mt-3">{field.name}</h3>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                    {field.description || 'Grama sintética monofilamento certificada con iluminación profesional.'}
-                  </p>
-                </div>
-
-                <div className="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1.5 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Horario Valle (Diurno):</span>
-                    <span className="font-bold text-white">${valleyPrice.toLocaleString('es-CO')} COP</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Horario Pico (Nocturno):</span>
-                    <span className="font-bold text-emerald-400">${peakPrice.toLocaleString('es-CO')} COP</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/login?redirect=/portal&venue=${venue.slug}&field=${field.id}`}
-                  className="w-full text-center bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-white font-bold py-2.5 rounded-xl text-xs transition"
+              return (
+                <div 
+                  key={field.id}
+                  className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between hover:border-slate-700 transition space-y-4"
                 >
-                  Consultar Turnos Disponibles
-                </Link>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                        {field.sport_type.replace('_', ' ')}
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-mono">
+                        {field.open_time} - {field.close_time}
+                      </span>
+                    </div>
+
+                    <h3 className="text-lg font-black text-white mt-3">{field.name}</h3>
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                      {field.description || 'Grama sintética monofilamento con iluminación profesional de alta potencia.'}
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-2xl space-y-1.5 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Horario Valle (Diurno):</span>
+                      <span className="font-bold text-white">${valleyPrice.toLocaleString('es-CO')} COP</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Horario Pico (Nocturno):</span>
+                      <span className="font-bold text-emerald-400">${peakPrice.toLocaleString('es-CO')} COP</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/sede/${venue.slug}/portal?tab=nueva&field=${field.id}`}
+                    className="w-full text-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-sm"
+                  >
+                    Reservar Turno en Portal
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-8 text-center text-xs text-slate-500">
