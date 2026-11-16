@@ -1879,13 +1879,18 @@ function closeNewStaffModal() { document.getElementById('modalNewStaff')?.classL
 async function handleCreateVenue(e) {
   e.preventDefault();
   const name = document.getElementById('newVenueName').value;
+  const slug = document.getElementById('newVenueSlug')?.value || '';
   const city = document.getElementById('newVenueCity').value;
   const address = document.getElementById('newVenueAddress').value;
   const phone = document.getElementById('newVenuePhone').value;
+  const logo_url = document.getElementById('newVenueLogoUrl')?.value || '';
+  const primary_color = document.getElementById('newVenuePrimaryColor')?.value || '#1e3a8a';
+  const secondary_color = document.getElementById('newVenueSecondaryColor')?.value || '#facc15';
   const admin_email = document.getElementById('newVenueAdminEmail')?.value;
   const admin_name = document.getElementById('newVenueAdminName')?.value;
   const admin_password = document.getElementById('newVenueAdminPass')?.value;
   const default_sport_type = document.getElementById('newVenueDefaultSport')?.value || 'futbol_5';
+  const initial_field_name = document.getElementById('newVenueInitialFieldName')?.value || '';
 
   const btnSubmit = document.getElementById('btnSubmitNewVenue');
   if (btnSubmit) {
@@ -1902,13 +1907,18 @@ async function handleCreateVenue(e) {
       },
       body: JSON.stringify({
         name,
+        slug,
         city,
         address,
         phone,
+        logo_url,
+        primary_color,
+        secondary_color,
         admin_email,
         admin_name,
         admin_password,
-        default_sport_type
+        default_sport_type,
+        initial_field_name
       })
     });
     const data = await res.json();

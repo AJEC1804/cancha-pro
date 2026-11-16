@@ -66,7 +66,8 @@ const createVenue = async (req, res, next) => {
       open_time, close_time, slot_duration_minutes, deposit_percentage,
       cancellation_hours_notice, rules_and_conditions,
       admin_email, admin_name, admin_phone, admin_password,
-      default_sport_type
+      default_sport_type, logo_url, primary_color, secondary_color,
+      initial_field_name
     } = req.body;
 
     if (!name || !phone || !address) {
@@ -98,6 +99,9 @@ const createVenue = async (req, res, next) => {
       hold_timeout_minutes: 10,
       cancellation_hours_notice: Number(cancellation_hours_notice || 6),
       rules_and_conditions: rules_and_conditions || 'Uso obligatorio de calzado deportivo turf. Prohibido taches de aluminio.',
+      logo_url: logo_url || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&h=120&fit=crop',
+      primary_color: primary_color || '#1e3a8a',
+      secondary_color: secondary_color || '#facc15',
       is_active: true
     });
 
@@ -138,7 +142,7 @@ const createVenue = async (req, res, next) => {
 
     const defaultField = await db.createField({
       venue_id: newVenue.id,
-      name: `${name} — Cancha 1 (${sportLabel})`,
+      name: initial_field_name || `${name} — Cancha 1 (${sportLabel})`,
       sport_type: sportType,
       surface_type: 'sintetica_monofilamento',
       default_price_per_hour: 120000,

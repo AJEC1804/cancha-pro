@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CanchaPro — Sistema Inteligente para Canchas Sintéticas</title>
+  <title>CanchaPro SaaS — El Sistema Operativo para Complejos Deportivos</title>
+  <meta name="description" content="Software de gestión integral para canchas sintéticas en Colombia: reservas online, La Vaca Digital, POS cafetería y folio unificado sin comisiones por partido.">
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -30,27 +32,36 @@
   <!-- Feather Icons -->
   <script src="https://unpkg.com/feather-icons"></script>
 </head>
-<body class="bg-turf-pattern min-h-screen text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
+<body class="bg-slate-50 dark:bg-[#0B0F19] min-h-screen text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950 font-sans transition-colors duration-300">
 
-  <!-- ================= TOPBAR MINIMALISTA Y LIMPIA ================= -->
-  <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+  <!-- ================= TOPBAR B2B EJECUTIVA ================= -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
       
-      <!-- Logo y Sede -->
-      <a href="index.html" class="flex items-center space-x-3 group">
+      <!-- Logo EscuTech / CanchaPro -->
+      <a href="/" class="flex items-center space-x-3 group">
         <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/25 group-hover:scale-105 transition transform">
           <i data-feather="activity" class="text-white w-5 h-5"></i>
         </div>
         <div>
           <div class="flex items-center space-x-2">
             <span class="text-xl font-black tracking-tight text-slate-900 dark:text-white">CANCHA<span class="text-emerald-500 dark:text-emerald-400">PRO</span></span>
-            <span class="text-[9px] uppercase font-black tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">SaaS</span>
+            <span class="text-[9px] uppercase font-black tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">SaaS B2B</span>
           </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">Sede: <strong id="currentVenueLabel" class="text-slate-700 dark:text-slate-200">La Bernabéu (Cartagena)</strong></p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Torre de Control para Complejos Deportivos</p>
         </div>
       </a>
 
-      <!-- Controles Limpios: Selector de Tema + Botón Panel + BOTÓN MENÚ LATERAL (☰) -->
+      <!-- Menú de Navegación B2B -->
+      <nav class="hidden md:flex items-center space-x-6 text-xs font-bold text-slate-600 dark:text-slate-300">
+        <a href="#solucion" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition">Solución</a>
+        <a href="#caracteristicas" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition">Características</a>
+        <a href="#planes" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition">Planes SaaS</a>
+        <a href="#testimonios" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition">Casos de Éxito</a>
+        <a href="#faq" class="hover:text-emerald-500 dark:hover:text-emerald-400 transition">Preguntas</a>
+      </nav>
+
+      <!-- Botones de Acción -->
       <div class="flex items-center space-x-2.5">
         <!-- Conmutador Claro / Oscuro -->
         <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema Claro / Oscuro" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 hover:scale-105 transition">
@@ -58,384 +69,160 @@
           <i data-feather="moon" id="themeIconMoon" class="w-4 h-4 block dark:hidden"></i>
         </button>
 
-        <!-- Acceso directo a Portal Jugador / Login -->
-        <a href="dashboard.html?role=cliente" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition transform hover:-translate-y-0.5">
-          <i data-feather="user" class="w-3.5 h-3.5"></i>
-          <span>Portal Jugador</span>
+        <!-- Ver Demo en Vivo (Sede La Bernabéu) -->
+        <a href="/sede/la-bernabeu" class="inline-flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3.5 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition transform hover:-translate-y-0.5">
+          <span>🏟️</span>
+          <span class="hidden sm:inline">Demo Sede:</span>
+          <span>La Bernabéu</span>
         </a>
 
-        <!-- Acceso al Dashboard de Gestión -->
-        <a href="dashboard.html?role=tenant_admin" class="hidden sm:inline-flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition">
-          <i data-feather="sliders" class="w-3.5 h-3.5 text-emerald-500"></i>
-          <span>Admin Sede</span>
+        <!-- Acceso SuperAdmin -->
+        <a href="/superadmin" class="inline-flex items-center space-x-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-3.5 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 transition transform hover:-translate-y-0.5">
+          <span>👑</span>
+          <span>SuperAdmin</span>
         </a>
-
-        <!-- BOTÓN HAMBURGUESA / MENÚ LATERAL -->
-        <button onclick="openNavDrawer()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center space-x-2 transition shadow-sm">
-          <i data-feather="menu" class="w-4 h-4 text-emerald-500"></i>
-          <span class="hidden md:inline">Menú</span>
-        </button>
       </div>
 
     </div>
   </header>
 
-  <!-- ================= MENÚ LATERAL DESPLEGABLE (OFF-CANVAS DRAWER) ================= -->
-  <div id="navDrawer" class="fixed inset-0 z-50 hidden">
-    <!-- Backdrop Blur -->
-    <div onclick="closeNavDrawer()" class="drawer-backdrop fixed inset-0"></div>
-
-    <!-- Panel Lateral Deslizante -->
-    <div class="drawer-panel fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between p-6 z-50 overflow-y-auto">
-      
-      <div class="space-y-6">
-        <!-- Header del Menú Lateral -->
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div class="flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black">
-              <i data-feather="activity" class="w-4 h-4 text-slate-950"></i>
-            </div>
-            <span class="font-black text-slate-900 dark:text-white text-base">CANCHA<span class="text-emerald-500">PRO</span></span>
-          </div>
-          <button onclick="closeNavDrawer()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-            <i data-feather="x" class="w-4 h-4"></i>
-          </button>
-        </div>
-
-        <!-- Sede Activa (Aislamiento Multi-Tenant Estricto) -->
-        <div class="bg-emerald-500/10 dark:bg-emerald-500/15 p-3.5 rounded-2xl border border-emerald-500/30 space-y-1">
-          <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Sede Activa (Complejo):</span>
-          <p id="drawerVenueName" class="text-xs text-slate-900 dark:text-white font-black flex items-center space-x-1.5">
-            <i data-feather="map-pin" class="w-3.5 h-3.5 text-emerald-500"></i>
-            <span id="drawerVenueText">La Bernabéu (Cartagena)</span>
-          </p>
-        </div>
-
-        <!-- Enlaces de Navegación -->
-        <div class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-1">Módulos del Sistema</span>
-          
-          <a href="#parrilla" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-              <i data-feather="calendar" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <span class="block">Parrilla en Vivo</span>
-              <span class="text-[10px] text-slate-400 font-normal">Consulta y reserva de horarios</span>
-            </div>
-          </a>
-
-          <a href="#la-vaca" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition">
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-              <i data-feather="share-2" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <span class="block">La Vaca Digital</span>
-              <span class="text-[10px] text-slate-400 font-normal">Divide la cuota por WhatsApp</span>
-            </div>
-          </a>
-
-          <a href="#cafeteria" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition">
-            <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-              <i data-feather="coffee" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <span class="block">Cafetería & POS</span>
-              <span class="text-[10px] text-slate-400 font-normal">Cargar consumos a la cancha</span>
-            </div>
-          </a>
-
-          <a href="#torneos" onclick="closeNavDrawer()" class="flex items-center space-x-3 p-3 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-400 transition">
-            <div class="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
-              <i data-feather="award" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <span class="block">Torneos & Fixtures</span>
-              <span class="text-[10px] text-slate-400 font-normal">Posiciones y calendarios</span>
-            </div>
-          </a>
-        </div>
-
-        <!-- Acceso Rápido por Rol -->
-        <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block">Cambiar Rol (Demostración):</span>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <button onclick="quickLoginAs('superadmin@canchapro.com')" class="p-2.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 font-bold text-left transition hover:bg-purple-500/20">
-              👑 SuperAdmin
-              <span class="block text-[9px] text-purple-500 font-normal">CRUD canchas</span>
-            </button>
-            <button onclick="quickLoginAs('admin@bernabeu.com')" class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-left transition hover:bg-emerald-500/20">
-              🏢 Admin Sede
-              <span class="block text-[9px] text-emerald-500 font-normal">La Bernabéu</span>
-            </button>
-            <button onclick="quickLoginAs('canchero@bernabeu.com')" class="p-2.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 font-bold text-left transition hover:bg-amber-500/20">
-              ⚡ Canchero
-              <span class="block text-[9px] text-amber-500 font-normal">POS y caja</span>
-            </button>
-            <button onclick="quickLoginAs('mateo@gmail.com')" class="p-2.5 rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold text-left transition hover:bg-blue-500/20">
-              ⚽ Jugador
-              <span class="block text-[9px] text-blue-500 font-normal">Mis reservas</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Footer del Menú Lateral -->
-      <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
-        <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-400 font-medium">Tema Visual:</span>
-          <button onclick="toggleTheme()" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
-            Alternar Claro / Oscuro
-          </button>
-        </div>
-        <a href="dashboard.html" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center space-x-2 transition shadow-md shadow-emerald-500/20">
-          <i data-feather="sliders" class="w-4 h-4"></i>
-          <span>Entrar al Panel de Control</span>
-        </a>
-        <p class="text-[10px] text-slate-400 text-center">📞 WhatsApp Directo: <strong>300 679 9595</strong></p>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- BANNER GLOBAL DE SEDE SUSPENDIDA -->
-  <div id="venueSuspendedGlobalBanner" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-    <div class="bg-red-500/10 border-2 border-red-500/40 rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-red-500/10">
-      <div class="flex items-center space-x-3.5">
-        <div class="w-12 h-12 rounded-2xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0">
-          <i data-feather="slash" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h4 class="text-base font-black text-slate-900 dark:text-white">⚠️ Complejo Deportivo Temporalmente Suspendido</h4>
-          <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">Las reservas públicas para este complejo se encuentran bloqueadas. Comunícate con la administración para más información.</p>
-        </div>
-      </div>
-      <button onclick="openNavDrawer()" class="bg-red-600 hover:bg-red-500 text-white font-black text-xs px-4 py-2.5 rounded-xl transition shadow-sm shrink-0">
-        Cambiar de Complejo
-      </button>
-    </div>
-  </div>
-
-  <!-- ================= HERO SECTION CON CANCHA TÁCTICA 3D ================= -->
-  <section class="relative pt-8 pb-16 overflow-hidden">
+  <!-- ================= HERO B2B EJECUTIVO ================= -->
+  <section class="relative pt-12 pb-16 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <div class="text-center max-w-3xl mx-auto space-y-6">
         
-        <!-- Columna Izquierda: Copy de Alta Conversión (Fórmula Receta Universal) -->
-        <div class="lg:col-span-6 space-y-6 text-center lg:text-left">
-          
-          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm">
-            <span class="text-amber-500 dark:text-amber-400">⚡ Reserva Directa en 60s</span>
-            <span>•</span>
-            <span class="text-emerald-600 dark:text-emerald-400">Garantía Anti No-Shows & Abono Seguro</span>
-          </div>
-
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-            Reserva tu Cancha en Segundos. <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-green-500">Cero Enredos de Cobro.</span>
-          </h1>
-
-          <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            El sistema inteligente que elimina las canchas vacías y las llamadas interminables. Asegura tu turno con bloqueo de 10 minutos, divide la cuenta automáticamente con tus amigos vía <strong>"La Vaca Digital" por WhatsApp</strong> y juega con iluminación profesional de alta potencia.
-          </p>
-
-          <!-- Badges de Deporte Disponibles -->
-          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1">
-            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">⚽ Fútbol 5 Sintético</span>
-            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">⚽ Fútbol 7 Maracaná</span>
-            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">🎾 Pádel Cristal Pro</span>
-          </div>
-
-          <!-- Botones de Acción de Alta Conversión (Reglas WCAG & Hover Elevation) -->
-          <div class="pt-3 flex flex-wrap items-center justify-center lg:justify-start gap-3">
-            <a href="#parrilla" onclick="scrollToBooking()" class="btn-cta-conversion bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-8 py-4 rounded-2xl shadow-xl shadow-emerald-500/25 inline-flex items-center space-x-2.5 transition">
-              <i data-feather="calendar" class="w-5 h-5"></i>
-              <span>Ver Horarios Disponibles</span>
-            </a>
-            <a href="dashboard.html?role=cliente" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-4 rounded-2xl inline-flex items-center space-x-2 transition shadow-lg shadow-blue-600/25 hover:-translate-y-0.5">
-              <i data-feather="user-check" class="w-5 h-5"></i>
-              <span>Portal del Jugador & Reservar</span>
-            </a>
-          </div>
-
-          <!-- Social Proof de Alto Impacto -->
-          <div class="pt-4 flex items-center justify-center lg:justify-start space-x-4 text-xs text-slate-500 dark:text-slate-400">
-            <div class="flex -space-x-2">
-              <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User 1">
-              <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="User 2">
-              <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" alt="User 3">
-            </div>
-            <div>
-              <div class="flex items-center space-x-1">
-                <span class="text-amber-400 text-xs">★★★★★</span>
-                <span class="font-black text-slate-900 dark:text-white ml-1">4.9 / 5</span>
-              </div>
-              <span>Más de <strong>15.000 partidos</strong> jugados con confirmación garantizada</span>
-            </div>
-          </div>
-
+        <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-sm">
+          <span>⚡ Software de Gestión Multi-Sede para Colombia</span>
+          <span>•</span>
+          <span class="text-amber-500 dark:text-amber-400">0% Comisiones por Partido</span>
         </div>
 
-        <!-- Columna Derecha: Cancha Táctica 3D -->
-        <div class="lg:col-span-6 virtual-pitch-container flex flex-col items-center">
-          
-          <!-- Banner Superior del Estadio -->
-          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/80 px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between w-full max-w-md mb-3 z-10 transition">
-            <div class="flex items-center space-x-2">
-              <span class="w-3 h-3 rounded-full bg-emerald-500 pulse-live"></span>
-              <span class="font-bold text-xs text-slate-800 dark:text-white">Cancha 1: La Bernabéu Principal</span>
-            </div>
-            <div class="flex items-center space-x-2 text-xs">
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full">Fútbol 5v5</span>
-            </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
+          El Sistema Operativo para <br class="hidden sm:inline" />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-green-500">Canchas Sintéticas y Complejos Deportivos</span>
+        </h1>
+
+        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-medium leading-relaxed max-w-2xl mx-auto">
+          Automatiza la operación completa de tu complejo deportivo: reservas online en vivo con abonos del 50%, La Vaca Digital para jugadores, POS de cafetería integrado y liquidación unificada en un solo folio.
+        </p>
+
+        <!-- Botones Principales -->
+        <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
+          <a href="/sede/la-bernabeu" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 rounded-2xl shadow-xl shadow-emerald-500/25 inline-flex items-center space-x-2 transition transform hover:-translate-y-0.5 text-xs sm:text-sm">
+            <span>🏟️ Explorar Portal Sede (La Bernabéu)</span>
+          </a>
+          <a href="/superadmin" class="bg-purple-600 hover:bg-purple-500 text-white font-black px-7 py-3.5 rounded-2xl shadow-xl shadow-purple-600/25 inline-flex items-center space-x-2 transition transform hover:-translate-y-0.5 text-xs sm:text-sm">
+            <span>👑 Torre de Control SuperAdmin</span>
+          </a>
+          <a href="https://wa.me/573006799595?text=Hola,%20deseo%20conectar%20mi%20cancha%20sintética%20a%20CanchaPro%20SaaS" target="_blank" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold px-6 py-3.5 rounded-2xl inline-flex items-center space-x-2 transition text-xs sm:text-sm">
+            <span>💬 Hablar con Asesor B2B</span>
+          </a>
+        </div>
+
+        <!-- Social Proof y Métricas Clave -->
+        <div class="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl text-center shadow-sm">
+            <p class="text-[10px] text-slate-500 uppercase font-black tracking-wider">Cero No-Shows</p>
+            <p class="text-2xl font-black text-emerald-500 mt-1">100%</p>
+            <p class="text-[11px] text-slate-400">Abono 50% con comprobante</p>
           </div>
-
-          <!-- La Cancha Táctica 3D -->
-          <div id="virtualPitchCanvas" class="virtual-pitch relative w-full max-w-md h-72 rounded-3xl turf-stripes p-3 border-4 border-white/60 dark:border-white/20 overflow-hidden cursor-pointer select-none">
-            
-            <!-- Líneas Oficiales del Campo de Juego -->
-            <div class="w-full h-full border-2 border-white/70 rounded-2xl relative flex items-center justify-center">
-              
-              <!-- Línea central y círculo del mediocampo -->
-              <div class="absolute inset-x-0 top-1/2 h-0.5 bg-white/70"></div>
-              <div class="w-20 h-20 rounded-full border-2 border-white/70 flex items-center justify-center">
-                <div class="w-2 h-2 rounded-full bg-white"></div>
-              </div>
-
-              <!-- Área de Portería Superior -->
-              <div class="absolute top-0 inset-x-1/4 h-14 border-b-2 border-x-2 border-white/70 rounded-b-lg"></div>
-              <div class="absolute top-12 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white"></div>
-
-              <!-- Área de Portería Inferior -->
-              <div class="absolute bottom-0 inset-x-1/4 h-14 border-t-2 border-x-2 border-white/70 rounded-t-lg"></div>
-              <div class="absolute bottom-12 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white"></div>
-
-              <!-- Puntos Tácticos Interactivos de Jugadores (5v5) -->
-              <div onclick="showPitchPlayerRole('Arquero', 'Lidera la defensa y protege el arco.')" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-amber-400 border-2 border-slate-950 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">1</div>
-              <div onclick="showPitchPlayerRole('Cierre Central', 'Recuperador clave y salida limpia desde atrás.')" class="absolute bottom-20 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white border-2 border-emerald-600 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">4</div>
-              <div onclick="showPitchPlayerRole('Ala Izquierda', 'Velocidad, desborde y centros por la banda.')" class="absolute bottom-28 left-12 w-7 h-7 rounded-full bg-white border-2 border-emerald-600 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">7</div>
-              <div onclick="showPitchPlayerRole('Ala Derecha', 'Ida y vuelta constante, remate a puerta.')" class="absolute bottom-28 right-12 w-7 h-7 rounded-full bg-white border-2 border-emerald-600 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">8</div>
-              <div onclick="showPitchPlayerRole('Pivot / Delantero', 'Referente de área, aguanta de espaldas y define.')" class="absolute top-24 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-emerald-400 border-2 border-slate-950 flex items-center justify-center text-[10px] font-black text-slate-950 shadow-lg hover:scale-125 transition">9</div>
-
-            </div>
-
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl text-center shadow-sm">
+            <p class="text-[10px] text-slate-500 uppercase font-black tracking-wider">Comisión x Partido</p>
+            <p class="text-2xl font-black text-teal-400 mt-1">$0 COP</p>
+            <p class="text-[11px] text-slate-400">Suscripción mensual fija</p>
           </div>
-
-          <!-- Tip Táctico Interactivo -->
-          <p id="pitchRoleTip" class="text-[11px] text-slate-500 dark:text-slate-400 mt-3 text-center">
-            💡 <em>Haz clic en cualquier posición de la cancha para ver funciones tácticas.</em>
-          </p>
-
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl text-center shadow-sm">
+            <p class="text-[10px] text-slate-500 uppercase font-black tracking-wider">Folio Unificado</p>
+            <p class="text-2xl font-black text-amber-500 mt-1">Cancha + Bar</p>
+            <p class="text-[11px] text-slate-400">Cero fugas de cafetería</p>
+          </div>
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl text-center shadow-sm">
+            <p class="text-[10px] text-slate-500 uppercase font-black tracking-wider">Multi-Deporte</p>
+            <p class="text-2xl font-black text-blue-500 mt-1">F5, F7, Pádel</p>
+            <p class="text-[11px] text-slate-400">Tarifas Valle, Pico y Finde</p>
+          </div>
         </div>
 
-      </div>
-
-      <!-- Quick Metrics Strip -->
-      <div class="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Cero No-Shows</p>
-          <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">100%</p>
-          <p class="text-[11px] text-slate-500 mt-0.5">Abonos con bloqueo de 10 min</p>
-        </div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">La Vaca Digital</p>
-          <p class="text-3xl font-black text-amber-500 dark:text-amber-400 mt-1">Split Nequi</p>
-          <p class="text-[11px] text-slate-500 mt-0.5">Divide cuotas por WhatsApp</p>
-        </div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">POS Cafetería</p>
-          <p class="text-3xl font-black text-blue-600 dark:text-blue-400 mt-1">A la Cancha</p>
-          <p class="text-[11px] text-slate-500 mt-0.5">Bebidas sumadas a la cuenta</p>
-        </div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-center shadow-sm dark:shadow-none transition">
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Torneos & Fixtures</p>
-          <p class="text-3xl font-black text-purple-600 dark:text-purple-400 mt-1">Round-Robin</p>
-          <p class="text-[11px] text-slate-500 mt-0.5">Tablas de posiciones en vivo</p>
-        </div>
       </div>
 
     </div>
   </section>
 
-  <!-- ================= SECCIÓN PROBLEMA VS SOLUCIÓN (FÓRMULA CXL / UNBOUNCE) ================= -->
-  <section id="problema-solucion" class="py-16 bg-slate-50/80 dark:bg-slate-950/40 border-t border-slate-200 dark:border-slate-800/80 transition">
+  <!-- ================= SECCIÓN PROBLEMA VS SOLUCIÓN B2B ================= -->
+  <section id="solucion" class="py-16 bg-slate-100/80 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800/80 transition">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <div class="text-center max-w-3xl mx-auto mb-12">
         <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20">
-          La Realidad del Fútbol Amateur
+          La Transformación Operativa
         </span>
         <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-3">
-          ¿Por qué armar el partido de la semana suele ser una pesadilla?
+          ¿Por qué los dueños de canchas migran a CanchaPro?
         </h2>
         <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">
-          Compara el dolor del método tradicional frente a la tranquilidad de reservar con CanchaPro SaaS.
+          Compara el desgaste de operar con cuadernos y WhatsApp frente al control automatizado de CanchaPro.
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         
-        <!-- Tarjeta: El Dolor Tradicional (Problema) -->
-        <div class="bg-white dark:bg-slate-900/90 border-2 border-red-500/20 rounded-3xl p-6 sm:p-8 space-y-5 shadow-lg shadow-red-500/5 transition">
+        <!-- Dolor Tradicional -->
+        <div class="bg-white dark:bg-slate-900/90 border-2 border-red-500/20 rounded-3xl p-6 sm:p-8 space-y-4 shadow-sm">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center font-black">
-              <i data-feather="x-circle" class="w-5 h-5"></i>
-            </div>
+            <div class="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center font-black">✕</div>
             <div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white">El Método Tradicional</h3>
-              <p class="text-xs text-red-500 font-semibold">Llamadas, demoras y plata embolatada</p>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">Operación Manual Tradicional</h3>
+              <p class="text-xs text-red-500 font-semibold">Cruces de turnos, desorden y dinero perdido</p>
             </div>
           </div>
 
-          <ul class="space-y-3.5 text-xs text-slate-600 dark:text-slate-300">
-            <li class="flex items-start space-x-3">
-              <span class="text-red-500 font-bold shrink-0 mt-0.5">✕</span>
-              <span><strong>Llamar a 4 canchas distintas</strong> y esperar que el canchero conteste un mensaje de WhatsApp para saber si hay turno a las 8:00 PM.</span>
+          <ul class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+            <li class="flex items-start space-x-2.5">
+              <span class="text-red-500 font-bold shrink-0">✕</span>
+              <span><strong>Cruces y dobles reservas:</strong> El canchero anota en un cuaderno y el administrador promete la misma cancha por WhatsApp.</span>
             </li>
-            <li class="flex items-start space-x-3">
-              <span class="text-red-500 font-bold shrink-0 mt-0.5">✕</span>
-              <span><strong>El organizador pone el 100%</strong> de su bolsillo y luego tiene que rogarle a 10 amigos en el grupo para que le transfieran su parte.</span>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-red-500 font-bold shrink-0">✕</span>
+              <span><strong>No-shows sin consecuencias:</strong> Equipos que apartan turno de palabra a las 8:00 PM y no llegan, dejando la cancha vacía en horario estelar.</span>
             </li>
-            <li class="flex items-start space-x-3">
-              <span class="text-red-500 font-bold shrink-0 mt-0.5">✕</span>
-              <span><strong>Doble reserva y malos entendidos:</strong> llegas con tus guayos y te dicen que la cancha ya se la dieron a otro equipo que llegó primero.</span>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-red-500 font-bold shrink-0">✕</span>
+              <span><strong>Fuga de dinero en el bar:</strong> Se anotan cervezas e hidratantes en papelitos que se pierden o nunca se cobran al terminar el partido.</span>
             </li>
-            <li class="flex items-start space-x-3">
-              <span class="text-red-500 font-bold shrink-0 mt-0.5">✕</span>
-              <span><strong>Llueve y pierdes tu dinero:</strong> si hay tormenta, no hay trazabilidad de tu anticipo y te quedas sin jugar y sin saldo.</span>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-red-500 font-bold shrink-0">✕</span>
+              <span><strong>Cierres de caja descuadrados:</strong> Imposible conciliar cuánto entró en efectivo frente a transferencias Nequi/Daviplata.</span>
             </li>
           </ul>
         </div>
 
-        <!-- Tarjeta: La Solución CanchaPro (Beneficio) -->
-        <div class="bg-gradient-to-br from-emerald-500/5 via-white to-teal-500/5 dark:from-emerald-950/30 dark:via-slate-900 dark:to-teal-950/20 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 space-y-5 shadow-xl shadow-emerald-500/10 transition">
+        <!-- Solución CanchaPro -->
+        <div class="bg-gradient-to-br from-emerald-500/5 via-white to-teal-500/5 dark:from-emerald-950/20 dark:via-slate-900 dark:to-teal-950/20 border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-black">
-              <i data-feather="check-circle" class="w-5 h-5"></i>
-            </div>
+            <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-black">✓</div>
             <div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white">Con CanchaPro SaaS</h3>
-              <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Reserva garantizada en 60 segundos</p>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">Control Total con CanchaPro SaaS</h3>
+              <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Automatización 24/7 y cuentas claras</p>
             </div>
           </div>
 
-          <ul class="space-y-3.5 text-xs text-slate-700 dark:text-slate-200">
-            <li class="flex items-start space-x-3">
-              <span class="text-emerald-500 font-black shrink-0 mt-0.5">✓</span>
-              <span><strong>Parrilla horaria 100% en tiempo real:</strong> visualizas exactamente qué canchas están libres desde las 06:00 AM hasta las 23:00 PM sin llamar a nadie.</span>
+          <ul class="space-y-3 text-xs text-slate-700 dark:text-slate-200">
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-500 font-black shrink-0">✓</span>
+              <span><strong>Portal Propio Aislado (/sede/[slug]):</strong> Cada sede tiene su dirección web con sus logos, reglas de guayos y cuentas bancarias directas.</span>
             </li>
-            <li class="flex items-start space-x-3">
-              <span class="text-emerald-500 font-black shrink-0 mt-0.5">✓</span>
-              <span><strong>"La Vaca Digital" por WhatsApp:</strong> envías un link directo; cada jugador paga su cuota exacta ($13.000 COP) por Nequi o Daviplata.</span>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-500 font-black shrink-0">✓</span>
+              <span><strong>Abonos del 50% con Bloqueo de 10 min:</strong> Nadie aparta cancha sin pagar el anticipo. Si no abonan en 10 minutos, el turno se libera solo.</span>
             </li>
-            <li class="flex items-start space-x-3">
-              <span class="text-emerald-500 font-black shrink-0 mt-0.5">✓</span>
-              <span><strong>Bloqueo preventivo de 10 minutos:</strong> el turno se congela a tu favor con algoritmo GiST mientras completas el abono del 50%.</span>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-500 font-black shrink-0">✓</span>
+              <span><strong>Folio Unificado Cancha + Bar:</strong> Consumos de bebidas cargados a la reserva. Liquidación en 1 clic compartida entre Canchero y Admin.</span>
             </li>
-            <li class="flex items-start space-x-3">
-              <span class="text-emerald-500 font-black shrink-0 mt-0.5">✓</span>
-              <span><strong>Bono Digital por Lluvia:</strong> si cae tormenta eléctrica, el sistema emite automáticamente un cupón de reprogramación a tu favor.</span>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-500 font-black shrink-0">✓</span>
+              <span><strong>Arqueo de Turno Inteligente:</strong> Cierre de caja automático separando efectivo en caja física vs pagos electrónicos (Nequi/PSE).</span>
             </li>
           </ul>
         </div>
@@ -445,354 +232,221 @@
     </div>
   </section>
 
-  <!-- ================= SECCIÓN: ¿CÓMO FUNCIONA EN 3 PASOS? ================= -->
-  <section id="como-funciona" class="py-16 bg-white dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 transition">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-2xl mx-auto mb-14">
-        <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20">
-          Experiencia Sin Fricción
-        </span>
-        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-3">
-          ¿Cómo reservar tu cancha en 3 pasos?
-        </h2>
-        <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">
-          De la pantalla a la grama sintética en menos de un minuto.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
-        
-        <!-- Paso 1 -->
-        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 text-center space-y-4 hover:border-emerald-500/40 transition">
-          <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto text-xl font-black">
-            1
-          </div>
-          <h3 class="text-lg font-black text-slate-900 dark:text-white">Elige Cancha y Hora</h3>
-          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Explora la parrilla en vivo. Elige tu formato deportivo (Fútbol 5, 7, 11 o Pádel) y haz clic sobre la franja horaria que mejor le convenga a tu equipo.
-          </p>
-        </div>
-
-        <!-- Paso 2 -->
-        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 text-center space-y-4 hover:border-amber-500/40 transition">
-          <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto text-xl font-black">
-            2
-          </div>
-          <h3 class="text-lg font-black text-slate-900 dark:text-white">Abona o Divide la Vaca</h3>
-          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Abona el 50% con Nequi o comparte el enlace de "La Vaca Digital" al grupo de WhatsApp para que cada quien pague su parte individual.
-          </p>
-        </div>
-
-        <!-- Paso 3 -->
-        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 text-center space-y-4 hover:border-teal-500/40 transition">
-          <div class="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-500 flex items-center justify-center mx-auto text-xl font-black">
-            3
-          </div>
-          <h3 class="text-lg font-black text-slate-900 dark:text-white">¡Llega, Juega y Disfruta!</h3>
-          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Recibe tu confirmación instantánea. Llega a la cancha con tus guayos turf, pide balones o bebidas cargadas a la cuenta y juega el picadito.
-          </p>
-        </div>
-
-      </div>
-
-      <div class="text-center mt-10">
-        <a href="#parrilla" onclick="scrollToBooking()" class="btn-cta-conversion bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 inline-flex items-center space-x-2 transition">
-          <i data-feather="arrow-down" class="w-4 h-4"></i>
-          <span>Comenzar Reserva en la Parrilla</span>
-        </a>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ================= PARRILLA HORARIA INTERACTIVA ================= -->
-  <section id="parrilla" class="py-14 bg-slate-100/80 dark:bg-slate-950/70 border-y border-slate-200 dark:border-slate-800/80 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <!-- Cabecera de la Parrilla -->
-      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-        <div>
-          <div class="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Módulo A: Motor de Reservas en Tiempo Real</span>
-          </div>
-          <h2 class="text-3xl font-black text-slate-900 dark:text-white">Parrilla Horaria Inteligente</h2>
-          <p class="text-slate-600 dark:text-slate-400 text-sm mt-1">
-            Los turnos en amarillo están temporalmente retenidos esperando abono. Si no pagan en 10 minutos, se liberan automáticamente.
-          </p>
-        </div>
-
-        <!-- Filtros de Fecha & Selector de Modo de Vista -->
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Toggle Vista Individual vs Multi-Cancha Consolidada -->
-          <div class="bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center shadow-sm">
-            <button onclick="switchGridViewMode('single')" id="btnViewSingle" class="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 transition flex items-center space-x-1">
-              <i data-feather="grid" class="w-3.5 h-3.5"></i>
-              <span>Por Cancha</span>
-            </button>
-            <button onclick="switchGridViewMode('multi')" id="btnViewMulti" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center space-x-1">
-              <i data-feather="columns" class="w-3.5 h-3.5"></i>
-              <span>Multi-Cancha (Consolidada)</span>
-            </button>
-          </div>
-
-          <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <button onclick="setGridDate('today')" id="btnDateToday" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition">Hoy</button>
-            <button onclick="setGridDate('tomorrow')" id="btnDateTomorrow" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Mañana</button>
-            <input type="date" id="gridDatePicker" onchange="onDateChanged()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white rounded-xl px-2.5 py-1 focus:outline-none cursor-pointer">
-          </div>
-        </div>
-      </div>
-
-      <!-- Selector de Canchas (Tabs Visuales) -->
-      <div id="courtTabsContainer" class="flex items-center space-x-3 overflow-x-auto pb-4 mb-6">
-        <!-- Renderizado dinámico de canchas -->
-      </div>
-
-      <!-- Tarjeta de Información de Cancha -->
-      <div id="courtInfoBanner" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm dark:shadow-none transition">
-        <div class="flex items-center space-x-4">
-          <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 flex-shrink-0">
-            <i data-feather="shield" class="w-7 h-7"></i>
-          </div>
-          <div>
-            <h3 id="currentCourtTitle" class="text-xl font-black text-slate-900 dark:text-white">Cancha 1: La Bernabéu Principal (Fútbol 5)</h3>
-            <p id="currentCourtDesc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Grama sintética monofilamento 50mm • Balones y petos en cafetería</p>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-6 text-xs border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-800">
-          <div>
-            <span class="text-slate-500 dark:text-slate-400 block font-medium text-[11px]" id="courtPriceValleyLabel">Tarifa Valle (06:00 - 17:00):</span>
-            <span class="text-slate-900 dark:text-white font-black text-base" id="courtPriceValley">$110.000 COP</span>
-          </div>
-          <div>
-            <span class="text-amber-600 dark:text-amber-400 block font-medium text-[11px]" id="courtPricePeakLabel">Tarifa Pico 🔥 (17:00 - 23:00):</span>
-            <span class="text-slate-900 dark:text-white font-black text-base" id="courtPricePeak">$130.000 COP</span>
-          </div>
-          <div class="bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-xl">
-            <span class="text-purple-600 dark:text-purple-400 block font-bold text-[10px] uppercase">Fin de Semana:</span>
-            <span class="text-slate-900 dark:text-white font-black text-xs" id="courtPriceWeekendDisplay">$130.000 / $160.000 COP</span>
-          </div>
-          <div>
-            <span class="text-slate-500 dark:text-slate-400 block font-medium text-[11px]">Abono Requerido:</span>
-            <span class="text-emerald-600 dark:text-emerald-400 font-black text-base">50% para apartar</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Grid de Horarios Individual -->
-      <div id="slotsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <!-- Renderizado de slots individuales -->
-      </div>
-
-      <!-- VISTA CONSOLIDADA MULTI-CANCHA (MATRIZ COLUMNAS CANCHAS X FILAS HORAS) -->
-      <div id="multiCourtGridContainer" class="hidden overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm dark:shadow-none p-4 sm:p-6 transition">
-        <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div class="flex items-center space-x-2">
-            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-            <h4 class="font-black text-slate-900 dark:text-white text-sm">Matriz de Ocupación Multi-Cancha en Tiempo Real</h4>
-          </div>
-          <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold" id="multiGridDateLabel">Fecha seleccionada</span>
-        </div>
-        <div id="multiGridTableWrapper" class="overflow-x-auto min-w-full">
-          <!-- Renderizado dinámico de la tabla multi-cancha -->
-        </div>
-      </div>
-
-      <!-- Leyenda de Estados Completa -->
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-slate-500 dark:text-slate-400">
-        <div class="flex items-center space-x-2">
-          <span class="w-3.5 h-3.5 rounded-lg bg-emerald-500/20 border border-emerald-500/70"></span>
-          <span>Disponible</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="w-3.5 h-3.5 rounded-lg bg-amber-500/30 border border-amber-500 animate-pulse"></span>
-          <span>Bloqueado 10 min</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="w-3.5 h-3.5 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
-          <span>Ocupado</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="w-3.5 h-3.5 rounded-lg bg-purple-500/20 border border-purple-500 text-purple-600 text-[10px] font-black flex items-center justify-center">F</span>
-          <span>Abonado Fijo Semanal</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="w-3.5 h-3.5 rounded-lg bg-blue-500/20 border border-blue-500 text-blue-600 text-[10px] font-black flex items-center justify-center">🏆</span>
-          <span>Partido de Torneo</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="w-3.5 h-3.5 rounded-lg bg-amber-500/20 border border-amber-500 text-amber-600 text-[10px] font-black flex items-center justify-center">🌧️</span>
-          <span>Bloqueo Lluvia / Mantenimiento</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ================= SECCIÓN: PRUEBA SOCIAL & TESTIMONIOS (CONVERSIÓN HUBSPOT/UNBOUNCE) ================= -->
-  <section id="testimonios" class="py-16 bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 transition">
+  <!-- ================= 3 TARJETAS DE PROPUESTA DE VALOR ================= -->
+  <section id="caracteristicas" class="py-16 bg-white dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 transition">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <div class="text-center max-w-2xl mx-auto mb-12">
         <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20">
-          Opiniones Reales de Jugadores
+          Módulos Especializados
         </span>
         <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-3">
-          Más de 15.000 partidos organizados sin fallas
+          Todo lo que tu complejo necesita en un solo software
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Tarjeta 1 -->
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 space-y-4 hover:border-emerald-500/40 transition">
+          <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-2xl font-black">
+            🏢
+          </div>
+          <h3 class="text-lg font-black text-slate-900 dark:text-white">Portales Independientes por Sede</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            Tus clientes ingresan a <code>/sede/[tu-complejo]</code>. Se aplican tus colores institucionales, logo, aviso de reglas (ej. no guayos con taches de aluminio) y tus propios medios de pago configurados.
+          </p>
+          <div class="pt-2">
+            <a href="/sede/la-bernabeu" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Ver ejemplo en La Bernabéu →</a>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2 -->
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 space-y-4 hover:border-amber-500/40 transition">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-2xl font-black">
+            🐄
+          </div>
+          <h3 class="text-lg font-black text-slate-900 dark:text-white">La Vaca Digital para Jugadores</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            El capitán comparte un link por WhatsApp y el sistema divide el costo del alquiler entre 10 o 14 jugadores. Cada amigo paga su cuota exacta a tu cuenta de Nequi o Daviplata.
+          </p>
+          <div class="pt-2">
+            <span class="text-xs font-bold text-amber-600 dark:text-amber-400">✓ Cero fricción de cobro</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta 3 -->
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 space-y-4 hover:border-emerald-500/40 transition">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-2xl font-black">
+            🧾
+          </div>
+          <h3 class="text-lg font-black text-slate-900 dark:text-white">Folio Unificado Cancha + Bar</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            El canchero carga hidratación y cervezas directamente al turno en juego. Al terminar, el sistema emite el folio total descontando el abono previo y permitiendo cobro en efectivo o digital.
+          </p>
+          <div class="pt-2">
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">✓ Mismo total en POS y Admin</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SECCIÓN DE PLANES SAAS B2B ================= -->
+  <section id="planes" class="py-16 bg-slate-100/80 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800/80 transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20">
+          Tarifas Transparentes
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-3">
+          Planes SaaS Simples. Cero Comisiones por Partido.
         </h2>
         <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">
-          Capitanes, jugadores semanales y organizadores de torneos confían en CanchaPro para jugar sin imprevistos.
+          Pagas una mensualidad fija y conservas el 100% de lo que recaudan tus canchas y tu cafetería.
         </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        
+        <!-- Plan Básico -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 flex flex-col justify-between space-y-6 shadow-sm">
+          <div>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Plan Básico</span>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">Hasta 2 Canchas</h3>
+            <div class="mt-4 flex items-baseline space-x-1">
+              <span class="text-3xl font-black text-slate-900 dark:text-white">$149.000</span>
+              <span class="text-xs text-slate-500 font-bold">COP / mes</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">Ideal para complejos pequeños que buscan digitalizar turnos y abonos.</p>
+            
+            <ul class="mt-6 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <li class="flex items-center space-x-2"><span>✓</span><span>Portal web exclusivo <code>/sede/[slug]</code></span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Parrilla en tiempo real y bloqueo 10 min</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Recepción de abonos por Nequi/Daviplata</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>1 cuenta de Administrador</span></li>
+            </ul>
+          </div>
+
+          <a href="https://wa.me/573006799595?text=Deseo%20el%20Plan%20Básico%20de%20CanchaPro" target="_blank" class="w-full text-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold py-3 rounded-xl text-xs transition">
+            Comenzar con Básico
+          </a>
+        </div>
+
+        <!-- Plan Pro (Destacado) -->
+        <div class="bg-gradient-to-b from-emerald-500/10 via-white to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-emerald-500 rounded-3xl p-7 flex flex-col justify-between space-y-6 shadow-xl relative">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+            Más Popular
+          </div>
+          <div>
+            <span class="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Plan Pro</span>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">Hasta 5 Canchas</h3>
+            <div class="mt-4 flex items-baseline space-x-1">
+              <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400">$299.000</span>
+              <span class="text-xs text-slate-500 font-bold">COP / mes</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">Para complejos medianos con cafetería activa y múltiples horarios.</p>
+            
+            <ul class="mt-6 space-y-2.5 text-xs text-slate-700 dark:text-slate-200 font-medium">
+              <li class="flex items-center space-x-2"><span>✓</span><span>Todo lo del Plan Básico</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span><strong>La Vaca Digital por WhatsApp</strong></span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span><strong>POS Cafetería & Folio Unificado</strong></span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Tarifas Valle, Pico y Fin de Semana</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Roles Admin Sede + Canchero/POS</span></li>
+            </ul>
+          </div>
+
+          <a href="https://wa.me/573006799595?text=Deseo%20el%20Plan%20Pro%20de%20CanchaPro" target="_blank" class="w-full text-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-xs transition shadow-lg shadow-emerald-500/20">
+            Elegir Plan Pro
+          </a>
+        </div>
+
+        <!-- Plan Enterprise -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 flex flex-col justify-between space-y-6 shadow-sm">
+          <div>
+            <span class="text-xs font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 block">Plan Enterprise</span>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">Canchas Ilimitadas</h3>
+            <div class="mt-4 flex items-baseline space-x-1">
+              <span class="text-3xl font-black text-slate-900 dark:text-white">$499.000</span>
+              <span class="text-xs text-slate-500 font-bold">COP / mes</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">Para grandes complejos con torneos, múltiples canchas y eventos.</p>
+            
+            <ul class="mt-6 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <li class="flex items-center space-x-2"><span>✓</span><span>Sub-canchas y deportes ilimitados</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Motor de Torneos & Fixtures en vivo</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Alertas automáticas vía Telegram / WhatsApp</span></li>
+              <li class="flex items-center space-x-2"><span>✓</span><span>Soporte prioritario 24/7 y onboarding</span></li>
+            </ul>
+          </div>
+
+          <a href="https://wa.me/573006799595?text=Deseo%20el%20Plan%20Enterprise%20de%20CanchaPro" target="_blank" class="w-full text-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold py-3 rounded-xl text-xs transition">
+            Contactar para Enterprise
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= CASOS DE ÉXITO Y TESTIMONIOS ================= -->
+  <section id="testimonios" class="py-16 bg-white dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20">
+          Resultados Reales
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-3">
+          Lo que dicen los dueños de complejos
+        </h2>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         
-        <!-- Testimonio 1 -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm hover:shadow-md transition">
-          <div class="flex items-center space-x-1 text-amber-400 text-sm">
-            ★★★★★
-          </div>
-          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
-            "Antes organizar el partido de los martes era un parto cobrándole a 10 personas por Nequi. Con <strong>La Vaca Digital</strong> les mando el link al grupo y cada quien paga su parte. Cuando se completa el 50% la cancha queda lista sola."
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4">
+          <div class="flex items-center space-x-1 text-amber-400 text-xs">★★★★★</div>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
+            "CanchaPro nos solucionó el desorden de WhatsApp. Los clientes reservan en su portal, pagan el abono del 50% y en caja el cuadre con el bar sale exacto todos los días."
           </p>
-          <div class="flex items-center space-x-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <img class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="Andrés Mercado">
+          <div class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">MM</div>
             <div>
-              <h4 class="text-xs font-black text-slate-900 dark:text-white">Andrés Mercado</h4>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">Capitán Los Galácticos • Cartagena</p>
+              <p class="font-bold text-xs text-slate-900 dark:text-white">Don Mario Mendoza</p>
+              <p class="text-[10px] text-slate-500">Complejo Deportivo La Bernabéu (Cartagena)</p>
             </div>
           </div>
         </div>
 
-        <!-- Testimonio 2 -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm hover:shadow-md transition">
-          <div class="flex items-center space-x-1 text-amber-400 text-sm">
-            ★★★★★
-          </div>
-          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
-            "El bloqueo temporal de 10 minutos es una maravilla. Antes llamabas y mientras hacías la transferencia te ganaban la cancha de las 8:00 PM. Ahora tienes tu tiempo garantizado para pagar con tranquilidad."
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4">
+          <div class="flex items-center space-x-1 text-amber-400 text-xs">★★★★★</div>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
+            "Tener 4 canchas con tarifas diferenciadas diurnas y nocturnas sin cruces de horarios nos aumentó la ocupación nocturna un 35% desde el primer mes."
           </p>
-          <div class="flex items-center space-x-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <img class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" alt="Sebastián Torres">
+          <div class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">CN</div>
             <div>
-              <h4 class="text-xs font-black text-slate-900 dark:text-white">Sebastián Torres</h4>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">Organizador Liga Nocturna • Bogotá</p>
+              <p class="font-bold text-xs text-slate-900 dark:text-white">Gerencia General</p>
+              <p class="text-[10px] text-slate-500">Camp Nou Arena VIP (Bogotá)</p>
             </div>
           </div>
         </div>
 
-        <!-- Testimonio 3 -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm hover:shadow-md transition">
-          <div class="flex items-center space-x-1 text-amber-400 text-sm">
-            ★★★★★
-          </div>
-          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
-            "Lo mejor es el protocolo por lluvia. La semana pasada cayó tremendo aguacero y el sistema nos generó un <strong>Bono Digital</strong> automático para reprogramar el partido el fin de semana sin perder nuestro abono."
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4">
+          <div class="flex items-center space-x-1 text-amber-400 text-xs">★★★★★</div>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
+            "La Vaca Digital es lo mejor que le ha pasado a nuestras canchas: los equipos se dividen la cuenta solos y nosotros ya no perseguimos la plata de nadie."
           </p>
-          <div class="flex items-center space-x-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <img class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="Valeria Gómez">
+          <div class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs">AG</div>
             <div>
-              <h4 class="text-xs font-black text-slate-900 dark:text-white">Valeria Gómez</h4>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">Jugadora Pádel Pro Glass • Cartagena</p>
+              <p class="font-bold text-xs text-slate-900 dark:text-white">Andrés Gómez</p>
+              <p class="text-[10px] text-slate-500">Complejo La Favela (Medellín)</p>
             </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Pasarelas y Medios de Pago Certificados Colombia -->
-      <div class="mt-12 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
-        <div class="flex items-center space-x-2">
-          <i data-feather="shield" class="w-5 h-5 text-emerald-500 shrink-0"></i>
-          <span>Pagos 100% seguros con cifrado bancario SSL de 256 bits:</span>
-        </div>
-        <div class="flex flex-wrap items-center justify-center gap-3 font-bold text-slate-700 dark:text-slate-200">
-          <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">🟣 Nequi</span>
-          <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">🔴 Daviplata</span>
-          <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">🟡 Bancolombia</span>
-          <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">🔵 PSE</span>
-          <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">💳 Tarjetas Débito / Crédito</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ================= SECCIÓN: PREGUNTAS FRECUENTES (FAQ ACORDEÓN) ================= -->
-  <section id="faq" class="py-16 bg-white dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800 transition">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center mb-12">
-        <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20">
-          Resolvemos tus Dudas
-        </span>
-        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-3">
-          Preguntas Frecuentes
-        </h2>
-        <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">
-          Todo lo que necesitas saber antes de saltar a la cancha.
-        </p>
-      </div>
-
-      <div class="space-y-4">
-        
-        <!-- FAQ 1 -->
-        <div id="faqItem_1" class="faq-item bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition">
-          <button onclick="toggleFaq(1)" class="w-full p-5 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none">
-            <span>¿Qué calzado está permitido en las canchas sintéticas?</span>
-            <i data-feather="chevron-down" class="faq-chevron w-4 h-4 text-emerald-500 transition-transform duration-300 shrink-0"></i>
-          </button>
-          <div class="faq-content px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-3">
-            Es obligatorio el uso de <strong>calzado tipo turf</strong> (tenis o guayos con suela multitaco de goma sintética) o calzado deportivo plano. <strong>Está estrictamente prohibido el uso de guayos con taches de aluminio o metal</strong>, ya que dañan la grama sintética monofilamento de 50mm y representan un riesgo para la seguridad física de los jugadores.
-          </div>
-        </div>
-
-        <!-- FAQ 2 -->
-        <div id="faqItem_2" class="faq-item bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition">
-          <button onclick="toggleFaq(2)" class="w-full p-5 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none">
-            <span>¿Cómo funciona el bloqueo temporal de 10 minutos?</span>
-            <i data-feather="chevron-down" class="faq-chevron w-4 h-4 text-emerald-500 transition-transform duration-300 shrink-0"></i>
-          </button>
-          <div class="faq-content px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-3">
-            Cuando seleccionas un turno libre, nuestro motor de base de datos congela la franja horaria a tu nombre durante 10 minutos exactos mediante el algoritmo anti-double booking. Durante ese tiempo, nadie más puede tomar ese horario. Si en 10 minutos no se completa el abono inicial requerido (50%), el sistema libera automáticamente la cancha para otros jugadores.
-          </div>
-        </div>
-
-        <!-- FAQ 3 -->
-        <div id="faqItem_3" class="faq-item bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition">
-          <button onclick="toggleFaq(3)" class="w-full p-5 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none">
-            <span>¿Qué sucede si llueve o hay tormenta eléctrica a la hora de mi reserva?</span>
-            <i data-feather="chevron-down" class="faq-chevron w-4 h-4 text-emerald-500 transition-transform duration-300 shrink-0"></i>
-          </button>
-          <div class="faq-content px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-3">
-            En caso de condiciones meteorológicas adversas o tormentas que impidan el juego seguro, el administrador del complejo activa el protocolo por lluvia en la plataforma. Tu dinero no se pierde: el sistema emite de forma inmediata un <strong>Bono Digital de Reprogramación (`BONO-LLUVIA-XXXX`)</strong> con vigencia de 60 días para que juegues tu partido cualquier otro día.
-          </div>
-        </div>
-
-        <!-- FAQ 4 -->
-        <div id="faqItem_4" class="faq-item bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition">
-          <button onclick="toggleFaq(4)" class="w-full p-5 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none">
-            <span>¿Cómo se divide el valor en "La Vaca Digital"?</span>
-            <i data-feather="chevron-down" class="faq-chevron w-4 h-4 text-emerald-500 transition-transform duration-300 shrink-0"></i>
-          </button>
-          <div class="faq-content px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-3">
-            El sistema divide automáticamente el costo total del turno entre la cantidad de jugadores seleccionada (por ejemplo, 10 jugadores = $13.000 COP cada uno). Se genera un enlace único de pago que puedes compartir en tu grupo de WhatsApp. Cada jugador paga con su Nequi o Daviplata y la plataforma confirma la cancha de inmediato al llegar al 50% recaudado.
-          </div>
-        </div>
-
-        <!-- FAQ 5 -->
-        <div id="faqItem_5" class="faq-item bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition">
-          <button onclick="toggleFaq(5)" class="w-full p-5 text-left flex items-center justify-between text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:outline-none">
-            <span>¿Con cuánta anticipación puedo cancelar o modificar mi reserva?</span>
-            <i data-feather="chevron-down" class="faq-chevron w-4 h-4 text-emerald-500 transition-transform duration-300 shrink-0"></i>
-          </button>
-          <div class="faq-content px-5 pb-5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-3">
-            Las cancelaciones y reprogramaciones voluntarias deben realizarse con un mínimo de <strong>6 horas de anticipación</strong> antes del inicio del turno. Cancelaciones fuera de este plazo no aplican para emisión de bonos debido a que el complejo deportivo bloquea el horario comercial para otros clientes.
           </div>
         </div>
 
@@ -801,405 +455,81 @@
     </div>
   </section>
 
-  <!-- ================= BLOQUE CTA FINAL DE ALTA CONVERSIÓN ================= -->
-  <section class="py-16 bg-gradient-to-tr from-emerald-950 via-slate-900 to-teal-950 border-t border-emerald-500/30 text-white relative overflow-hidden">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
+  <!-- ================= PREGUNTAS FRECUENTES B2B ================= -->
+  <section id="faq" class="py-16 bg-slate-100/80 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800/80 transition">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       
-      <span class="inline-block text-xs font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 px-4 py-1.5 rounded-full border border-emerald-500/40">
-        ¿Listo para el Picadito de Esta Semana?
-      </span>
-
-      <h2 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-        Asegura tu Cancha en 60 Segundos. <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">Sin Llamadas, Sin No-Shows.</span>
-      </h2>
-
-      <p class="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-        Elige tu horario favorito en la parrilla, asegura el turno con tu abono y reparte la cuota entre tus amigos por WhatsApp. Juega en canchas con iluminación profesional y césped sintético de alto impacto.
-      </p>
-
-      <div class="pt-3 flex flex-wrap items-center justify-center gap-4">
-        <a href="#parrilla" onclick="scrollToBooking()" class="btn-cta-conversion bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-9 py-4 rounded-2xl shadow-2xl shadow-emerald-500/40 inline-flex items-center space-x-2 text-sm transition">
-          <i data-feather="calendar" class="w-5 h-5"></i>
-          <span>Reservar Mi Turno Ahora</span>
-        </a>
-        <a href="https://wa.me/573006799595?text=Hola,%20deseo%20m%C3%A1s%20informaci%C3%B3n%20para%20reservar%20una%20cancha%20en%20CanchaPro" target="_blank" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-white font-bold px-7 py-4 rounded-2xl inline-flex items-center space-x-2 text-sm transition">
-          <i data-feather="message-circle" class="w-5 h-5 text-emerald-400"></i>
-          <span>Contactar por WhatsApp</span>
-        </a>
+      <div class="text-center">
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Preguntas Frecuentes</h2>
+        <p class="text-xs text-slate-500 mt-1">Resolvemos las dudas más comunes de propietarios de canchas.</p>
       </div>
 
-      <div class="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
-        <span class="flex items-center space-x-1.5"><i data-feather="check" class="w-4 h-4 text-emerald-400"></i><span>Confirmación Instantánea</span></span>
-        <span class="flex items-center space-x-1.5"><i data-feather="check" class="w-4 h-4 text-emerald-400"></i><span>Bloqueo 10 Minutos</span></span>
-        <span class="flex items-center space-x-1.5"><i data-feather="check" class="w-4 h-4 text-emerald-400"></i><span>Garantía por Lluvia</span></span>
+      <div class="space-y-4 text-xs">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
+          <h3 class="font-black text-slate-900 dark:text-white text-sm">¿Cómo recibe el complejo el dinero de los abonos?</h3>
+          <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+            Directamente en tus cuentas. Configuras tus números de Nequi, Daviplata, Bancolombia o llaves Wompi en tu panel de administración. CanchaPro no retiene tus fondos ni cobra comisión por partido.
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
+          <h3 class="font-black text-slate-900 dark:text-white text-sm">¿Cómo funciona la dirección de mi sede?</h3>
+          <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+            Cada complejo obtiene su enlace único: <code>canchapro.co/sede/[tu-slug]</code>. Al entrar allí, tus clientes solo ven tus canchas, tus horarios y tus políticas de calzado.
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2">
+          <h3 class="font-black text-slate-900 dark:text-white text-sm">¿Qué pasa si llueve o hay tormenta?</h3>
+          <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+            El administrador puede registrar un bloqueo climático en 1 clic. El sistema notifica a los jugadores y emite automáticamente un bono digital de reprogramación para que el cliente use su saldo otro día.
+          </p>
+        </div>
       </div>
 
     </div>
   </section>
 
-  <!-- ================= FOOTER COMPLETO Y CUMPLIMIENTO LEGAL (SKILL CONSTRUIR-LANDING-PAGES) ================= -->
-  <footer class="py-12 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 transition">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-      
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        
-        <!-- Identidad y Descripción -->
-        <div class="space-y-3">
-          <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black">
-              <i data-feather="activity" class="w-4 h-4 text-slate-950"></i>
-            </div>
-            <span class="text-base font-black text-slate-900 dark:text-white">CANCHA<span class="text-emerald-500">PRO</span></span>
-          </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            Plataforma SaaS para administración deportiva y reservas inteligentes de canchas sintéticas en Colombia. Cero no-shows y flujo financiero automatizado.
-          </p>
-          <p class="text-[11px] text-slate-400">
-            NIT: 901.456.789-1 • Cartagena de Indias, Colombia
-          </p>
-        </div>
-
-        <!-- Sedes Oficiales -->
-        <div>
-          <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-3">📍 Complejos Deportivos</h4>
-          <ul class="space-y-2 text-xs">
-            <li>
-              <strong class="text-slate-800 dark:text-slate-200 block">La Bernabéu (Cartagena):</strong>
-              <span>Dg al CC San Fernando, detrás del Totumazo Cartagenero.</span>
-            </li>
-            <li>
-              <strong class="text-slate-800 dark:text-slate-200 block">Camp Nou Arena VIP (Bogotá):</strong>
-              <span>Calle 127 # 45-20, Autopista Norte.</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Canales de Atención -->
-        <div>
-          <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-3">📞 Atención y Horarios</h4>
-          <ul class="space-y-1.5 text-xs">
-            <li>Lunes a Domingo: 06:00 AM – 11:00 PM</li>
-            <li>Línea Directa: <strong>+57 300 679 9595</strong></li>
-            <li>Soporte Técnico: <strong>soporte@canchapro.com</strong></li>
-            <li class="pt-1">
-              <a href="https://wa.me/573006799595" target="_blank" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline inline-flex items-center space-x-1">
-                <i data-feather="message-circle" class="w-3.5 h-3.5"></i>
-                <span>Chatear por WhatsApp</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Marco Legal Obligatorio Colombia -->
-        <div>
-          <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-3">⚖️ Cumplimiento Legal</h4>
-          <p class="text-slate-500 dark:text-slate-400 text-[11px] mb-3">
-            Conforme a las leyes colombianas (Ley 1581 de 2012 de Habeas Data y Estatuto del Consumidor Ley 1480):
-          </p>
-          <ul class="space-y-1.5 text-xs">
-            <li><button onclick="openLegalModal('privacidad')" class="hover:text-emerald-500 font-semibold text-left">🔒 Política de Privacidad</button></li>
-            <li><button onclick="openLegalModal('terminos')" class="hover:text-emerald-500 font-semibold text-left">📜 Términos y Condiciones</button></li>
-            <li><button onclick="openLegalModal('tratamiento')" class="hover:text-emerald-500 font-semibold text-left">🛡️ Tratamiento de Datos (Ley 1581)</button></li>
-            <li><button onclick="openLegalModal('cookies')" class="hover:text-emerald-500 font-semibold text-left">🍪 Política de Cookies</button></li>
-          </ul>
-        </div>
-
+  <!-- ================= FOOTER OFICIAL ESCUTECH ================= -->
+  <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-10 transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div class="flex items-center space-x-2">
+        <span class="font-black text-slate-900 dark:text-white">CANCHA<span class="text-emerald-500">PRO</span></span>
+        <span>•</span>
+        <span>Desarrollado por <strong>EscuTech Solutions</strong></span>
       </div>
 
-      <div class="border-t border-slate-200 dark:border-slate-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-400">
-        <p>© 2026 CanchaPro Platform. Todos los derechos reservados. Desarrollado para alto rendimiento deportivo.</p>
-        <div class="flex items-center space-x-4">
-          <button onclick="openLegalModal('privacidad')" class="hover:underline">Privacidad</button>
-          <span>•</span>
-          <button onclick="openLegalModal('terminos')" class="hover:underline">Términos</button>
-          <span>•</span>
-          <button onclick="openLegalModal('cookies')" class="hover:underline">Cookies</button>
-        </div>
+      <div class="flex items-center space-x-4">
+        <a href="/sede/la-bernabeu" class="hover:text-emerald-500 transition">Sede La Bernabéu</a>
+        <a href="/superadmin" class="hover:text-purple-500 transition">Torre SuperAdmin</a>
+        <a href="/portal" class="hover:text-blue-500 transition">Portal Jugador</a>
       </div>
 
+      <p>© 2026 CanchaPro SaaS. Todos los derechos reservados.</p>
     </div>
   </footer>
 
-  <!-- ================= BANNER DE CONSENTIMIENTO DE COOKIES OBLIGATORIO (§5 SKILL) ================= -->
-  <div id="cookieBanner" class="cookie-banner fixed bottom-0 inset-x-0 z-50 p-4 sm:p-5 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 hidden">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-start space-x-3.5">
-        <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-          <i data-feather="shield" class="w-5 h-5"></i>
-        </div>
-        <div class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong class="text-slate-900 dark:text-white block font-bold text-sm">Aviso de Cookies y Protección de Datos</strong>
-          Utilizamos cookies esenciales y analíticas para procesar tus reservas de forma segura, recordar tu modo visual (claro/oscuro) y agilizar tu pago conforme a la legislación colombiana (Ley 1581 de 2012). Puedes consultar nuestra <button onclick="openLegalModal('cookies')" class="text-emerald-600 dark:text-emerald-400 underline font-bold">Política de Cookies</button> y <button onclick="openLegalModal('privacidad')" class="text-emerald-600 dark:text-emerald-400 underline font-bold">Privacidad</button>.
-        </div>
-      </div>
-      <div class="flex items-center space-x-2.5 shrink-0 w-full md:w-auto">
-        <button onclick="setCookieConsent('essential')" class="w-1/2 md:w-auto px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-          Solo Esenciales
-        </button>
-        <button onclick="setCookieConsent('all')" class="w-1/2 md:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition shadow-md shadow-emerald-500/20">
-          Aceptar Todas
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= STICKY MOBILE BOOKING BAR (MOBILE-FIRST 80% TRAFFIC) ================= -->
-  <div class="mobile-sticky-bar md:hidden fixed bottom-0 inset-x-0 z-40 p-3 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
-    <div>
-      <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Turnos en vivo</span>
-      <span class="text-xs font-black text-emerald-600 dark:text-emerald-400">Desde $110.000 COP</span>
-    </div>
-    <button onclick="scrollToBooking()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center space-x-1.5">
-      <i data-feather="calendar" class="w-4 h-4"></i>
-      <span>Reservar Cancha</span>
-    </button>
-  </div>
-
-  <!-- ================= MODAL DE DOCUMENTOS LEGALES COMPLETOS (LEY 1581/2012 COLOMBIA) ================= -->
-  <div id="modalLegalDocs" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition">
-      
-      <!-- Header con Tabs de Navegación -->
-      <div class="bg-slate-50 dark:bg-slate-950 p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
-            <i data-feather="file-text" class="w-4 h-4"></i>
-          </div>
-          <span class="font-black text-slate-900 dark:text-white text-sm">Marco Legal Oficial — CanchaPro SaaS</span>
-        </div>
-        <button onclick="closeLegalModal()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-          <i data-feather="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <!-- Barra de Tabs -->
-      <div class="flex items-center border-b border-slate-200 dark:border-slate-800 px-4 bg-slate-100/50 dark:bg-slate-950/50 text-xs overflow-x-auto">
-        <button id="tabBtn_privacidad" onclick="switchLegalTab('privacidad')" class="legal-tab-btn py-3 px-4 font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-500 shrink-0">
-          🔒 Política de Privacidad
-        </button>
-        <button id="tabBtn_terminos" onclick="switchLegalTab('terminos')" class="legal-tab-btn py-3 px-4 font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-500 shrink-0">
-          📜 Términos y Condiciones
-        </button>
-        <button id="tabBtn_tratamiento" onclick="switchLegalTab('tratamiento')" class="legal-tab-btn py-3 px-4 font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-500 shrink-0">
-          🛡️ Tratamiento de Datos (Ley 1581)
-        </button>
-        <button id="tabBtn_cookies" onclick="switchLegalTab('cookies')" class="legal-tab-btn py-3 px-4 font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-500 shrink-0">
-          🍪 Política de Cookies
-        </button>
-      </div>
-
-      <!-- Contenido de los Documentos Legales con Scroll -->
-      <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-        
-        <!-- DOCUMENTO 1: POLÍTICA DE PRIVACIDAD -->
-        <div id="legalSection_privacidad" class="space-y-3">
-          <h3 class="text-base font-black text-slate-900 dark:text-white">1. Política de Privacidad</h3>
-          <p class="text-[11px] text-slate-400">Última actualización: Noviembre de 2026 • República de Colombia</p>
-          <p>
-            <strong>CanchaPro SaaS</strong> (en adelante "La Plataforma"), identificada con NIT 901.456.789-1 y domicilio principal en Cartagena de Indias, Colombia, se compromete a salvaguardar la privacidad y seguridad de los datos personales suministrados por sus usuarios y clientes.
-          </p>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">1.1 Datos Personales que Recopilamos</h4>
-          <p>Para la prestación de los servicios de reserva deportiva y el uso de "La Vaca Digital", recopilamos:</p>
-          <ul class="list-disc list-inside space-y-1 pl-2">
-            <li>Nombres y apellidos completos.</li>
-            <li>Número de teléfono móvil / cuenta de WhatsApp activa.</li>
-            <li>Correo electrónico de confirmación.</li>
-            <li>Datos de facturación y trazabilidad de pagos mediante pasarelas autorizadas (Nequi, Daviplata, PSE).</li>
-          </ul>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">1.2 Finalidades del Tratamiento</h4>
-          <p>Los datos son tratados exclusivamente para: (a) procesar reservas en tiempo real y enviar confirmaciones automáticas por WhatsApp; (b) gestionar el cobro fraccionado a través de "La Vaca Digital"; (c) emitir Bonos Digitales de Reprogramación por lluvia o mantenimiento; y (d) atender solicitudes de soporte.</p>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">1.3 Derechos del Titular (ARCO)</h4>
-          <p>El titular podrá en cualquier momento ejercer sus derechos de Conocer, Actualizar, Rectificar y Suprimir sus datos enviando un correo a <strong>privacidad@canchapro.com</strong> o a través de nuestra línea de WhatsApp <strong>+57 300 679 9595</strong>.</p>
-        </div>
-
-        <!-- DOCUMENTO 2: TÉRMINOS Y CONDICIONES -->
-        <div id="legalSection_terminos" class="space-y-3 hidden">
-          <h3 class="text-base font-black text-slate-900 dark:text-white">2. Términos y Condiciones del Servicio</h3>
-          <p class="text-[11px] text-slate-400">Normas de Uso y Contratación de Espacios Deportivos</p>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">2.1 Condiciones de Reserva y Abonos</h4>
-          <p>
-            Toda reserva requiere un abono mínimo del <strong>50% del valor total</strong> del turno para ser confirmada. El sistema otorga un período de retención preventiva de diez (10) minutos. Si al expirar dicho tiempo no se ha acreditado el abono, el turno se liberará automáticamente al público.
-          </p>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">2.2 Protocolo de Calzado y Seguridad</h4>
-          <p>
-            Es obligatorio el uso de <strong>calzado deportivo tipo turf</strong> con suela de goma sintética. Queda terminantemente prohibido el ingreso a las canchas con guayos de taches de aluminio, acero o cualquier material metálico. El incumplimiento dará lugar a la negación de ingreso sin derecho a reembolso.
-          </p>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">2.3 Cancelaciones y Reprogramación por Lluvia</h4>
-          <ul class="list-disc list-inside space-y-1 pl-2">
-            <li><strong>Cancelación voluntaria:</strong> Debe notificarse con mínimo seis (6) horas de anticipación.</li>
-            <li><strong>Lluvia o Fuerza Mayor:</strong> Si las condiciones climáticas impiden el desarrollo seguro del partido, el complejo emitirá un <strong>Bono Digital de Reprogramación</strong> con vigencia de 60 días para agendar en cualquier fecha disponible.</li>
-          </ul>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">2.4 Ley Aplicable y Jurisdicción</h4>
-          <p>Estos términos se rigen íntegramente por las leyes de la República de Colombia y la jurisdicción de los jueces de Cartagena de Indias.</p>
-        </div>
-
-        <!-- DOCUMENTO 3: TRATAMIENTO DE DATOS PERSONALES -->
-        <div id="legalSection_tratamiento" class="space-y-3 hidden">
-          <h3 class="text-base font-black text-slate-900 dark:text-white">3. Tratamiento de Datos Personales (Habeas Data)</h3>
-          <p class="text-[11px] text-slate-400">Cumplimiento Estricto de la Ley Estatutaria 1581 de 2012 y Decreto 1377 de 2013</p>
-          <p>
-            Al ingresar tus datos para registrar una reserva o utilizar la función de "La Vaca Digital", autorizas de manera previa, libre, expresa e informada a <strong>CanchaPro SaaS</strong> para recolectar, almacenar, usar y circular tus datos personales en nuestras bases de datos seguras.
-          </p>
-          <h4 class="font-bold text-slate-800 dark:text-slate-100">3.1 Canales de Atención para Habeas Data</h4>
-          <p>
-            Puedes radicar tus peticiones, quejas y reclamos (PQR) relativos a tus datos personales a través de:
-          </p>
-          <ul class="list-disc list-inside space-y-1 pl-2">
-            <li>Correo electrónico: <strong>datos@canchapro.com</strong></li>
-            <li>Línea física y WhatsApp: <strong>+57 300 679 9595</strong></li>
-            <li>Dirección: Dg al CC San Fernando, detrás del Totumazo, Cartagena, Colombia.</li>
-          </ul>
-          <p>
-            El tiempo máximo legal de respuesta a consultas es de diez (10) días hábiles, y para reclamos de supresión o corrección es de quince (15) días hábiles, de acuerdo con el artículo 14 de la Ley 1581 de 2012.
-          </p>
-        </div>
-
-        <!-- DOCUMENTO 4: POLÍTICA DE COOKIES -->
-        <div id="legalSection_cookies" class="space-y-3 hidden">
-          <h3 class="text-base font-black text-slate-900 dark:text-white">4. Política de Cookies y Almacenamiento Local</h3>
-          <p class="text-[11px] text-slate-400">Transparencia sobre el uso de tecnologías de rastreo y almacenamiento</p>
-          <p>
-            Nuestro sitio web utiliza cookies técnicas y la tecnología de <code>localStorage</code> del navegador web para garantizar el correcto funcionamiento de la plataforma:
-          </p>
-          <ul class="list-disc list-inside space-y-2 pl-2">
-            <li><strong>Cookies Técnicas Esenciales:</strong> Necesarias para mantener la sesión autenticada de los usuarios y guardar de manera temporal el ID del turno seleccionado durante el temporizador de 10 minutos.</li>
-            <li><strong>Cookies de Preferencias:</strong> Almacenan tu preferencia visual de interfaz (Modo Claro / Modo Oscuro) y la decisión de consentimiento de cookies.</li>
-            <li><strong>Cookies Analíticas:</strong> Miden de forma anónima el rendimiento de carga y la tasa de conversión de reservas para optimizar los servidores.</li>
-          </ul>
-          <p>
-            Puedes en cualquier momento limpiar las cookies y datos de sitio directamente desde la configuración de tu navegador.
-          </p>
-        </div>
-
-      </div>
-
-      <!-- Footer del Modal -->
-      <div class="bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
-        <button onclick="closeLegalModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2 rounded-xl text-xs transition">
-          Entendido y Cerrar
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ================= MODAL DE AUTENTICACIÓN / REGISTRO PARA RESERVAS ================= -->
-  <div id="modalAuthLogin" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-4 transition">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <div class="flex items-center space-x-2">
-          <div class="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
-            <i data-feather="user-check" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="font-black text-slate-900 dark:text-white text-base">Portal del Jugador</h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Inicia sesión o crea tu cuenta para reservar turno</p>
-          </div>
-        </div>
-        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <!-- Pestañas Iniciar Sesión / Crear Cuenta -->
-      <div class="flex p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
-        <button type="button" onclick="switchAuthTab('login')" id="authTabBtn_login" class="flex-1 py-2 rounded-xl font-black bg-blue-600 text-white transition shadow-sm">Iniciar Sesión</button>
-        <button type="button" onclick="switchAuthTab('register')" id="authTabBtn_register" class="flex-1 py-2 rounded-xl font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition">Crear Cuenta</button>
-      </div>
-
-      <!-- Formulario Login -->
-      <form id="authLoginForm" onsubmit="handleAuthLogin(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
-          <input type="email" id="authLoginEmail" required placeholder="tu@correo.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:border-blue-500 focus:outline-none">
-        </div>
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
-          <input type="password" id="authLoginPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:border-blue-500 focus:outline-none">
-        </div>
-        <button type="submit" id="btnSubmitAuth" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 rounded-xl transition shadow-md shadow-blue-500/20">
-          Iniciar Sesión y Continuar a mi Portal
-        </button>
-      </form>
-
-      <!-- Formulario Registro -->
-      <form id="authRegisterForm" onsubmit="handleAuthRegister(event)" class="space-y-3 text-xs hidden">
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo</label>
-          <input type="text" id="authRegisterName" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Celular / WhatsApp</label>
-            <input type="tel" id="authRegisterPhone" required placeholder="3001234567" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
-            <input type="email" id="authRegisterEmail" required placeholder="juan@correo.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-          </div>
-        </div>
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
-          <input type="password" id="authRegisterPassword" required placeholder="Crea una contraseña segura" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
-        </div>
-        <button type="submit" id="btnSubmitRegister" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
-          Crear Cuenta y Entrar al Portal
-        </button>
-      </form>
-
-      <!-- Accesos Rápidos Demo -->
-      <div id="authDemoShortcuts" class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Acceso Rápido Jugador Demo:</span>
-        <button type="button" onclick="loginAsDemoUser('cliente')" class="w-full p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black border border-blue-500/20 hover:bg-blue-500/20 flex items-center justify-center space-x-2 text-xs">
-          <span>⚽ Entrar como Mateo Jugador (Demo)</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Alerta de Cancha / Cuenta Suspendida -->
-  <div id="modalSuspendedAlert" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border-2 border-red-500/50 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl text-center transition">
-      <div class="w-16 h-16 rounded-3xl bg-red-500/20 text-red-500 flex items-center justify-center mx-auto shadow-lg shadow-red-500/20">
-        <i data-feather="slash" class="w-8 h-8"></i>
-      </div>
-      <div>
-        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-red-600 text-white shadow-sm">
-          Bloqueo de Seguridad
-        </span>
-        <h3 class="text-lg font-black text-slate-900 dark:text-white mt-3">Cuenta / Cancha Suspendida</h3>
-        <p id="suspendedModalText" class="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-          Esta cancha se encuentra actualmente desactivada o suspendida. No es posible realizar gestiones, reservas ni operaciones comerciales en esta instalación.
-        </p>
-      </div>
-
-      <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-left space-y-1.5">
-        <p class="text-xs font-bold text-red-600 dark:text-red-400 flex items-center space-x-1.5">
-          <i data-feather="alert-triangle" class="w-4 h-4"></i>
-          <span>Acción requerida:</span>
-        </p>
-        <p class="text-[11px] text-slate-600 dark:text-slate-400">
-          Por favor comunícate directamente con el <strong>Administrador del Sistema</strong> para solicitar el desbloqueo o reactivación del servicio.
-        </p>
-      </div>
-
-      <div class="flex space-x-2 pt-2">
-        <button onclick="closeSuspendedAlertModal()" class="w-1/2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-xl text-xs transition">
-          Cerrar
-        </button>
-        <a href="https://wa.me/573006799595?text=Hola,%20mi%20cancha%20o%20cuenta%20est%C3%A1%20suspendida%20en%20CanchaPro,%20solicito%20asistencia%20del%20administrador%20del%20sistema" target="_blank" class="w-1/2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-1.5">
-          <i data-feather="message-circle" class="w-4 h-4"></i>
-          <span>WhatsApp Admin</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
-
-  <!-- Scripts -->
-  <script src="js/app.js"></script>
   <script>
-    feather.replace();
+    // Inicialización de iconos Feather y Tema Claro/Oscuro
+    function initTheme() {
+      const saved = localStorage.getItem('canchapro_theme') || 'dark';
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      if (window.feather) feather.replace();
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('canchapro_theme', isDark ? 'dark' : 'light');
+      if (window.feather) feather.replace();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+    });
   </script>
 </body>
 </html>
