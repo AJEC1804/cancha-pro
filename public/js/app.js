@@ -726,7 +726,7 @@ async function submitReservationHold() {
 }
 
 async function testQuickHold() {
-  const d = new Date().toISOString().split('T')[0];
+  const d = getBogotaDate();
   state.selectedDate = d;
   openBookingModal('20:00', '21:00', 130000);
 }
@@ -3463,53 +3463,111 @@ function renderTenantReservationsTable() {
     <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
       <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
         <tr>
-          <th class="py-2.5 px-3">Fecha & Hora</th>
-          <th class="py-2.5 px-3">Cancha</th>
           <th class="py-2.5 px-3">Cliente</th>
+          <th class="py-2.5 px-3">Sub-Cancha</th>
+          <th class="py-2.5 px-3">Fecha/Hora</th>
+          <th class="py-2.5 px-3 text-right">Total Cancha</th>
+          <th class="py-2.5 px-3 text-right">Abono (50%)</th>
+          <th class="py-2.5 px-3 text-right">Resta Cancha</th>
+          <th class="py-2.5 px-3 text-right">Consumos Bar</th>
+          <th class="py-2.5 px-3 text-right">Total Neto</th>
           <th class="py-2.5 px-2 text-center">Estado</th>
-          <th class="py-2.5 px-3 text-center">Comprobante</th>
-          <th class="py-2.5 px-3 text-right">Saldo Cancha</th>
           <th class="py-2.5 px-3 text-right">Acciones</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
         ${list.map(r => {
-          const statusBadge = r.status === 'confirmed'
-            ? '<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20 text-[10px]">Confirmada</span>'
-            : (r.status === 'pending_verification'
-              ? '<span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-500/20 text-[10px]">Por Verificar</span>'
-              : (r.status === 'hold'
-                ? '<span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-2 py-0.5 rounded-full border border-blue-500/20 text-[10px]">Hold / En Pago</span>'
-                : '<span class="bg-red-500/10 text-red-600 font-bold px-2 py-0.5 rounded-full text-[10px]">Cancelada</span>'));
+          const courtTotal = Number(r.total_amount || 0);
+          const depositPaid = Number(r.deposit_paid || 0);
+          const courtRemaining = Math.max(0, courtTotal - depositPaid);
+          const barTotal = Number(r.folio?.pos_total || 0);
+          const barCount = (r.folio?.pos_items || []).length;
+          const totalNet = courtRemaining + (r.folio ? Number(r.folio.pos_pending || 0) : barTotal);
 
-          const receiptCol = r.receipt_url || r.payment_reference
-            ? `<div class="flex items-center justify-center space-x-1.5">
-                 <span class="text-[10px] font-mono text-emerald-600 font-bold">${r.payment_reference || 'Comprobante'}</span>
-                 ${r.status === 'pending_verification' ? `<button onclick="approveReservation('${r.id}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-2 py-0.5 rounded-lg text-[10px] shadow-sm">✓ Aprobar</button>` : ''}
-               </div>`
-            : '<span class="text-slate-400 text-[10px]">-</span>';
+          let statusBadge = '';
+          let timerBadge = '';
+          if (r.status === 'confirmed') {
+            statusBadge = '<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20 text-[10px]">Confirmada</span>';
+          } else if (r.status === 'pending_verification') {
+            statusBadge = '<span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-500/20 text-[10px]">Por Verificar</span>';
+            if (r.held_until) {
+              const diffMs = new Date(r.held_until).getTime() - Date.now();
+              const diffMin = Math.max(0, Math.ceil(diffMs / 60000));
+              timerBadge = `<span class="text-[9px] text-amber-500 font-mono block mt-0.5">⏳ Retención: ${diffMin}m</span>`;
+            }
+          } else if (r.status === 'hold') {
+            statusBadge = '<span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-2 py-0.5 rounded-full border border-blue-500/20 text-[10px]">Hold / En Pago</span>';
+            if (r.held_until) {
+              const diffMs = new Date(r.held_until).getTime() - Date.now();
+              const diffMin = Math.max(0, Math.ceil(diffMs / 60000));
+              timerBadge = `<span class="text-[9px] text-blue-500 font-mono block mt-0.5">⏳ Expira: ${diffMin}m</span>`;
+            }
+          } else {
+            statusBadge = '<span class="bg-red-500/10 text-red-600 font-bold px-2 py-0.5 rounded-full text-[10px]">Cancelada</span>';
+          }
+
+          let actionsHtml = `<div class="flex items-center justify-end space-x-1.5">`;
+          if (r.status === 'pending_verification') {
+            actionsHtml += `
+              <button onclick="approveReservation('${r.id}')" title="Aprobar comprobante" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-2 py-1 rounded-lg text-[10px] shadow-sm transition">
+                ✓ Aprobar
+              </button>
+              <button onclick="rejectReservation('${r.id}')" title="Rechazar comprobante" class="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-600 border border-red-500/20 font-bold px-2 py-1 rounded-lg text-[10px] transition">
+                ✕ Rechazar
+              </button>
+            `;
+          }
+          actionsHtml += `
+            <button onclick="openUnifiedFolioModal('${r.id}')" class="bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bold px-2.5 py-1 rounded-lg text-[10px] transition shadow-sm">
+              🧾 Liquidar Saldo
+            </button>
+          </div>`;
 
           return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40 transition">
-              <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
-                <span>${r.booking_date}</span>
-                <span class="text-slate-400 block text-[10px] font-normal">${r.start_time} - ${r.end_time}</span>
-              </td>
-              <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${r.field_name || 'Cancha'}</td>
               <td class="py-2.5 px-3">
-                <span class="font-bold text-slate-900 dark:text-white block">${r.client_name}</span>
-                <span class="text-[10px] text-slate-400">${r.client_phone}</span>
+                <span class="font-bold text-slate-900 dark:text-white block">${r.client_name || 'Cliente'}</span>
+                <span class="text-[10px] text-slate-400 block">${r.client_phone || r.client_email || ''}</span>
               </td>
-              <td class="py-2.5 px-2 text-center">${statusBadge}</td>
-              <td class="py-2.5 px-3 text-center">${receiptCol}</td>
+              <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                ${r.field_name || 'Sub-Cancha'}
+              </td>
+              <td class="py-2.5 px-3 font-medium text-slate-900 dark:text-white">
+                <span>${r.booking_date}</span>
+                <span class="text-slate-400 block text-[10px]">${r.start_time} - ${r.end_time}</span>
+              </td>
+              <td class="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
+                $${courtTotal.toLocaleString('es-CO')}
+              </td>
               <td class="py-2.5 px-3 text-right">
-                <span class="font-black text-slate-900 dark:text-white block">$${(r.remaining_balance || (r.total_amount - (r.deposit_paid || 0))).toLocaleString('es-CO')}</span>
-                <span class="text-[9px] text-slate-400">Total: $${Number(r.total_amount).toLocaleString('es-CO')}</span>
+                <span class="font-bold ${depositPaid > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} block">
+                  $${depositPaid.toLocaleString('es-CO')}
+                </span>
+                <span class="text-[9px] ${depositPaid > 0 ? 'text-emerald-500' : 'text-slate-400'}">${depositPaid > 0 ? '✓ Pagado' : 'Sin abono'}</span>
               </td>
-              <td class="py-2.5 px-3 text-right space-x-1">
-                <button onclick="openFolioModal('${r.id}')" class="bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 font-bold px-2.5 py-1 rounded-lg text-[11px] transition">
-                  🧾 Folio
-                </button>
+              <td class="py-2.5 px-3 text-right font-bold text-slate-800 dark:text-slate-200">
+                $${courtRemaining.toLocaleString('es-CO')}
+              </td>
+              <td class="py-2.5 px-3 text-right">
+                <span class="font-bold ${barTotal > 0 ? 'text-amber-500' : 'text-slate-400'} block">
+                  $${barTotal.toLocaleString('es-CO')}
+                </span>
+                ${barCount > 0 ? `<span class="text-[9px] text-slate-400">${barCount} ítem(s)</span>` : ''}
+              </td>
+              <td class="py-2.5 px-3 text-right">
+                <span class="font-black ${totalNet === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'} text-sm block">
+                  $${totalNet.toLocaleString('es-CO')}
+                </span>
+                <span class="text-[9px] font-bold ${totalNet === 0 ? 'text-emerald-500' : 'text-amber-500'}">
+                  ${totalNet === 0 ? '✓ Al día' : 'Pendiente'}
+                </span>
+              </td>
+              <td class="py-2.5 px-2 text-center">
+                ${statusBadge}
+                ${timerBadge}
+              </td>
+              <td class="py-2.5 px-3 text-right">
+                ${actionsHtml}
               </td>
             </tr>
           `;
@@ -3543,6 +3601,35 @@ async function approveReservation(reservationId) {
     }
   } catch (err) {
     showToast('Error al comunicar aprobación.', 'error');
+  }
+}
+
+async function rejectReservation(reservationId) {
+  if (!confirm('¿Deseas rechazar este comprobante y liberar el turno para otros clientes?')) return;
+  const btn = event && event.target ? event.target.closest('button') : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${reservationId}/reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify({ reason: 'Comprobante no válido o no recibido.' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('⚠️ Comprobante rechazado y turno liberado.', 'info');
+      loadTenantReservations();
+    } else {
+      showToast(data.error || 'Error al rechazar reserva.', 'error');
+    }
+  } catch (err) {
+    showToast('Error de comunicación al rechazar.', 'error');
   }
 }
 
@@ -4561,6 +4648,174 @@ async function handleUnifiedBookingSubmit(e) {
 
 // ------------------------------------------------------------
 // MODAL FOLIO UNIFICADO (ÚNICA FUENTE DE VERDAD)
+// ------------------------------------------------------------
+
+let currentUnifiedFolioData = null;
+let currentFolioPaymentMethod = 'cash';
+
+async function openUnifiedFolioModal(reservationId) {
+  state.currentFolioResId = reservationId;
+  const modal = document.getElementById('modalUnifiedFolio') || document.getElementById('modalFolioDetails');
+  const title = document.getElementById('folioModalTitle');
+  const content = document.getElementById('folioModalContent');
+  if (!modal) return;
+
+  modal.classList.remove('hidden');
+  if (content) {
+    content.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs"><span class="inline-block animate-spin mr-2">⏳</span> Calculando Folio Unificado en tiempo real...</div>';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${reservationId}/folio`, {
+      headers: { 'Authorization': `Bearer ${state.authToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.folio) {
+      const f = data.folio;
+      currentUnifiedFolioData = f;
+      if (title) title.innerText = `Reserva #${f.reservation_id} • ${f.client_name} (${f.field_name})`;
+
+      const cafeteriaRows = f.cafeteria_items && f.cafeteria_items.length > 0
+        ? f.cafeteria_items.map(item => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/40">
+              <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">${item.product_name}</td>
+              <td class="py-2 px-2 text-center text-slate-500 font-semibold">${item.quantity}</td>
+              <td class="py-2 px-2 text-right text-slate-600 dark:text-slate-400">$${Number(item.unit_price).toLocaleString('es-CO')}</td>
+              <td class="py-2 px-3 text-right font-black text-amber-500">$${Number(item.subtotal).toLocaleString('es-CO')}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">No hay consumos de cafetería cargados a este turno.</td></tr>';
+
+      if (content) {
+        content.innerHTML = `
+          <!-- Desglose Financiero Explícito Cancha -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl">
+              <span class="text-[10px] text-slate-400 uppercase font-bold block">1. Valor Cancha</span>
+              <span class="text-base font-black text-slate-900 dark:text-white block mt-0.5">$${Number(f.court_price).toLocaleString('es-CO')} COP</span>
+              <span class="text-[10px] text-slate-500 block">Tarifa pactada</span>
+            </div>
+            <div class="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-2xl">
+              <span class="text-[10px] text-emerald-700 dark:text-emerald-400 uppercase font-black block">2. Abono Pagado</span>
+              <span class="text-base font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">$${Number(f.court_deposit_paid).toLocaleString('es-CO')} COP</span>
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 block font-semibold">${f.court_deposit_paid > 0 ? '✓ 50% Transferido' : '⚠️ Sin abono previo'}</span>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl">
+              <span class="text-[10px] text-slate-400 uppercase font-bold block">3. Saldo Cancha</span>
+              <span class="text-base font-black text-slate-900 dark:text-white block mt-0.5">$${Number(f.court_pending_balance).toLocaleString('es-CO')} COP</span>
+              <span class="text-[10px] text-slate-500 block">Valor - Abono</span>
+            </div>
+          </div>
+
+          <!-- Consumos Cafetería Ítem por Ítem -->
+          <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span class="font-black text-slate-900 dark:text-white text-xs flex items-center space-x-1.5">
+                <span>🥤 Consumos Cafetería / Bar (Detallado Ítem x Ítem)</span>
+              </span>
+              <span class="font-black text-amber-500 text-xs">Total Bar: $${Number(f.cafeteria_total).toLocaleString('es-CO')} COP</span>
+            </div>
+            <table class="w-full text-xs text-left">
+              <thead class="text-[10px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-1 px-3">Producto</th>
+                  <th class="py-1 px-2 text-center">Cant</th>
+                  <th class="py-1 px-2 text-right">Precio Unit</th>
+                  <th class="py-1 px-3 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                ${cafeteriaRows}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TOTAL NETO POR COBRAR -->
+          <div class="bg-emerald-500/10 border-2 border-emerald-500/40 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block">Total Neto a Liquidar (Saldo Cancha + Bar)</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400">$${Number(f.court_pending_balance).toLocaleString('es-CO')} + $${Number(f.cafeteria_total).toLocaleString('es-CO')}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400 block">$${Number(f.grand_total_due).toLocaleString('es-CO')} COP</span>
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${f.grand_total_due === 0 ? 'bg-emerald-500/20 text-emerald-600' : 'bg-amber-500/20 text-amber-600'}">
+                ${f.grand_total_due === 0 ? '✓ Cuenta Saldada' : '⚠️ Pendiente de Cobro'}
+              </span>
+            </div>
+          </div>
+        `;
+      }
+
+      setFolioPaymentMethod('cash');
+
+      const cashInput = document.getElementById('folioMixedCashInput');
+      const elecInput = document.getElementById('folioMixedElecInput');
+      if (cashInput && elecInput) {
+        const half = Math.floor(f.grand_total_due / 2);
+        cashInput.value = half;
+        elecInput.value = f.grand_total_due - half;
+      }
+    } else {
+      if (content) content.innerHTML = `<div class="p-6 text-center text-xs text-red-500">${data.error || 'No se pudo cargar el folio.'}</div>`;
+    }
+  } catch (err) {
+    if (content) content.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Error de conexión al cargar el folio.</div>';
+  }
+}
+
+async function submitUnifiedFolioSettlement() {
+  if (!state.currentFolioResId) return;
+  const btn = document.getElementById('btnSubmitUnifiedFolio');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Liquidando Folio...';
+  }
+
+  const equipmentChecked = document.getElementById('folioEquipmentCheck')?.checked !== false;
+
+  let payload = {
+    payment_method: currentFolioPaymentMethod,
+    equipment_returned: equipmentChecked,
+    notes: 'Liquidación Unificada en Mostrador (Canchero/POS).'
+  };
+
+  if (currentFolioPaymentMethod === 'mixed') {
+    const cashVal = Number(document.getElementById('folioMixedCashInput')?.value || 0);
+    const elecVal = Number(document.getElementById('folioMixedElecInput')?.value || 0);
+    payload.cash_amount = cashVal;
+    payload.electronic_amount = elecVal;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reservations/${state.currentFolioResId}/settle-folio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.authToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ ¡Folio liquidado con éxito! Saldo en cero y turno finalizado.', 'success');
+      closeUnifiedFolioModal();
+      if (typeof loadTenantReservations === 'function') loadTenantReservations();
+      if (typeof loadTenantClients === 'function') loadTenantClients();
+      if (typeof loadActiveShift === 'function') loadActiveShift();
+      if (typeof loadShiftHistory === 'function') loadShiftHistory();
+    } else {
+      showToast(data.error || 'Error al liquidar folio.', 'error');
+    }
+  } catch (e) {
+    showToast('Error de comunicación con el servidor.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
 // ------------------------------------------------------------
 
 function setFolioPaymentMethod(method) {

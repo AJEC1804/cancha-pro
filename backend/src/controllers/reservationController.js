@@ -869,6 +869,31 @@ const approveReservation = async (req, res, next) => {
   }
 };
 
+const rejectReservation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body || {};
+    const reservation = await db.findReservationById(id);
+    if (!reservation) {
+      return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+    }
+
+    const updated = await db.updateReservation(id, {
+      status: 'cancelled',
+      notes: (reservation.notes ? reservation.notes + ' | ' : '') + `Comprobante rechazado: ${reason || 'Comprobante inválido o no recibido en cuenta'}`,
+      updated_at: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: `Comprobante de "${reservation.client_name}" rechazado. El turno quedó liberado.`,
+      reservation: updated
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getGridAvailability,
   getMultiGridAvailability,
@@ -880,6 +905,7 @@ module.exports = {
   settleFolio,
   uploadReceipt,
   approveReservation,
+  rejectReservation,
   createRecurringSubscription,
   listSubscriptions,
   createOperationalBlock,

@@ -32,6 +32,7 @@ router.post('/hold', reservationController.holdSlot);
 router.get('/:id/folio', reservationController.getFolio);
 router.post('/:id/receipt', reservationController.uploadReceipt);
 router.post('/:id/approve', authenticate, reservationController.approveReservation);
+router.post('/:id/reject', authenticate, reservationController.rejectReservation);
 router.post('/:id/settle-folio', authenticate, reservationController.settleFolio);
 
 // Confirmación de pago / abono

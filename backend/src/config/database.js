@@ -1171,8 +1171,15 @@ const db = {
     const folio = await db.getFolio(reservationId);
     if (!folio) return null;
 
-    const cashPaid = Number(settlementData.cash_amount || 0);
-    const electronicPaid = Number(settlementData.electronic_amount || 0);
+    let cashPaid = Number(settlementData.cash_amount || 0);
+    let electronicPaid = Number(settlementData.electronic_amount || 0);
+    if (!cashPaid && !electronicPaid) {
+      if (settlementData.payment_method === 'cash') {
+        cashPaid = folio.total_net_due;
+      } else {
+        electronicPaid = folio.total_net_due;
+      }
+    }
     const totalReceived = cashPaid + electronicPaid;
 
     // Actualizar la reserva
