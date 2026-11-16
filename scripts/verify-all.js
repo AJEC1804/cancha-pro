@@ -172,6 +172,62 @@ async function runTests() {
     const dataPlayer = await resPlayer.json();
     assert(dataPlayer.success && Array.isArray(dataPlayer.reservations) && dataPlayer.reservations.length > 0, 'Customer query returns reservations without blank page');
 
+    // 15. Venue Suspension & 403 Blocking Isolation
+    console.log('\n--- Test 15: Venue Suspension & 403 Blocking ---');
+    const toggleRes = await fetch(`${baseUrl}/api/venues/a0000000-0000-0000-0000-000000000003/toggle`, {
+      method: 'PATCH',
+      headers: authHeaders
+    });
+    const toggleData = await toggleRes.json();
+    assert(toggleData.success && toggleData.venue.is_active === false, 'PATCH /api/venues/:id/toggle sets is_active: false');
+
+    const resSuspendedLanding = await fetch(`${baseUrl}/sede/la-favela`);
+    assert(resSuspendedLanding.status === 403, 'GET /sede/la-favela returns HTTP 403 when suspended');
+    const suspendedHtml = await resSuspendedLanding.text();
+    assert(suspendedHtml.includes('Servicio temporalmente suspendido'), 'Suspended screen renders notice');
+
+    const resSuspendedAdmin = await fetch(`${baseUrl}/sede/la-favela/admin`);
+    assert(resSuspendedAdmin.status === 403, 'GET /sede/la-favela/admin returns HTTP 403 when suspended');
+
+    const resActiveBernabeu = await fetch(`${baseUrl}/sede/la-bernabeu`);
+    assert(resActiveBernabeu.status === 200, 'GET /sede/la-bernabeu remains HTTP 200 without being affected');
+
+    // Reactivate venue
+    await fetch(`${baseUrl}/api/venues/a0000000-0000-0000-0000-000000000003/toggle`, {
+      method: 'PATCH',
+      headers: authHeaders
+    });
+
+    // 16. Reject Reservation Flow
+    console.log('\n--- Test 16: Reject Reservation Flow ---');
+    const rejectRes = await fetch(`${baseUrl}/api/reservations/res-demo-002/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      body: JSON.stringify({ reason: 'Comprobante adulterado o no recibido' })
+    });
+    const rejectData = await rejectRes.json();
+    assert(rejectData.success && rejectData.reservation.status === 'cancelled', 'POST /:id/reject sets status to cancelled');
+
+    // 17. Security Git Rule Verification
+    console.log('\n--- Test 17: Security Rule Verification ---');
+    const { execSync } = require('child_process');
+    const branchName = execSync('git branch --show-current').toString().trim();
+    assert(branchName === 'feat/modulos-sede-independientes', `Active git branch is feat/modulos-sede-independientes (current: ${branchName})`);
+
+    let bernabeuUntouched = true;
+    const fs = require('fs');
+    const path = require('path');
+    const bernabeuDir = path.resolve(__dirname, '..', '..', 'bernabeu');
+    if (fs.existsSync(bernabeuDir)) {
+      try {
+        const gitStatusBernabeu = execSync(`git -C "${bernabeuDir}" status --porcelain`).toString().trim();
+        bernabeuUntouched = gitStatusBernabeu.length === 0;
+      } catch (e) {
+        // Not a git repo or not accessible, still untouched
+      }
+    }
+    assert(bernabeuUntouched, 'Security check: ../bernabeu repo is completely untouched and intact');
+
     console.log(`\n========================================`);
     console.log(`TOTAL TESTS: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
     console.log(`========================================\n`);

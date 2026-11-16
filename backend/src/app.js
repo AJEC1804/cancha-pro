@@ -101,6 +101,9 @@ function renderVenueLandingHtml(venue) {
       }
     };
   </script>
+  <script>
+    window.__INITIAL_VENUE__ = ${JSON.stringify(venue).replace(/</g, '\\u003c')};
+  </script>
   <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-emerald-500 selection:text-slate-950">

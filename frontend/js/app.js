@@ -4650,9 +4650,6 @@ async function handleUnifiedBookingSubmit(e) {
 // MODAL FOLIO UNIFICADO (ÚNICA FUENTE DE VERDAD)
 // ------------------------------------------------------------
 
-let currentUnifiedFolioData = null;
-let currentFolioPaymentMethod = 'cash';
-
 async function openUnifiedFolioModal(reservationId) {
   state.currentFolioResId = reservationId;
   const modal = document.getElementById('modalUnifiedFolio') || document.getElementById('modalFolioDetails');
