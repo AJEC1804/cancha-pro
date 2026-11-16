@@ -180,12 +180,34 @@ const closeShift = async (req, res, next) => {
   }
 };
 
-// Ver estado del turno actual
+// Ver estado del turno actual (Arqueo de Efectivo vs Digitales)
 const getActiveShift = async (req, res, next) => {
   try {
-    const venueId = req.query.venue_id || (req.user ? req.user.venue_id : 'a0000000-0000-0000-0000-000000000001');
+    const venueId = req.query.venue_id || (req.user && req.user.venue_id) || 'a0000000-0000-0000-0000-000000000001';
     const shift = await db.findActiveShift(venueId);
-    res.json({ success: true, shift: shift || null });
+    if (!shift) {
+      return res.json({ success: true, shift: null });
+    }
+    const initialCash = Number(shift.initial_cash || 100000);
+    const courtSales = Number(shift.court_sales || 0);
+    const cafeteriaSales = Number(shift.cafeteria_sales || 0);
+    const cashSales = Math.max(0, Number(shift.expected_cash || 0) - initialCash);
+    const electronicSales = Number(shift.total_electronic_sales || 0);
+    const totalCollected = cashSales + electronicSales;
+
+    res.json({
+      success: true,
+      shift: {
+        ...shift,
+        initial_cash: initialCash,
+        court_sales: courtSales,
+        cafeteria_sales: cafeteriaSales,
+        cash_sales: cashSales,
+        electronic_sales: electronicSales,
+        expected_cash: Number(shift.expected_cash || initialCash),
+        total_collected: totalCollected
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -213,9 +235,18 @@ const checkoutUnifiedTab = async (req, res, next) => {
       return res.status(403).json({ success: false, suspended: true, error: 'Esta cancha se encuentra suspendida.' });
     }
 
-    // 1. Calcular consumos de cafetería
-    let cafeteriaTotal = 0;
+    // 1. Calcular consumos de cafetería (órdenes abiertas en folio + nuevos ítems si los hay)
+    const folio = await db.getFolio(reservation.id);
+    let cafeteriaTotal = folio ? Number(folio.cafeteria_total || 0) : 0;
     let hasRentalEquipment = false;
+
+    if (folio && folio.pos_items) {
+      folio.pos_items.forEach(it => {
+        if (it.name && (it.name.toLowerCase().includes('peto') || it.name.toLowerCase().includes('balón') || it.name.toLowerCase().includes('balon'))) {
+          hasRentalEquipment = true;
+        }
+      });
+    }
 
     if (items && items.length > 0) {
       for (const item of items) {
@@ -256,22 +287,14 @@ const checkoutUnifiedTab = async (req, res, next) => {
       });
     }
 
-    // 4. Actualizar reserva como pagada y completada
-    const updatedRes = await db.updateReservation(reservation.id, {
-      status: 'completed',
-      payment_status: 'paid',
-      remaining_balance: 0,
-      total_amount: reservation.total_amount + cafeteriaTotal,
-      deposit_paid: reservation.deposit_paid + courtPending,
-      notes: (reservation.notes ? reservation.notes + ' | ' : '') + `Liquidado en caja: Efectivo $${paidCash.toLocaleString('es-CO')} + ${electronic_method || 'Nequi'} $${paidElectronic.toLocaleString('es-CO')}. Implementos devueltos: OK.`
+    // 4. Liquidar Folio unificado de forma atómica
+    await db.settleFolio(reservation.id, {
+      cash_amount: paidCash,
+      electronic_amount: paidElectronic,
+      payment_method: electronic_method || (paidElectronic > 0 && paidCash === 0 ? 'electronic' : 'cash')
     });
 
-    // 5. Actualizar turno de caja activo con el efectivo y ventas electrónicas
-    const activeShift = await db.findActiveShift(reservation.venue_id);
-    if (activeShift) {
-      activeShift.expected_cash += paidCash;
-      activeShift.total_electronic_sales += paidElectronic;
-    }
+    const updatedRes = await db.findReservationById(reservation.id);
 
     res.json({
       success: true,

@@ -22,7 +22,9 @@ module.exports = (req, res) => {
     const queryCopy = { ...parsed.query };
     delete queryCopy.path;
     const searchParams = new URLSearchParams(queryCopy).toString();
-    req.url = '/api/' + parsed.query.path + (searchParams ? '?' + searchParams : '');
+    const rawPath = parsed.query.path;
+    const prefix = (rawPath.startsWith('sede') || rawPath.startsWith('portal') || rawPath.startsWith('login') || rawPath.startsWith('dashboard')) ? '/' : '/api/';
+    req.url = prefix + rawPath + (searchParams ? '?' + searchParams : '');
   } else if (req.headers['x-matched-path']) {
     req.url = req.headers['x-matched-path'];
   } else if (req.headers['x-forwarded-uri']) {

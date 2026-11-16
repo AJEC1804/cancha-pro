@@ -15,12 +15,20 @@
       "destination": "/dashboard.html"
     },
     {
+      "source": "/portal",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/dashboard.html"
+    },
+    {
       "source": "/sede/(.*)",
-      "destination": "/index.html"
+      "destination": "/api?path=sede/$1"
     },
     {
       "source": "/sede",
-      "destination": "/index.html"
+      "destination": "/api?path=sede"
     }
   ],
   "headers": [

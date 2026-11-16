@@ -58,10 +58,16 @@
           <i data-feather="moon" id="themeIconMoon" class="w-4 h-4 block dark:hidden"></i>
         </button>
 
-        <!-- Acceso directo al Dashboard -->
-        <a href="dashboard.html" class="hidden sm:inline-flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5">
-          <i data-feather="sliders" class="w-3.5 h-3.5"></i>
-          <span>Panel de Gestión</span>
+        <!-- Acceso directo a Portal Jugador / Login -->
+        <a href="dashboard.html?role=cliente" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 transition transform hover:-translate-y-0.5">
+          <i data-feather="user" class="w-3.5 h-3.5"></i>
+          <span>Portal Jugador</span>
+        </a>
+
+        <!-- Acceso al Dashboard de Gestión -->
+        <a href="dashboard.html?role=tenant_admin" class="hidden sm:inline-flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition">
+          <i data-feather="sliders" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span>Admin Sede</span>
         </a>
 
         <!-- BOTÓN HAMBURGUESA / MENÚ LATERAL -->
@@ -247,9 +253,9 @@
               <i data-feather="calendar" class="w-5 h-5"></i>
               <span>Ver Horarios Disponibles</span>
             </a>
-            <a href="#la-vaca" class="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white font-bold px-6 py-4 rounded-2xl inline-flex items-center space-x-2 transition shadow-sm hover:-translate-y-0.5">
-              <i data-feather="share-2" class="w-5 h-5 text-amber-500 dark:text-amber-400"></i>
-              <span>Simular La Vaca</span>
+            <a href="dashboard.html?role=cliente" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-4 rounded-2xl inline-flex items-center space-x-2 transition shadow-lg shadow-blue-600/25 hover:-translate-y-0.5">
+              <i data-feather="user-check" class="w-5 h-5"></i>
+              <span>Portal del Jugador & Reservar</span>
             </a>
           </div>
 
@@ -560,16 +566,20 @@
 
         <div class="flex flex-wrap items-center gap-6 text-xs border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-800">
           <div>
-            <span class="text-slate-500 dark:text-slate-400 block font-medium">Hora Valle (06:00 - 17:00):</span>
+            <span class="text-slate-500 dark:text-slate-400 block font-medium text-[11px]" id="courtPriceValleyLabel">Tarifa Valle (06:00 - 17:00):</span>
             <span class="text-slate-900 dark:text-white font-black text-base" id="courtPriceValley">$110.000 COP</span>
           </div>
           <div>
-            <span class="text-amber-600 dark:text-amber-400 block font-medium">Hora Pico 🔥 (17:00 - 23:00):</span>
+            <span class="text-amber-600 dark:text-amber-400 block font-medium text-[11px]" id="courtPricePeakLabel">Tarifa Pico 🔥 (17:00 - 23:00):</span>
             <span class="text-slate-900 dark:text-white font-black text-base" id="courtPricePeak">$130.000 COP</span>
           </div>
+          <div class="bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-xl">
+            <span class="text-purple-600 dark:text-purple-400 block font-bold text-[10px] uppercase">Fin de Semana:</span>
+            <span class="text-slate-900 dark:text-white font-black text-xs" id="courtPriceWeekendDisplay">$130.000 / $160.000 COP</span>
+          </div>
           <div>
-            <span class="text-slate-500 dark:text-slate-400 block font-medium">Abono Requerido:</span>
-            <span class="text-emerald-600 dark:text-emerald-400 font-black text-base">50% para retener</span>
+            <span class="text-slate-500 dark:text-slate-400 block font-medium text-[11px]">Abono Requerido:</span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-black text-base">50% para apartar</span>
           </div>
         </div>
       </div>
@@ -621,187 +631,6 @@
         </div>
       </div>
 
-    </div>
-  </section>
-
-  <!-- ================= SECCIÓN: "LA VACA DIGITAL" ================= -->
-  <section id="la-vaca" class="py-16 relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="bg-gradient-to-br from-white via-slate-50 to-emerald-50 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 lg:p-12 shadow-xl dark:shadow-2xl transition">
-        
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div class="lg:col-span-7 space-y-5">
-            <div class="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1 rounded-full">
-              <span>🐄 Módulo B Exclusivo</span>
-              <span>•</span>
-              <span>Cero dolores de cabeza para el Capitán</span>
-            </div>
-            
-            <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-tight">
-              "La Vaca Digital": Divide la Cancha y que Cada Quien Pague su Cuota
-            </h2>
-            
-            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-              ¿Cansado de que el organizador siempre deba poner la plata completa y luego cobrarle a los demás? Con <strong>La Vaca Digital</strong>, el sistema divide el valor entre todos, genera enlaces individuales de Nequi/PSE y confirma el turno automáticamente cuando se junta el 50% de abono.
-            </p>
-
-            <ul class="space-y-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-              <li class="flex items-center space-x-3">
-                <i data-feather="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>
-                <span>Mensaje listo para enviar al grupo de WhatsApp con link único de pago.</span>
-              </li>
-              <li class="flex items-center space-x-3">
-                <i data-feather="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>
-                <span>Cada jugador paga con su propio Nequi, Daviplata o PSE.</span>
-              </li>
-              <li class="flex items-center space-x-3">
-                <i data-feather="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>
-                <span>El turno pasa a <strong>CONFIRMADO</strong> al alcanzar la cuota del 50%.</span>
-              </li>
-            </ul>
-
-            <div class="pt-2">
-              <button onclick="demoVacaSimulation()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-7 py-3 rounded-2xl shadow-lg shadow-amber-500/25 inline-flex items-center space-x-2 transition transform hover:-translate-y-0.5">
-                <i data-feather="share-2" class="w-4 h-4"></i>
-                <span>Simular "La Vaca" en Vivo</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Widget de La Vaca -->
-          <div class="lg:col-span-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl transition">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
-              <div>
-                <span class="text-xs text-slate-500 dark:text-slate-400 block font-semibold">Simulador de Pozo</span>
-                <span class="font-bold text-slate-900 dark:text-white text-base">Cancha Fútbol 5 (10 Jugadores)</span>
-              </div>
-              <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-black">Meta: $130.000 COP</span>
-            </div>
-
-            <!-- Slider de Jugadores -->
-            <div class="space-y-2 mb-5">
-              <div class="flex justify-between text-xs font-bold">
-                <span class="text-slate-600 dark:text-slate-400">Número de Jugadores:</span>
-                <span id="demoVacaPlayersLabel" class="text-emerald-600 dark:text-emerald-400">10 personas</span>
-              </div>
-              <input type="range" id="demoVacaRange" min="4" max="14" value="10" step="1" oninput="updateDemoVacaCalculation()" class="w-full accent-emerald-500 cursor-pointer h-2 bg-slate-200 dark:bg-slate-800 rounded-lg">
-              <div class="flex justify-between text-[11px] text-slate-400">
-                <span>4 jugadores</span>
-                <span>10 (Estándar 5v5)</span>
-                <span>14 jugadores</span>
-              </div>
-            </div>
-
-            <!-- Mini Cancha Táctica de Camisetas -->
-            <div id="vacaSquadGrid" class="grid grid-cols-5 gap-2 mb-4 p-3 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center">
-              <!-- Renderizado de 10 camisetas -->
-            </div>
-
-            <!-- Cálculo por Jugador -->
-            <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center mb-5">
-              <span class="text-xs text-slate-500 dark:text-slate-400 block uppercase font-bold">Cuota individual por jugador:</span>
-              <span id="demoVacaQuota" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">$13.000 COP</span>
-              <span class="text-[11px] text-slate-500 block mt-1">Con solo 5 aportes se asegura el abono del 50% y la cancha queda confirmada</span>
-            </div>
-
-            <!-- Barra de Progreso de la Vaca -->
-            <div class="space-y-1.5 mb-5">
-              <div class="flex justify-between text-xs font-bold">
-                <span class="text-slate-600 dark:text-slate-400">Progreso Recaudado:</span>
-                <span id="demoVacaProgressText" class="text-slate-900 dark:text-white">7 de 10 Pagaron ($91.000 COP)</span>
-              </div>
-              <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3.5 overflow-hidden">
-                <div id="demoVacaProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500" style="width: 70%"></div>
-              </div>
-            </div>
-
-            <button onclick="shareVacaWhatsappDemo()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center space-x-2 transition shadow-md shadow-emerald-600/20">
-              <i data-feather="send" class="w-4 h-4"></i>
-              <span>Copiar Enlace de WhatsApp para el Grupo</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= SECCIÓN: CAFETERÍA & TORNEOS ================= -->
-  <section id="cafeteria" class="py-14 bg-white dark:bg-slate-950/40 border-t border-slate-200 dark:border-slate-800 transition">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        <!-- Tarjeta POS "Cargar a Cancha" -->
-        <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl space-y-4 shadow-sm dark:shadow-none transition">
-          <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500">
-            <i data-feather="coffee" class="w-6 h-6"></i>
-          </div>
-          <h3 class="text-2xl font-black text-slate-900 dark:text-white">Cafetería & "Cargar a Cancha X"</h3>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-            Los jugadores no tienen que interrumpir el juego con billeteras. El canchero o personal del bar registra Gatorades, cervezas o petos y los <strong>carga a la cuenta abierta de la cancha</strong> para cobrar todo en un solo pago al finalizar.
-          </p>
-          <div class="flex items-center space-x-3 text-xs text-slate-600 dark:text-slate-400 font-semibold">
-            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Control de Stock Mínimo</span>
-            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Cierre de Caja con Arqueo</span>
-          </div>
-        </div>
-
-        <!-- Tarjeta Gestión de Torneos y Ligas -->
-        <div class="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl space-y-4 shadow-sm dark:shadow-none transition">
-          <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-500">
-            <i data-feather="award" class="w-6 h-6"></i>
-          </div>
-          <h3 class="text-2xl font-black text-slate-900 dark:text-white">Torneos, Ligas y Turnos Fijos</h3>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-            Generador automático de fixtures Todos contra Todos (Round-Robin), registro de resultados, tabla de goleadores y administración de turnos fijos semanales para empresas y grupos recurrentes.
-          </p>
-          <div class="flex items-center space-x-3 text-xs text-slate-600 dark:text-slate-400 font-semibold">
-            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Fixture Algorítmico</span>
-            <span class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">✓ Tablas en Tiempo Real</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= SECCIÓN: TORNEOS ================= -->
-  <section id="torneos" class="py-14">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-2xl mx-auto mb-10">
-        <h2 class="text-3xl font-black text-slate-900 dark:text-white">Torneos y Fixtures Automatizados</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">Crea campeonatos relámpago o ligas largas. El sistema genera los cruces (Round-Robin) y actualiza la tabla de posiciones en tiempo real.</p>
-      </div>
-
-      <!-- Tabla de Posiciones Demo -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl max-w-4xl mx-auto transition">
-        <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <i data-feather="award" class="w-5 h-5 text-amber-500"></i>
-            <span class="font-bold text-slate-900 dark:text-white text-sm">Copa Nocturna La Bernabéu 2026</span>
-          </div>
-          <span class="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/20">Fase de Grupos</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-            <thead class="bg-slate-100 dark:bg-slate-950 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th class="py-3 px-4">#</th>
-                <th class="py-3 px-4">Equipo</th>
-                <th class="py-3 px-4 text-center">PJ</th>
-                <th class="py-3 px-4 text-center">PG</th>
-                <th class="py-3 px-4 text-center">PE</th>
-                <th class="py-3 px-4 text-center">PP</th>
-                <th class="py-3 px-4 text-center">DG</th>
-                <th class="py-3 px-4 text-center font-bold text-slate-900 dark:text-white">PTS</th>
-              </tr>
-            </thead>
-            <tbody id="tournamentTableBody" class="divide-y divide-slate-200 dark:divide-slate-800">
-              <!-- Renderizado de posiciones -->
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -1254,173 +1083,75 @@
     </div>
   </div>
 
-  <!-- ================= MODAL DE RESERVA CON CRONÓMETRO 10 MIN ================= -->
-  <div id="bookingModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition">
-      
-      <!-- Header con Cronómetro Regresivo -->
-      <div class="bg-slate-50 dark:bg-slate-950 p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+  <!-- ================= MODAL DE AUTENTICACIÓN / REGISTRO PARA RESERVAS ================= -->
+  <div id="modalAuthLogin" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-4 transition">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
+            <i data-feather="user-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-slate-900 dark:text-white text-base">Portal del Jugador</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Inicia sesión o crea tu cuenta para reservar turno</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i data-feather="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Pestañas Iniciar Sesión / Crear Cuenta -->
+      <div class="flex p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
+        <button type="button" onclick="switchAuthTab('login')" id="authTabBtn_login" class="flex-1 py-2 rounded-xl font-black bg-blue-600 text-white transition shadow-sm">Iniciar Sesión</button>
+        <button type="button" onclick="switchAuthTab('register')" id="authTabBtn_register" class="flex-1 py-2 rounded-xl font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition">Crear Cuenta</button>
+      </div>
+
+      <!-- Formulario Login -->
+      <form id="authLoginForm" onsubmit="handleAuthLogin(event)" class="space-y-3 text-xs">
         <div>
-          <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Bloqueo Preventivo Temporal</span>
-          <h3 id="modalCourtName" class="text-base font-black text-slate-900 dark:text-white">Cancha 1: La Bernabéu Principal</h3>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
+          <input type="email" id="authLoginEmail" required placeholder="tu@correo.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:border-blue-500 focus:outline-none">
         </div>
-        
-        <!-- Reloj Regresivo 10 Min -->
-        <div class="neon-timer-box px-4 py-2 rounded-2xl border border-amber-500/40 text-center">
-          <span class="text-[9px] text-amber-400 font-black block uppercase tracking-wider">Tiempo Restante</span>
-          <span id="holdCountdown" class="text-lg font-black text-amber-400">10:00</span>
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
+          <input type="password" id="authLoginPassword" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:border-blue-500 focus:outline-none">
         </div>
-      </div>
+        <button type="submit" id="btnSubmitAuth" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 rounded-xl transition shadow-md shadow-blue-500/20">
+          Iniciar Sesión y Continuar a mi Portal
+        </button>
+      </form>
 
-      <!-- Cuerpo del Modal -->
-      <div class="p-6 space-y-5 overflow-y-auto">
-        
-        <!-- Detalle de la Reserva -->
-        <div class="bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between text-xs">
+      <!-- Formulario Registro -->
+      <form id="authRegisterForm" onsubmit="handleAuthRegister(event)" class="space-y-3 text-xs hidden">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo</label>
+          <input type="text" id="authRegisterName" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
           <div>
-            <span class="text-slate-500 dark:text-slate-400 block font-medium">Fecha y Turno:</span>
-            <span id="modalDateTime" class="text-slate-900 dark:text-white font-black text-sm">2026-11-10 | 19:00 - 20:00</span>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Celular / WhatsApp</label>
+            <input type="tel" id="authRegisterPhone" required placeholder="3001234567" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
           </div>
-          <div class="text-right">
-            <span class="text-slate-500 dark:text-slate-400 block font-medium">Total Cancha:</span>
-            <span id="modalTotalAmount" class="text-emerald-600 dark:text-emerald-400 font-black text-base">$130.000 COP</span>
-          </div>
-        </div>
-
-        <!-- Formulario del Jugador -->
-        <div class="space-y-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo del Responsable</label>
-            <input type="text" id="bookingClientName" placeholder="Ej. Mateo Jugador" value="Mateo Jugador" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:border-emerald-500 focus:outline-none">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Teléfono / WhatsApp</label>
-              <input type="tel" id="bookingClientPhone" placeholder="3001234567" value="3012345678" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:border-emerald-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
-              <input type="email" id="bookingClientEmail" placeholder="correo@ejemplo.com" value="mateo@gmail.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 focus:border-emerald-500 focus:outline-none">
-            </div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
+            <input type="email" id="authRegisterEmail" required placeholder="juan@correo.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
           </div>
         </div>
-
-        <!-- Selección de Modo de Pago -->
-        <div class="space-y-2">
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Selecciona Modalidad de Abono</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="selectPaymentMode('deposit_50')" id="optDeposit50" class="p-3 rounded-2xl border text-center text-xs font-black border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-              <span>Abono 50%</span>
-              <span id="modalDepositAmount" class="block text-[11px] text-slate-500 font-normal mt-0.5">$65.000 COP</span>
-            </button>
-            <button type="button" onclick="selectPaymentMode('full')" id="optFull" class="p-3 rounded-2xl border text-center text-xs font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <span>Pago 100%</span>
-              <span class="block text-[11px] text-slate-500 font-normal mt-0.5">Totalidad</span>
-            </button>
-            <button type="button" onclick="selectPaymentMode('vaca_split')" id="optVaca" class="p-3 rounded-2xl border text-center text-xs font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">
-              <span>🐄 La Vaca</span>
-              <span class="block text-[11px] text-slate-500 font-normal mt-0.5">Dividir cuota</span>
-            </button>
-          </div>
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
+          <input type="password" id="authRegisterPassword" required placeholder="Crea una contraseña segura" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold">
         </div>
+        <button type="submit" id="btnSubmitRegister" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition shadow-md shadow-emerald-500/20">
+          Crear Cuenta y Entrar al Portal
+        </button>
+      </form>
 
-        <!-- Checkbox de Políticas de La Bernabéu -->
-        <div class="flex items-start space-x-2 text-[11px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-950/40 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <input type="checkbox" id="acceptTermsCheck" checked class="mt-0.5 accent-emerald-500 rounded">
-          <label for="acceptTermsCheck">
-            Acepto el uso de calzado tipo turf (no taches de aluminio) y que la reserva requiere mínimo 6 horas de anticipación para cancelación o reprogramación.
-          </label>
-        </div>
-
-      </div>
-
-      <!-- Footer del Modal -->
-      <div class="bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-3">
-        <button onclick="closeBookingModal()" class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl">Cancelar</button>
-        <button onclick="submitReservationHold()" id="btnSubmitHold" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition">
-          Retener y Proceder al Pago
+      <!-- Accesos Rápidos Demo -->
+      <div id="authDemoShortcuts" class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Acceso Rápido Jugador Demo:</span>
+        <button type="button" onclick="loginAsDemoUser('cliente')" class="w-full p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black border border-blue-500/20 hover:bg-blue-500/20 flex items-center justify-center space-x-2 text-xs">
+          <span>⚽ Entrar como Mateo Jugador (Demo)</span>
         </button>
       </div>
-
-    </div>
-  </div>
-
-  <!-- ================= MODAL PASO DE CHECKOUT REAL (ADMIN SEDE PAYMENT METHODS) ================= -->
-  <div id="modalCheckoutStep" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition">
-      
-      <!-- Header con Cronómetro de 10 min -->
-      <div class="bg-emerald-500/10 dark:bg-emerald-500/15 p-5 border-b border-emerald-500/20 flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Paso 2: Confirmación & Pago Directo</span>
-          <h3 id="checkoutVenueName" class="text-base font-black text-slate-900 dark:text-white">Complejo Deportivo La Bernabéu</h3>
-        </div>
-        <div class="bg-white dark:bg-slate-950 px-3.5 py-1.5 rounded-2xl border border-emerald-500/30 text-center shadow-sm">
-          <span class="text-[9px] text-slate-500 block uppercase font-bold">Turno Retenido</span>
-          <span id="checkoutTimer" class="text-sm font-black text-amber-500 font-mono">10:00</span>
-        </div>
-      </div>
-
-      <!-- Contenido del Checkout -->
-      <div class="p-6 space-y-5 overflow-y-auto text-xs">
-        
-        <!-- Resumen del Turno Retenido -->
-        <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
-          <div class="flex justify-between items-center">
-            <span id="checkoutCourtLabel" class="font-black text-slate-900 dark:text-white text-sm">Cancha 1: La Bernabéu Principal</span>
-            <span id="checkoutPriceTotalLabel" class="font-black text-emerald-600 dark:text-emerald-400 text-sm">$130.000 COP</span>
-          </div>
-          <p id="checkoutDateTimeLabel" class="text-slate-500 dark:text-slate-400 text-[11px]">2026-11-14 | 19:00 - 20:00</p>
-        </div>
-
-        <!-- Selector de Abono (50% vs 100%) -->
-        <div class="space-y-1.5">
-          <label class="block font-bold text-slate-700 dark:text-slate-300">Selecciona el valor a pagar ahora:</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button type="button" onclick="setCheckoutPaymentMode('deposit_50')" id="checkoutMode50Btn" class="p-3.5 rounded-2xl border text-center font-black border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 transition">
-              <span class="block text-xs">Abono Mínimo (50%)</span>
-              <span id="checkoutDepositAmountLabel" class="text-base font-black block mt-0.5">$65.000</span>
-              <span class="text-[9px] font-normal text-slate-500 block">Saldo al llegar a la cancha</span>
-            </button>
-            <button type="button" onclick="setCheckoutPaymentMode('full')" id="checkoutMode100Btn" class="p-3.5 rounded-2xl border text-center font-bold border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition">
-              <span class="block text-xs">Pago Total (100%)</span>
-              <span id="checkoutFullAmountLabel" class="text-base font-black block mt-0.5">$130.000</span>
-              <span class="text-[9px] font-normal text-slate-500 block">Todo pago y liquidado</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Cuentas Receptoras de la Sede -->
-        <div class="space-y-3">
-          <label class="block font-bold text-slate-700 dark:text-slate-300">Medios de Pago Autorizados por este Complejo:</label>
-          <div id="checkoutPaymentAccountsContainer" class="space-y-2">
-            <!-- Renderizado dinámico de Nequi, Daviplata, Bancolombia -->
-          </div>
-        </div>
-
-        <!-- Adjuntar Comprobante de Pago -->
-        <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <label class="block font-bold text-slate-900 dark:text-white">Adjuntar Comprobante de Transferencia:</label>
-          <div>
-            <input type="text" id="checkoutPaymentReference" placeholder="Número de comprobante o referencia (Ej: M849301)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none mb-2">
-            <div class="flex items-center space-x-2">
-              <input type="file" id="checkoutReceiptFile" accept="image/*,.pdf" onchange="handleReceiptFileSelected(event)" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-600 dark:file:text-emerald-400 hover:file:bg-emerald-500/20 cursor-pointer">
-              <span id="checkoutReceiptPreview" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hidden">✓ Comprobante cargado</span>
-            </div>
-          </div>
-          <p class="text-[10px] text-slate-500">Al confirmar, la reserva se registrará en estado <strong class="text-amber-500">"Pendiente de Verificación"</strong> para validación del administrador.</p>
-        </div>
-
-      </div>
-
-      <!-- Footer del Checkout -->
-      <div class="bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <button onclick="closeCheckoutModal()" class="px-3 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl">Cerrar</button>
-        <button onclick="submitCheckoutReceipt()" id="btnSubmitReceipt" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition flex items-center space-x-2">
-          <span>Confirmar Pago y Enviar Comprobante</span>
-        </button>
-      </div>
-
     </div>
   </div>
 

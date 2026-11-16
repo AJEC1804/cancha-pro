@@ -143,6 +143,35 @@ async function runTests() {
     const dataSettle = await resSettle.json();
     assert(dataSettle.success && dataSettle.folio.grand_total_due === 0, 'Settle folio sets grand_total_due to $0');
 
+    // 11. SSR Clean Route /sede/:slug
+    console.log('\n--- Test 11: Clean Routes /sede/:slug (SSR) ---');
+    const resSsrBernabeu = await fetch(`${baseUrl}/sede/la-bernabeu`);
+    const htmlBernabeu = await resSsrBernabeu.text();
+    assert(resSsrBernabeu.status === 200, 'GET /sede/la-bernabeu returns HTTP 200');
+    assert(htmlBernabeu.includes('window.__INITIAL_VENUE__') && htmlBernabeu.includes('la-bernabeu'), 'SSR injects window.__INITIAL_VENUE__ to eliminate initial flicker');
+
+    // 12. Direct portal and login routes
+    console.log('\n--- Test 12: Direct Portal & Login Routes ---');
+    const resPortal = await fetch(`${baseUrl}/portal`);
+    assert(resPortal.status === 200, 'GET /portal returns HTTP 200');
+    const resLogin = await fetch(`${baseUrl}/login`);
+    assert(resLogin.status === 200, 'GET /login returns HTTP 200');
+
+    // 13. Active Shift Cash vs Electronic Breakdown
+    console.log('\n--- Test 13: Active Shift Arqueo Separation ---');
+    const resShift = await fetch(`${baseUrl}/api/pos/shift/active`, { headers: authHeaders });
+    const dataShift = await resShift.json();
+    assert(dataShift.success, 'Active shift returned');
+    assert(dataShift.shift && typeof dataShift.shift.cash_sales !== 'undefined' && typeof dataShift.shift.electronic_sales !== 'undefined', 'Shift separates cash_sales and electronic_sales');
+
+    // 14. Player Reservations Query by customer_id
+    console.log('\n--- Test 14: Player Portal Reservations by Customer ID ---');
+    const resPlayer = await fetch(`${baseUrl}/api/reservations?customer_id=demo-user-c0000000-0000-0000-0000-000000000001`, {
+      headers: { 'Authorization': 'Bearer demo-user-c0000000-0000-0000-0000-000000000001' }
+    });
+    const dataPlayer = await resPlayer.json();
+    assert(dataPlayer.success && Array.isArray(dataPlayer.reservations) && dataPlayer.reservations.length > 0, 'Customer query returns reservations without blank page');
+
     console.log(`\n========================================`);
     console.log(`TOTAL TESTS: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
     console.log(`========================================\n`);

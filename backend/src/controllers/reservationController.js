@@ -71,13 +71,19 @@ const getGridAvailability = async (req, res, next) => {
     const slots = [];
     const now = new Date();
 
+    const bookingDateObj = new Date(date + 'T00:00:00');
+    const dayOfWeek = bookingDateObj.getDay();
+    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
     for (let h = openHour; h < closeHour; h++) {
       const startTime = `${String(h).padStart(2, '0')}:00`;
       const endTime = `${String(h + 1).padStart(2, '0')}:00`;
 
-      // Regla de hora pico: a partir de las 17:00 (5:00 PM) o fines de semana
-      const isPeakHour = h >= 17;
-      const hourlyPrice = isPeakHour ? field.peak_price_per_hour : field.default_price_per_hour;
+      // Regla de hora pico unificada: a partir de las 17:00 (5:00 PM) o mañanas de fin de semana
+      const isPeakHour = isWeekend ? ((h >= 8 && h < 12) || h >= 17) : (h >= 17);
+      const hourlyPrice = isWeekend
+        ? (isPeakHour ? (field.weekend_peak_price_per_hour || field.peak_price_per_hour) : (field.weekend_price_per_hour || field.default_price_per_hour))
+        : (isPeakHour ? field.peak_price_per_hour : field.default_price_per_hour);
 
       // Buscar si existe una reserva activa para este slot
       const existingRes = dayReservations.find(r => 
@@ -369,11 +375,12 @@ const cancelReservation = async (req, res, next) => {
 const listReservations = async (req, res, next) => {
   try {
     const query = {};
-    if (req.query.venue_id) query.venue_id = req.query.venue_id;
+    if (req.query.venue_id && req.query.venue_id !== 'all') query.venue_id = req.query.venue_id;
     if (req.query.field_id) query.field_id = req.query.field_id;
     if (req.query.date) query.booking_date = req.query.date;
     if (req.query.status && req.query.status !== 'all') query.status = req.query.status;
     if (req.query.user_id) query.user_id = req.query.user_id;
+    if (req.query.customer_id) query.user_id = req.query.customer_id;
 
     // Si es cliente regular, solo puede consultar sus reservas
     if (req.user && req.user.role === 'cliente') {

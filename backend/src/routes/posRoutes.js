@@ -17,7 +17,7 @@ router.post('/orders', authenticate, requireRoles('superadmin', 'tenant_admin', 
 router.post('/checkout-unified', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.checkoutUnifiedTab);
 
 // Arqueo de caja
-router.get('/shift', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.getActiveShift);
+router.get(['/shift', '/shift/active'], authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.getActiveShift);
 router.post('/shift/close', authenticate, requireRoles('superadmin', 'tenant_admin', 'staff'), posController.closeShift);
 
 module.exports = router;

@@ -23,7 +23,11 @@ const authenticate = async (req, res, next) => {
     
     // Soporte para tokens demo directos (útil para pruebas en Postman o frontend rápido)
     if (token.startsWith('demo-user-')) {
-      const userId = token.replace('demo-user-', '');
+      let userId = token.replace('demo-user-', '');
+      // Soporte para alias de cliente
+      if (userId === 'c0000000-0000-0000-0000-000000000001') {
+        userId = 'b0000000-0000-0000-0000-000000000004';
+      }
       const user = await db.findUserById(userId);
       if (user) {
         req.user = user;
@@ -88,7 +92,7 @@ const requireVenueAccess = (req, res, next) => {
     return next();
   }
 
-  const requestedVenueId = req.params.venueId || req.body.venue_id || req.query.venue_id;
+  const requestedVenueId = req.params.venueId || req.params.id || req.body.venue_id || req.query.venue_id;
   
   if (requestedVenueId && req.user.venue_id && req.user.venue_id !== requestedVenueId) {
     return res.status(403).json({
